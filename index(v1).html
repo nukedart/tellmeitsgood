@@ -598,9 +598,11 @@
     // When you deploy, move this to a backend/serverless function
     // ============================================================
     const CONFIG = {
-      // API key is now stored safely in Vercel environment variables.
-      // The browser never sees it — requests go to /api/verdict instead.
-      DEMO_MODE: false,
+      // TODO: Replace with your Claude or OpenAI API key for local testing
+      // See CURRENT_STATE.md for instructions on setting up the API
+      ANTHROPIC_API_KEY: 'YOUR_API_KEY_HERE',
+      MODEL: 'claude-haiku-4-5-20251001',
+      DEMO_MODE: true, // ← Set to false when you have a real API key
     };
 
     // ============================================================
@@ -726,26 +728,51 @@
     }
 
     // ============================================================
-    // REAL API CALL — posts to our Vercel serverless function.
-    // The function calls Claude with your secret API key server-side.
-    // Your key is NEVER exposed to the browser.
+    // REAL CLAUDE API CALL
+    // ⚠️  This exposes your API key in the browser.
+    // Only use for local testing. Move to a backend before deploying.
     // ============================================================
     async function callClaudeAPI(userInput) {
-      const response = await fetch('/api/verdict', {
+      const systemPrompt = `You are a sharp, honest financial advisor friend.
+Someone is about to buy something. Give them a real, direct verdict.
+No fluff. Be genuinely helpful — sometimes that means saying don't buy it.
+
+Return ONLY valid JSON with no extra text, no markdown, no explanation:
+{
+  "verdict": "good" | "think_twice" | "dont",
+  "score": <number 1-10>,
+  "reasons": ["<reason 1>", "<reason 2>", "<reason 3>"],
+  "questions": ["<question 1>", "<question 2>", "<question 3>"],
+  "alternative": "<one honest alternative suggestion or null>"
+}`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': CONFIG.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
         },
-        body: JSON.stringify({ purchaseText: userInput }),
+        body: JSON.stringify({
+          model: CONFIG.MODEL,
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: `Purchase they're considering: ${userInput}` }]
+        })
       });
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || `Server error ${response.status}`);
+        throw new Error(err.error?.message || `API error ${response.status}`);
       }
 
-      // The serverless function already returns parsed verdict JSON
-      return response.json();
+      const data = await response.json();
+      const text = data.content[0].text;
+
+      // Parse JSON from response
+      const cleaned = text.replace(/```json|```/g, '').trim();
+      return JSON.parse(cleaned);
     }
 
     // ============================================================
