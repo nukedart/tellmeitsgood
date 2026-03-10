@@ -1,27 +1,17 @@
 # Current State — [UPDATE THIS DATE EVERY SESSION]
 
 ## What works right now
-- Project folder created and pushed to GitHub
-- GitHub Pages live at: https://[YOUR USERNAME].github.io/tellmeitsgood
-- index.html: full UI shell with Design OS tokens
-- Input form with char counter and validation
-- Example query chips (click to fill)
-- Loading state with spinner
-- Results display: verdict banner, score bar, reasons, questions, alternative
-- Reset / "check another purchase" flow
-- Light + dark mode (follows system)
-- Demo mode: shows realistic fake results so UI is fully testable
-- Mobile responsive layout
+- Full UI with Design OS, light + dark mode
+- Real Claude API via Vercel serverless function
+- Verdict, score, reasons, questions, alternative
+- Demo mode off — real AI verdicts live
+- Deployed at: https://tellmeitsgood.vercel.app/
 
 ## What I'm building next
-- [ ] Connect real Claude API (replace demo mode with real calls)
+- Waiting on feedback from 6+ people before deciding
 
-## Known issues / things to fix
-- API key is placeholder — demo mode is ON (this is intentional for now)
-- Need to set up a backend before deploying publicly (to hide API key)
-
-## Files I've changed
-- index.html (complete starter file)
+## Known issues
+- [anything you noticed while testing]
 
 ## How to test right now
 1. Open index.html directly in your browser (just double-click the file)
