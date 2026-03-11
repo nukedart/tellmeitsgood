@@ -459,6 +459,121 @@
       color: var(--text);
     }
 
+    /* ── Budget selector ── */
+    .budget-group {
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+
+    .budget-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      letter-spacing: .02em;
+    }
+
+    .budget-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .budget-option {
+      flex: 1;
+      position: relative;
+    }
+
+    .budget-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .budget-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+
+    .budget-option label:hover {
+      border-color: var(--accent);
+      background: var(--accent-surf);
+    }
+
+    .budget-option input[type="radio"]:checked + label {
+      border-color: var(--accent);
+      background: var(--accent-surf);
+      color: var(--accent-text);
+    }
+
+    .budget-option-emoji {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .budget-option-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .01em;
+    }
+
+    .budget-option input[type="radio"]:checked + label .budget-option-name {
+      color: var(--accent-text);
+    }
+
+    .budget-option-desc {
+      font-size: 11px;
+      color: var(--text-3);
+      line-height: 1.3;
+    }
+
+    @media (max-width: 400px) {
+      .budget-option-desc { display: none; }
+    }
+
+    /* ── TL;DR strip ── */
+    .tldr-strip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      font-style: italic;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    /* ── Confidence badge ── */
+    .confidence-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 100px;
+      margin-left: 8px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+
+    .confidence-badge.confident    { background: var(--success-surf); color: var(--success); }
+    .confidence-badge.fence        { background: var(--warning-surf);  color: var(--warning); }
+    .confidence-badge.clear-no     { background: var(--danger-surf);   color: var(--danger);  }
+
     /* ── Error state ── */
     .error-msg {
       display: none;
@@ -490,6 +605,7 @@
       .verdict-title { font-size: 20px; }
     }
   </style>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
 <body>
@@ -516,6 +632,37 @@
           maxlength="500"
           placeholder="e.g. AirPods Pro for $249 — I mostly use them at the gym and already have decent earbuds..."
         ></textarea>
+        <!-- Budget selector -->
+        <div class="budget-group">
+          <span class="budget-label">What's your budget mindset for this?</span>
+          <div class="budget-options">
+            <div class="budget-option">
+              <input type="radio" id="budget-low" name="budget" value="Low-Cost" checked>
+              <label for="budget-low">
+                <span class="budget-option-emoji">💸</span>
+                <span class="budget-option-name">Low-Cost</span>
+                <span class="budget-option-desc">Value is key</span>
+              </label>
+            </div>
+            <div class="budget-option">
+              <input type="radio" id="budget-mid" name="budget" value="Mid-Cost">
+              <label for="budget-mid">
+                <span class="budget-option-emoji">⚖️</span>
+                <span class="budget-option-name">Mid-Cost</span>
+                <span class="budget-option-desc">Quality vs price</span>
+              </label>
+            </div>
+            <div class="budget-option">
+              <input type="radio" id="budget-high" name="budget" value="No Limits">
+              <label for="budget-high">
+                <span class="budget-option-emoji">🚀</span>
+                <span class="budget-option-name">No Limits</span>
+                <span class="budget-option-desc">Best is best</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div class="input-actions">
           <span class="char-count"><span id="charCount">0</span> / 500</span>
           <button class="btn-primary" id="submitBtn" onclick="handleSubmit()">
@@ -545,6 +692,9 @@
     <!-- ── Results ── -->
     <div class="results" id="resultsSection">
 
+      <!-- TL;DR -->
+      <div class="tldr-strip" id="tldrStrip"></div>
+
       <!-- Verdict banner -->
       <div class="verdict-banner" id="verdictBanner">
         <div class="verdict-icon" id="verdictIcon"></div>
@@ -556,6 +706,7 @@
               <div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div>
             </div>
             <span class="score-text" id="scoreText"></span>
+            <span class="confidence-badge" id="confidenceBadge"></span>
           </div>
         </div>
       </div>
@@ -731,12 +882,14 @@
     // Your key is NEVER exposed to the browser.
     // ============================================================
     async function callClaudeAPI(userInput) {
+      const budget = document.querySelector('input[name="budget"]:checked')?.value || 'Mid-Cost';
+
       const response = await fetch('/api/verdict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ purchaseText: userInput }),
+        body: JSON.stringify({ purchaseText: userInput, budget }),
       });
 
       if (!response.ok) {
@@ -763,6 +916,15 @@
 
       const cfg = verdictConfig[data.verdict] || verdictConfig['think_twice'];
 
+      // TL;DR strip
+      const tldrStrip = document.getElementById('tldrStrip');
+      if (data.tldr) {
+        tldrStrip.textContent = `"${data.tldr}"`;
+        tldrStrip.style.display = 'block';
+      } else {
+        tldrStrip.style.display = 'none';
+      }
+
       // Verdict banner
       const banner = document.getElementById('verdictBanner');
       banner.className = `verdict-banner ${cfg.color}`;
@@ -781,6 +943,19 @@
         document.getElementById('scoreBarFill').style.background = cfg.barColor;
       }, 100);
       document.getElementById('scoreText').textContent = `${score} / 10`;
+
+      // Confidence badge
+      const badge = document.getElementById('confidenceBadge');
+      if (score >= 8) {
+        badge.textContent = 'confident';
+        badge.className = 'confidence-badge confident';
+      } else if (score >= 5) {
+        badge.textContent = 'on the fence';
+        badge.className = 'confidence-badge fence';
+      } else {
+        badge.textContent = 'pretty clear no';
+        badge.className = 'confidence-badge clear-no';
+      }
 
       // Reasons list
       const reasonsList = document.getElementById('reasonsList');
@@ -824,6 +999,8 @@
       document.getElementById('purchaseInput').value = '';
       document.getElementById('charCount').textContent = '0';
       document.getElementById('scoreBarFill').style.width = '0%';
+      document.getElementById('tldrStrip').style.display = 'none';
+      document.getElementById('confidenceBadge').textContent = '';
       hideError();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

@@ -5,7 +5,7 @@
 // That means your ANTHROPIC_API_KEY stays 100% private.
 //
 // How it works:
-//   Browser → POST /api/verdict { purchaseText: "...", budget: "..." }
+//   Browser → POST /api/verdict { purchaseText: "..." }
 //                ↓
 //   This function → Claude API (using secret key)
 //                ↓
@@ -19,16 +19,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  // ── 2. Read the user's input from the request body ────────
-  // `budget` is new — sent from the radio selector in index.html.
-  // We default to 'Mid-Cost' if it's somehow missing.
-  const { purchaseText, budget = 'Mid-Cost' } = req.body;
+  // ── 2. Read the user's purchase text from the request body ─
+  const { purchaseText } = req.body;
 
   if (!purchaseText || purchaseText.trim().length === 0) {
     return res.status(400).json({ error: 'No purchaseText provided.' });
   }
 
   // ── 3. Call the Claude API ─────────────────────────────────
+  // process.env.ANTHROPIC_API_KEY is set in your Vercel dashboard.
+  // It is never visible to the browser.
   try {
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -44,18 +44,10 @@ export default async function handler(req, res) {
 Someone is about to buy something. Give them a real, direct verdict.
 No fluff. Be genuinely helpful — sometimes that means saying don't buy it.
 
-The user's budget mindset is: ${budget}.
-- "Low-Cost": They're value-focused. Justify every dollar. Flag cheaper alternatives.
-- "Mid-Cost": They care about quality but want fair value. Balance both sides.
-- "No Limits": They want the best option, not the cheapest. Only flag price if it's genuinely poor value.
-
-Adjust your reasoning, score, and alternative suggestion to match their budget mindset.
-
 Return ONLY valid JSON with no extra text, no markdown, no explanation:
 {
   "verdict": "good" | "think_twice" | "dont",
   "score": <number 1-10>,
-  "tldr": "<one punchy, conversational sentence summarising your verdict — max 20 words>",
   "reasons": ["<reason 1>", "<reason 2>", "<reason 3>"],
   "questions": ["<question 1>", "<question 2>", "<question 3>"],
   "alternative": "<one honest alternative suggestion or null>"
