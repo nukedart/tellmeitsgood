@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tell Me It's Good — Should you buy it?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN OS — CALM SAAS TOKENS
+       Warm cream · Blue accent · Light + Dark
+    ============================================================ */
+    :root {
+      --bg:            #FAF8F5;
+      --surface:       #F3F0EB;
+      --surface-2:     #EAE6DF;
+      --border:        #DDD9D2;
+      --border-strong: #C8C3BB;
+      --text:          #1C1917;
+      --text-2:        #6B6560;
+      --text-3:        #A09891;
+      --accent:        #2F6FED;
+      --accent-hover:  #1A57D4;
+      --accent-surf:   #EBF1FD;
+      --accent-text:   #1A4FB8;
+      --card:          #FFFFFF;
+      --success:       #3A9E6F;
+      --success-surf:  #ECFDF5;
+      --warning:       #D4872A;
+      --warning-surf:  #FFFBEB;
+      --danger:        #D94F4F;
+      --danger-surf:   #FEF2F2;
+      --radius-sm:     6px;
+      --radius-md:     10px;
+      --radius-lg:     14px;
+      --radius-xl:     20px;
+      --font-display:  'DM Serif Display', Georgia, serif;
+      --font-body:     'DM Sans', system-ui, sans-serif;
+      --shadow-sm:     0 1px 2px rgba(0,0,0,.06);
+      --shadow-md:     0 4px 12px rgba(0,0,0,.08);
+      --shadow-lg:     0 12px 32px rgba(0,0,0,.12);
+    }
+
+    /* ── Dark mode ── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:            #18161A;
+        --surface:       #211F24;
+        --surface-2:     #2B2830;
+        --border:        #38343D;
+        --border-strong: #49444F;
+        --text:          #F0EDE8;
+        --text-2:        #9B9299;
+        --text-3:        #67636B;
+        --accent:        #5A8FFF;
+        --accent-hover:  #4070E8;
+        --accent-surf:   #1C2744;
+        --accent-text:   #8AB4FF;
+        --card:          #211F24;
+        --success:       #4CB87F;
+        --success-surf:  #0D2B1E;
+        --warning:       #E09640;
+        --warning-surf:  #2B1F0A;
+        --danger:        #E86060;
+        --danger-surf:   #2B1212;
+        --shadow-md:     0 4px 12px rgba(0,0,0,.3);
+        --shadow-lg:     0 12px 40px rgba(0,0,0,.5);
+      }
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      transition: background .25s, color .25s;
+    }
+
+    /* ── Layout ── */
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .headline {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 6vw, 48px);
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .subheadline {
+      font-size: 16px;
+      color: var(--text-2);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Input card ── */
+    .input-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      letter-spacing: .02em;
+    }
+
+    .input-field {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      resize: none;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s, background .25s;
+      line-height: 1.5;
+    }
+
+    .input-field::placeholder { color: var(--text-3); }
+
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-surf);
+      background: var(--card);
+    }
+
+    .input-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      gap: 12px;
+    }
+
+    .char-count {
+      font-size: 12px;
+      color: var(--text-3);
+      flex-shrink: 0;
+    }
+
+    /* ── Button ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 22px;
+      height: 42px;
+      cursor: pointer;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px rgba(47,111,237,.3);
+    }
+
+    .btn-primary:active { transform: scale(.98); }
+
+    .btn-primary:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── Example queries ── */
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+
+    .example-chip {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .example-chip:hover {
+      background: var(--accent-surf);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+
+    /* ── Loading state ── */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .loading.visible { display: block; }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-2);
+    }
+
+    .loading-subtext {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 4px;
+    }
+
+    /* ── Results ── */
+    .results {
+      display: none;
+      animation: fadeUp .35s ease;
+    }
+
+    .results.visible { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Verdict banner */
+    .verdict-banner {
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .verdict-banner.good        { background: var(--success-surf); border: 1.5px solid var(--success); }
+    .verdict-banner.think_twice { background: var(--warning-surf); border: 1.5px solid var(--warning); }
+    .verdict-banner.dont        { background: var(--danger-surf);  border: 1.5px solid var(--danger);  }
+
+    .verdict-icon {
+      font-size: 40px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .verdict-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .verdict-banner.good        .verdict-label { color: var(--success); }
+    .verdict-banner.think_twice .verdict-label { color: var(--warning); }
+    .verdict-banner.dont        .verdict-label { color: var(--danger);  }
+
+    .verdict-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    /* Score bar */
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .score-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width .8s ease;
+    }
+
+    .score-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      flex-shrink: 0;
+    }
+
+    /* Result cards */
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .result-card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 14px;
+    }
+
+    .result-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-list li {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .result-bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+
+    /* Question items */
+    .question-item {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .question-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .question-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      min-width: 18px;
+    }
+
+    /* Alternative */
+    .alternative-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Reset button */
+    .btn-reset {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all .15s;
+    }
+
+    .btn-reset:hover {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    /* ── Budget selector ── */
+    .budget-group {
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+
+    .budget-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      letter-spacing: .02em;
+    }
+
+    .budget-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .budget-option {
+      flex: 1;
+      position: relative;
+    }
+
+    .budget-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .budget-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+
+    .budget-option label:hover {
+      border-color: var(--accent);
+      background: var(--accent-surf);
+    }
+
+    .budget-option input[type="radio"]:checked + label {
+      border-color: var(--accent);
+      background: var(--accent-surf);
+      color: var(--accent-text);
+    }
+
+    .budget-option-emoji {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .budget-option-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .01em;
+    }
+
+    .budget-option input[type="radio"]:checked + label .budget-option-name {
+      color: var(--accent-text);
+    }
+
+    .budget-option-desc {
+      font-size: 11px;
+      color: var(--text-3);
+      line-height: 1.3;
+    }
+
+    @media (max-width: 400px) {
+      .budget-option-desc { display: none; }
+    }
+
+    /* ── TL;DR strip ── */
+    .tldr-strip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      font-style: italic;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    /* ── Confidence badge ── */
+    .confidence-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 100px;
+      margin-left: 8px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+
+    .confidence-badge.confident    { background: var(--success-surf); color: var(--success); }
+    .confidence-badge.fence        { background: var(--warning-surf);  color: var(--warning); }
+    .confidence-badge.clear-no     { background: var(--danger-surf);   color: var(--danger);  }
+
+    /* ── Error state ── */
+    .error-msg {
+      display: none;
+      background: var(--danger-surf);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--danger);
+      margin-top: 12px;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      margin-top: 64px;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .page { padding: 40px 16px 60px; }
+      .input-card { padding: 20px; }
+      .verdict-banner { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .verdict-icon { font-size: 32px; }
+      .verdict-title { font-size: 20px; }
+    }
+  </style>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-dot"></span>
+        tellmeitsgood.com
+      </div>
+      <h1 class="headline">Should you buy it?</h1>
+      <p class="subheadline">Get an honest verdict before you spend your money. No fluff, no ads — just a straight answer.</p>
+    </header>
+
+    <!-- ── Input section ── -->
+    <div id="inputSection">
+      <div class="input-card">
+        <label class="input-label" for="purchaseInput">What are you thinking about buying?</label>
+        <textarea
+          id="purchaseInput"
+          class="input-field"
+          rows="3"
+          maxlength="500"
+          placeholder="e.g. AirPods Pro for $249 — I mostly use them at the gym and already have decent earbuds..."
+        ></textarea>
+        <!-- Budget selector -->
+        <div class="budget-group">
+          <span class="budget-label">What's your budget mindset for this?</span>
+          <div class="budget-options">
+            <div class="budget-option">
+              <input type="radio" id="budget-low" name="budget" value="Low-Cost" checked>
+              <label for="budget-low">
+                <span class="budget-option-emoji">💸</span>
+                <span class="budget-option-name">Low-Cost</span>
+                <span class="budget-option-desc">Value is key</span>
+              </label>
+            </div>
+            <div class="budget-option">
+              <input type="radio" id="budget-mid" name="budget" value="Mid-Cost">
+              <label for="budget-mid">
+                <span class="budget-option-emoji">⚖️</span>
+                <span class="budget-option-name">Mid-Cost</span>
+                <span class="budget-option-desc">Quality vs price</span>
+              </label>
+            </div>
+            <div class="budget-option">
+              <input type="radio" id="budget-high" name="budget" value="No Limits">
+              <label for="budget-high">
+                <span class="budget-option-emoji">🚀</span>
+                <span class="budget-option-name">No Limits</span>
+                <span class="budget-option-desc">Best is best</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-actions">
+          <span class="char-count"><span id="charCount">0</span> / 500</span>
+          <button class="btn-primary" id="submitBtn" onclick="handleSubmit()">
+            Tell me if it's good →
+          </button>
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+
+      <!-- Example queries -->
+      <div class="examples">
+        <span class="example-chip" onclick="fillExample(this)">AirPods Pro for $249</span>
+        <span class="example-chip" onclick="fillExample(this)">$80/mo gym membership near my office</span>
+        <span class="example-chip" onclick="fillExample(this)">Standing desk for $400, work from home</span>
+        <span class="example-chip" onclick="fillExample(this)">New iPhone 16 Pro — already have 14 Pro</span>
+        <span class="example-chip" onclick="fillExample(this)">$15/mo Spotify — currently use free tier</span>
+      </div>
+    </div>
+
+    <!-- ── Loading state ── -->
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      <p class="loading-text">Thinking this through...</p>
+      <p class="loading-subtext">Weighing the pros, cons, and your wallet</p>
+    </div>
+
+    <!-- ── Results ── -->
+    <div class="results" id="resultsSection">
+
+      <!-- TL;DR -->
+      <div class="tldr-strip" id="tldrStrip"></div>
+
+      <!-- Verdict banner -->
+      <div class="verdict-banner" id="verdictBanner">
+        <div class="verdict-icon" id="verdictIcon"></div>
+        <div>
+          <div class="verdict-label" id="verdictLabel"></div>
+          <div class="verdict-title" id="verdictTitle"></div>
+          <div class="score-row">
+            <div class="score-bar-wrap">
+              <div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div>
+            </div>
+            <span class="score-text" id="scoreText"></span>
+            <span class="confidence-badge" id="confidenceBadge"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reasons -->
+      <div class="result-card">
+        <div class="result-card-title">Key Points</div>
+        <ul class="result-list" id="reasonsList"></ul>
+      </div>
+
+      <!-- Questions -->
+      <div class="result-card">
+        <div class="result-card-title">Ask Yourself</div>
+        <div id="questionsList"></div>
+      </div>
+
+      <!-- Alternative -->
+      <div class="result-card" id="alternativeCard">
+        <div class="result-card-title">Consider Instead</div>
+        <p class="alternative-text" id="alternativeText"></p>
+      </div>
+
+      <!-- Reset -->
+      <button class="btn-reset" onclick="resetApp()">
+        ← Check another purchase
+      </button>
+    </div>
+
+    <!-- ── Footer ── -->
+    <footer class="footer">
+      <p>Built with calm intentions · No data stored · No ads</p>
+    </footer>
+
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG — Add your API key here when ready
+    // ⚠️  For local testing only — never commit a real API key
+    // When you deploy, move this to a backend/serverless function
+    // ============================================================
+    const CONFIG = {
+      // API key is now stored safely in Vercel environment variables.
+      // The browser never sees it — requests go to /api/verdict instead.
+      DEMO_MODE: false,
+    };
+
+    // ============================================================
+    // DEMO DATA — Realistic fake response for testing UI
+    // Remove this when connecting real API
+    // ============================================================
+    const DEMO_RESPONSES = {
+      good: {
+        verdict: 'good',
+        score: 8,
+        reasons: [
+          'The price point is fair for the quality and features you\'re getting',
+          'Based on your use case, this solves a real problem you have regularly',
+          'Strong resale value if you decide it\'s not for you in 6 months'
+        ],
+        questions: [
+          'Have you tried borrowing or renting one first to confirm you\'ll actually use it?',
+          'Is there a sale or better price coming in the next 30 days?',
+          'Does buying this mean skipping something more important this month?'
+        ],
+        alternative: 'The previous generation model is ~40% cheaper and covers 90% of the same use cases — worth comparing before you commit.'
+      },
+      think_twice: {
+        verdict: 'think_twice',
+        score: 5,
+        reasons: [
+          'You might already have something that does 80% of this job',
+          'The timing feels impulse-driven rather than need-driven',
+          'Better options exist at this price point worth researching first'
+        ],
+        questions: [
+          'What specifically changes in your life the day after you buy this?',
+          'When did you last want this — was it recent or have you wanted it for months?',
+          'Could you solve the underlying problem a different way for less money?'
+        ],
+        alternative: 'Sleep on it for 72 hours. If you still want it after that, it\'s probably a good call.'
+      },
+      dont: {
+        verdict: 'dont',
+        score: 2,
+        reasons: [
+          'This doesn\'t match the need you described — it\'s solving the wrong problem',
+          'The price is significantly above market rate for what you\'re getting',
+          'You\'ll likely use this a handful of times then feel regret'
+        ],
+        questions: [
+          'Be honest — is this want or need?',
+          'What would you do with that money if you didn\'t spend it here?',
+          'Has something today triggered this urge to buy?'
+        ],
+        alternative: 'Put the money aside for 30 days. If you still feel this way, revisit it then.'
+      }
+    };
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let isLoading = false;
+
+    // ============================================================
+    // CHAR COUNTER
+    // ============================================================
+    document.getElementById('purchaseInput').addEventListener('input', function() {
+      document.getElementById('charCount').textContent = this.value.length;
+    });
+
+    // ============================================================
+    // FILL EXAMPLE
+    // ============================================================
+    function fillExample(el) {
+      const input = document.getElementById('purchaseInput');
+      input.value = el.textContent;
+      input.focus();
+      document.getElementById('charCount').textContent = input.value.length;
+    }
+
+    // ============================================================
+    // HANDLE SUBMIT
+    // ============================================================
+    async function handleSubmit() {
+      const input = document.getElementById('purchaseInput').value.trim();
+      const errorEl = document.getElementById('errorMsg');
+
+      // Validate
+      if (!input) {
+        showError('Tell me what you\'re thinking of buying first.');
+        return;
+      }
+      if (input.length < 10) {
+        showError('Give me a bit more detail so I can give you a useful verdict.');
+        return;
+      }
+
+      hideError();
+      showLoading();
+
+      try {
+        let result;
+        if (CONFIG.DEMO_MODE) {
+          // Demo mode: return fake data after a realistic delay
+          result = await getDemoResponse();
+        } else {
+          // Real mode: call Claude API
+          result = await callClaudeAPI(input);
+        }
+        displayResults(result);
+      } catch (err) {
+        hideLoading();
+        showError('Something went wrong. Try again in a moment — ' + err.message);
+        console.error('API error:', err);
+      }
+    }
+
+    // ============================================================
+    // DEMO RESPONSE (simulates API delay + realistic data)
+    // ============================================================
+    async function getDemoResponse() {
+      // Simulate API thinking time
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const options = ['good', 'think_twice', 'dont'];
+      const pick = options[Math.floor(Math.random() * options.length)];
+      return DEMO_RESPONSES[pick];
+    }
+
+    // ============================================================
+    // REAL API CALL — posts to our Vercel serverless function.
+    // The function calls Claude with your secret API key server-side.
+    // Your key is NEVER exposed to the browser.
+    // ============================================================
+    async function callClaudeAPI(userInput) {
+      const budget = document.querySelector('input[name="budget"]:checked')?.value || 'Mid-Cost';
+
+      const response = await fetch('/api/verdict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ purchaseText: userInput, budget }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Server error ${response.status}`);
+      }
+
+      // The serverless function already returns parsed verdict JSON
+      return response.json();
+    }
+
+    // ============================================================
+    // DISPLAY RESULTS
+    // ============================================================
+    function displayResults(data) {
+      hideLoading();
+
+      // Verdict config
+      const verdictConfig = {
+        good:        { icon: '✅', label: 'Tell me it\'s good', color: 'good',        barColor: 'var(--success)' },
+        think_twice: { icon: '⚠️', label: 'Think twice',       color: 'think_twice', barColor: 'var(--warning)' },
+        dont:        { icon: '❌', label: 'Don\'t do it',      color: 'dont',        barColor: 'var(--danger)'  },
+      };
+
+      const cfg = verdictConfig[data.verdict] || verdictConfig['think_twice'];
+
+      // TL;DR strip
+      const tldrStrip = document.getElementById('tldrStrip');
+      if (data.tldr) {
+        tldrStrip.textContent = `"${data.tldr}"`;
+        tldrStrip.style.display = 'block';
+      } else {
+        tldrStrip.style.display = 'none';
+      }
+
+      // Verdict banner
+      const banner = document.getElementById('verdictBanner');
+      banner.className = `verdict-banner ${cfg.color}`;
+      document.getElementById('verdictIcon').textContent = cfg.icon;
+      document.getElementById('verdictLabel').textContent = cfg.label;
+
+      const score = Math.min(Math.max(data.score || 5, 1), 10);
+      document.getElementById('verdictTitle').textContent =
+        score >= 7 ? 'Looks like a solid buy.' :
+        score >= 4 ? 'Could go either way.' :
+        'Probably not worth it.';
+
+      // Score bar
+      setTimeout(() => {
+        document.getElementById('scoreBarFill').style.width = `${score * 10}%`;
+        document.getElementById('scoreBarFill').style.background = cfg.barColor;
+      }, 100);
+      document.getElementById('scoreText').textContent = `${score} / 10`;
+
+      // Confidence badge
+      const badge = document.getElementById('confidenceBadge');
+      if (score >= 8) {
+        badge.textContent = 'confident';
+        badge.className = 'confidence-badge confident';
+      } else if (score >= 5) {
+        badge.textContent = 'on the fence';
+        badge.className = 'confidence-badge fence';
+      } else {
+        badge.textContent = 'pretty clear no';
+        badge.className = 'confidence-badge clear-no';
+      }
+
+      // Reasons list
+      const reasonsList = document.getElementById('reasonsList');
+      reasonsList.innerHTML = (data.reasons || []).map(r => `
+        <li>
+          <span class="result-bullet"></span>
+          <span>${r}</span>
+        </li>
+      `).join('');
+
+      // Questions
+      const questionsList = document.getElementById('questionsList');
+      questionsList.innerHTML = (data.questions || []).map((q, i) => `
+        <div class="question-item">
+          <span class="question-num">${i + 1}.</span>
+          <span>${q}</span>
+        </div>
+      `).join('');
+
+      // Alternative
+      const altCard = document.getElementById('alternativeCard');
+      const altText = document.getElementById('alternativeText');
+      if (data.alternative && data.alternative !== 'null') {
+        altText.textContent = data.alternative;
+        altCard.style.display = 'block';
+      } else {
+        altCard.style.display = 'none';
+      }
+
+      // Show results
+      document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('resultsSection').classList.add('visible');
+    }
+
+    // ============================================================
+    // RESET
+    // ============================================================
+    function resetApp() {
+      document.getElementById('inputSection').style.display = 'block';
+      document.getElementById('resultsSection').classList.remove('visible');
+      document.getElementById('purchaseInput').value = '';
+      document.getElementById('charCount').textContent = '0';
+      document.getElementById('scoreBarFill').style.width = '0%';
+      document.getElementById('tldrStrip').style.display = 'none';
+      document.getElementById('confidenceBadge').textContent = '';
+      hideError();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============================================================
+    // UI HELPERS
+    // ============================================================
+    function showLoading() {
+      isLoading = true;
+      document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('loadingState').classList.add('visible');
+      document.getElementById('submitBtn').disabled = true;
+    }
+
+    function hideLoading() {
+      isLoading = false;
+      document.getElementById('loadingState').classList.remove('visible');
+      document.getElementById('submitBtn').disabled = false;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.add('visible');
+      document.getElementById('inputSection').style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('errorMsg').classList.remove('visible');
+    }
+
+    // Allow submit with Cmd/Ctrl + Enter
+    document.getElementById('purchaseInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit();
+    });
+  </script>
+</body>
+</html>
