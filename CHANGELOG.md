@@ -5,6 +5,15 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.7.1 — 2026-03-18
+
+### Optimized
+- Capped web searches at 5 per research call (`max_uses: 5` on web_search tool). Previously uncapped — Claude would run 8–12 searches per request, inflating both search API costs and input token counts from large result payloads.
+- Reduced `max_tokens` from 6000 → 4000. The fixed JSON output structure rarely needs more than 3000 tokens; 4000 is safe headroom at ~33% lower output cost.
+- Compressed system prompt JSON schema example by ~40%. Replaced verbose placeholder-score example (repeated `7`s across 15 criteria) with a compact type-annotated schema. Same structural guidance to Claude, fewer input tokens per call.
+
+---
+
 ## v0.7.0 — 2026-03-18
 
 ### Added

@@ -57,12 +57,13 @@ export default async function handler(req, res) {
         // 3000 was too low — the 15-criteria JSON with web search results
         // can easily exceed that, causing truncated/broken JSON responses.
         // 6000 gives enough headroom for a complete, valid response.
-        max_tokens: 6000,
+        max_tokens: 4000,
 
         tools: [
           {
             type: 'web_search_20250305',
             name: 'web_search',
+            max_uses: 5,
           },
         ],
 
@@ -102,65 +103,55 @@ CRITICAL OUTPUT RULES:
 - Do NOT use markdown code fences or backticks.
 - Start your response with { and end with }
 
-Return this exact JSON structure:
+Return this exact JSON structure (all fields required, no extras):
 
 {
-  "productName": "full product name",
-  "brand": "brand name",
+  "productName": string,
+  "brand": string,
   "price": "$XX.XX or Price not found",
-  "productUrl": "canonical product URL or null",
-  "badge": "TELL_ME_ITS_GOOD",
-  "overallScore": 7.2,
+  "productUrl": string|null,
+  "badge": "TELL_ME_ITS_GOOD|CLEAN_PICK|ETHICAL_PICK|QUALITY_PICK|NOT_LISTED",
+  "overallScore": number,
   "gate1": {
-    "name": "Value & Quality",
-    "average": 7.4,
-    "passes": true,
+    "name": "Value & Quality", "average": number, "passes": bool,
     "criteria": {
-      "performance": { "label": "Core performance", "score": 8, "evidence": "one specific sentence", "source_url": "https://..." },
-      "durability": { "label": "Build quality & longevity", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "value": { "label": "Price-to-quality ratio", "score": 7, "evidence": "one specific sentence with dollar comparison", "source_url": "https://..." },
-      "honest_claims": { "label": "Honest product claims", "score": 8, "evidence": "one specific sentence", "source_url": "https://..." },
-      "usability": { "label": "Usability & experience", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." }
+      "performance":    { "label": "Core performance",          "score": int, "evidence": string, "source_url": string|null },
+      "durability":     { "label": "Build quality & longevity", "score": int, "evidence": string, "source_url": string|null },
+      "value":          { "label": "Price-to-quality ratio",    "score": int, "evidence": string, "source_url": string|null },
+      "honest_claims":  { "label": "Honest product claims",     "score": int, "evidence": string, "source_url": string|null },
+      "usability":      { "label": "Usability & experience",    "score": int, "evidence": string, "source_url": string|null }
     }
   },
   "gate2": {
-    "name": "Clean & Safe",
-    "average": 7.0,
-    "passes": true,
-    "disqualified": false,
-    "disqualifier_reason": null,
+    "name": "Clean & Safe", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
     "criteria": {
-      "ingredient_safety": { "label": "Ingredient safety", "score": 7, "evidence": "specific finding with ingredient names or EWG ratings", "source_url": "https://..." },
-      "transparency": { "label": "Full ingredient disclosure", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "greenwashing": { "label": "No greenwashing", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "children_pets": { "label": "Safe around kids & pets", "score": 7, "evidence": "one specific sentence or Not applicable", "source_url": null },
-      "packaging": { "label": "Packaging honesty", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." }
+      "ingredient_safety": { "label": "Ingredient safety",          "score": int, "evidence": string, "source_url": string|null },
+      "transparency":      { "label": "Full ingredient disclosure",  "score": int, "evidence": string, "source_url": string|null },
+      "greenwashing":      { "label": "No greenwashing",            "score": int, "evidence": string, "source_url": string|null },
+      "children_pets":     { "label": "Safe around kids & pets",    "score": int, "evidence": string, "source_url": string|null },
+      "packaging":         { "label": "Packaging honesty",          "score": int, "evidence": string, "source_url": string|null }
     }
   },
   "gate3": {
-    "name": "Ethical Company",
-    "average": 7.0,
-    "passes": true,
-    "disqualified": false,
-    "disqualifier_reason": null,
+    "name": "Ethical Company", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
     "criteria": {
-      "sourcing": { "label": "Supply chain transparency", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "labor": { "label": "No major labor violations", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "reviews": { "label": "Honest review practices", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "marketing": { "label": "No manipulative marketing", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." },
-      "accountability": { "label": "Accountability track record", "score": 7, "evidence": "one specific sentence", "source_url": "https://..." }
+      "sourcing":        { "label": "Supply chain transparency",    "score": int, "evidence": string, "source_url": string|null },
+      "labor":           { "label": "No major labor violations",    "score": int, "evidence": string, "source_url": string|null },
+      "reviews":         { "label": "Honest review practices",      "score": int, "evidence": string, "source_url": string|null },
+      "marketing":       { "label": "No manipulative marketing",    "score": int, "evidence": string, "source_url": string|null },
+      "accountability":  { "label": "Accountability track record",  "score": int, "evidence": string, "source_url": string|null }
     }
   },
   "summary": {
     "tldr": "one punchy sentence max 20 words",
     "brandTax": "specific dollar and % estimate with named alternative",
     "bestTimeToBuy": "specific actionable advice",
-    "realTalk": "honest summary of owner experience vs marketing claims",
-    "pros": ["pro 1", "pro 2", "pro 3"],
-    "cons": ["con 1", "con 2", "con 3"],
+    "realTalk": "honest owner-experience summary vs marketing claims",
+    "pros": [string, string, string],
+    "cons": [string, string, string],
     "alternatives": [
-      { "name": "alternative product/brand", "reason": "why worth considering" },
-      { "name": "alternative product/brand", "reason": "why worth considering" }
+      { "name": string, "reason": string },
+      { "name": string, "reason": string }
     ]
   }
 }`,
