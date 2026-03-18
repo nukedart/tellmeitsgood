@@ -74,22 +74,28 @@
     body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 
     /* ── Auth bar ── */
-    .auth-bar { width: 100%; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--surface); min-height: 44px; }
-    .auth-bar-left { display: flex; align-items: center; gap: 12px; }
+    .auth-bar { width: 100%; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border-strong); background: var(--card); min-height: 60px; box-shadow: var(--shadow-sm); }
+    .auth-bar-left { display: flex; align-items: center; gap: 14px; }
     .auth-bar-right { display: flex; align-items: center; gap: 12px; }
-    .usage-pill { font-size: 11px; font-weight: 600; color: var(--text-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: 100px; padding: 3px 10px; }
-    .usage-pill.warning { color: var(--warning); border-color: var(--warning); background: var(--warning-surf); }
-    .usage-pill.exhausted { color: var(--danger); border-color: var(--danger); background: var(--danger-surf); }
-    .auth-bar-history-btn { font-size: 12px; font-weight: 500; color: var(--text-2); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 10px; cursor: pointer; font-family: var(--font-body); transition: all .15s; display: none; }
-    .auth-bar-history-btn:hover { background: var(--surface-2); color: var(--text); }
-    .auth-bar-history-btn.visible { display: inline-flex; align-items: center; gap: 5px; }
-    .auth-bar-email { font-size: 12px; color: var(--text-2); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .auth-bar-signin { font-size: 12px; font-weight: 500; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: var(--font-body); padding: 0; transition: color .15s; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
-    .auth-bar-signin:hover { color: var(--accent); text-decoration-color: var(--accent); }
-    .auth-bar-signout { font-size: 12px; font-weight: 500; color: var(--text-3); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 10px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    /* Usage pill — large enough to actually read */
+    .usage-pill { font-size: 13px; font-weight: 700; color: var(--text-2); background: var(--surface-2); border: 1.5px solid var(--border-strong); border-radius: 100px; padding: 6px 14px; letter-spacing: .01em; }
+    .usage-pill.warning { color: #92400E; border-color: var(--warning); background: var(--warning-surf); }
+    .usage-pill.exhausted { color: #991B1B; border-color: var(--danger); background: var(--danger-surf); font-weight: 700; }
+    @media (prefers-color-scheme: dark) {
+      .usage-pill.warning  { color: var(--warning); }
+      .usage-pill.exhausted { color: var(--danger); }
+    }
+    .auth-bar-history-btn { font-size: 13px; font-weight: 600; color: var(--text); background: var(--surface); border: 1.5px solid var(--border-strong); border-radius: var(--radius-md); padding: 6px 14px; cursor: pointer; font-family: var(--font-body); transition: all .15s; display: none; }
+    .auth-bar-history-btn:hover { background: var(--accent-surf); border-color: var(--accent); color: var(--accent-text); }
+    .auth-bar-history-btn.visible { display: inline-flex; align-items: center; gap: 6px; }
+    .auth-bar-email { font-size: 13px; font-weight: 500; color: var(--text-2); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Sign in — proper button, not a link */
+    .auth-bar-signin { font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 18px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .auth-bar-signin:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(47,111,237,.3); }
+    .auth-bar-signout { font-size: 12px; font-weight: 500; color: var(--text-3); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 5px 12px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
     .auth-bar-signout:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface-2); }
-    .pro-badge-btn { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--pro); background: var(--pro-surf); border: 1px solid var(--pro-border); border-radius: 100px; padding: 3px 10px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
-    .pro-badge-btn:hover { background: var(--pro-border); color: white; }
+    .pro-badge-btn { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--pro); background: var(--pro-surf); border: 1.5px solid var(--pro-border); border-radius: 100px; padding: 5px 12px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .pro-badge-btn:hover { background: var(--pro); color: white; }
 
     /* ── Modal shared ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
@@ -177,10 +183,11 @@
     .url-input:focus, .query-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); background: var(--card); }
     .input-panel { display: none; }
     .input-panel.active { display: block; }
-    .input-actions { display: flex; align-items: center; justify-content: flex-end; margin-top: 14px; }
+    .input-actions { display: flex; align-items: center; justify-content: center; margin-top: 18px; }
 
     /* ── Buttons ── */
-    .btn-primary { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 0 22px; height: 42px; cursor: pointer; transition: background .15s, transform .1s, box-shadow .15s; white-space: nowrap; }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-body); font-size: 15px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 0 32px; height: 48px; cursor: pointer; transition: background .15s, transform .1s, box-shadow .15s; white-space: nowrap; }
+    .btn-primary.full { width: 100%; }
     .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(47,111,237,.3); }
     .btn-primary:active { transform: scale(.98); }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -433,7 +440,7 @@
         </div>
         <div class="error-msg" id="errorMsg"></div>
         <div class="input-actions">
-          <button class="btn-primary" id="submitBtn" onclick="handleSubmit()">Research this product →</button>
+          <button class="btn-primary full" id="submitBtn" onclick="handleSubmit()">Research this product →</button>
         </div>
       </div>
 
@@ -714,7 +721,7 @@
 
         const signInBtn = document.createElement('button');
         signInBtn.className = 'auth-bar-signin';
-        signInBtn.textContent = 'Sign in';
+        signInBtn.textContent = 'Sign in / Sign up';
         signInBtn.onclick = () => openModal('authModal');
 
         left.innerHTML = '';
