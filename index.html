@@ -136,6 +136,27 @@
     .pro-later-btn { width: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 13px; color: var(--text-3); background: none; border: none; cursor: pointer; padding: 8px; transition: color .15s; }
     .pro-later-btn:hover { color: var(--text); }
 
+    /* ── Gear button ── */
+    .auth-bar-gear { width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--border); color: var(--text-2); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; font-family: var(--font-body); flex-shrink: 0; }
+    .auth-bar-gear:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text); transform: rotate(30deg); }
+
+    /* ── Settings modal ── */
+    .settings-section { margin-bottom: 20px; }
+    .settings-section-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { font-size: 13px; color: var(--text-2); flex-shrink: 0; }
+    .settings-row-value { font-size: 13px; font-weight: 500; color: var(--text); text-align: right; word-break: break-all; }
+    .settings-plan-free { font-size: 13px; font-weight: 600; color: var(--text-3); }
+    .settings-plan-pro  { font-size: 13px; font-weight: 700; color: var(--pro); }
+    .settings-upgrade-btn { width: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--pro); border: none; border-radius: var(--radius-md); height: 44px; cursor: pointer; transition: all .15s; margin-top: 14px; }
+    .settings-upgrade-btn:hover { background: #6D28D9; box-shadow: 0 4px 12px rgba(124,58,237,.3); }
+    .settings-manage-btn { width: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); height: 38px; cursor: pointer; transition: all .15s; margin-top: 10px; text-decoration: none; }
+    .settings-manage-btn:hover { background: var(--surface-2); color: var(--text); }
+    .settings-hint { font-size: 11px; color: var(--text-3); margin-top: 8px; line-height: 1.5; }
+    .settings-signout-btn { width: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--danger); background: var(--danger-surf); border: 1px solid var(--danger); border-radius: var(--radius-md); height: 40px; cursor: pointer; transition: all .15s; margin-top: 24px; }
+    .settings-signout-btn:hover { background: var(--danger); color: #fff; }
+
     /* ── History modal ── */
     .history-modal-card { max-width: 560px; max-height: 80vh; overflow-y: auto; }
     .history-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; line-height: 1.6; }
@@ -421,6 +442,15 @@
     </div>
   </div>
 
+  <!-- ── Settings modal ── -->
+  <div class="modal-overlay" id="settingsModal" onclick="handleModalBackdropClick(event, 'settingsModal')">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+      <div class="modal-title">Account settings</div>
+      <div id="settingsContent"></div>
+    </div>
+  </div>
+
   <!-- ── Main page ── -->
   <div class="page">
     <header class="header">
@@ -700,14 +730,12 @@
         // ── Logged in ──
         left.innerHTML = '';
         if (currentUserPro) {
-          // Pro users get the History button
           const histBtn = document.createElement('button');
           histBtn.className = 'auth-bar-history-btn visible';
           histBtn.innerHTML = '📋 History';
           histBtn.onclick = openHistory;
           left.appendChild(histBtn);
         } else {
-          // Free logged-in users get a Go Pro nudge on the left
           const upgradeBtn = document.createElement('button');
           upgradeBtn.className = 'pro-badge-btn';
           upgradeBtn.textContent = '⭐ Upgrade for history';
@@ -715,27 +743,15 @@
           left.appendChild(upgradeBtn);
         }
 
-        const emailEl = document.createElement('span');
-        emailEl.className = 'auth-bar-email';
-        emailEl.textContent = currentUser.email;
-        emailEl.title = currentUser.email;
-
-        // Pro badge (right side, Pro users only)
-        const signOutBtn = document.createElement('button');
-        signOutBtn.className = 'auth-bar-signout';
-        signOutBtn.textContent = 'Sign out';
-        signOutBtn.onclick = handleSignOut;
+        // Gear icon — opens settings modal
+        const gearBtn = document.createElement('button');
+        gearBtn.className = 'auth-bar-gear';
+        gearBtn.title = 'Account settings';
+        gearBtn.textContent = '⚙';
+        gearBtn.onclick = openSettings;
 
         right.innerHTML = '';
-        if (currentUserPro) {
-          const proBadge = document.createElement('span');
-          proBadge.className = 'pro-badge-btn';
-          proBadge.textContent = '⭐ Pro';
-          proBadge.style.cursor = 'default';
-          right.appendChild(proBadge);
-        }
-        right.appendChild(emailEl);
-        right.appendChild(signOutBtn);
+        right.appendChild(gearBtn);
 
       } else {
         // ── Logged out ──
@@ -908,7 +924,7 @@
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['authModal','proModal','historyModal'].forEach(closeModal);
+        ['authModal','proModal','historyModal','settingsModal'].forEach(closeModal);
       }
     });
 
@@ -956,6 +972,40 @@
     // ============================================================
     async function handleSignOut() {
       await supabaseClient.auth.signOut();
+      closeModal('settingsModal');
+    }
+
+    // ============================================================
+    // SETTINGS MODAL
+    // ============================================================
+    function openSettings() {
+      if (!currentUser) return;
+
+      const content = document.getElementById('settingsContent');
+
+      const planHtml = currentUserPro
+        ? `<div class="settings-plan-pro">⭐ Pro — 25 searches/day</div>
+           <button class="settings-manage-btn" onclick="alert('Email hello@tellmeitsgood.com to manage your subscription.')">Manage subscription</button>`
+        : `<div class="settings-plan-free">Free — 3 searches/day</div>
+           <button class="settings-upgrade-btn" onclick="closeModal('settingsModal'); handleProCheckout()">⭐ Upgrade to Pro — $9/month</button>`;
+
+      content.innerHTML = `
+        <div class="settings-section">
+          <div class="settings-section-label">Account</div>
+          <div class="settings-row">
+            <span class="settings-row-label">Email</span>
+            <span class="settings-row-value">${escapeHtml(currentUser.email)}</span>
+          </div>
+          <p class="settings-hint">To change your email, sign out and sign in with your new address.</p>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-label">Subscription</div>
+          ${planHtml}
+        </div>
+        <button class="settings-signout-btn" onclick="handleSignOut()">Sign out</button>
+      `;
+
+      openModal('settingsModal');
     }
 
     // ============================================================
