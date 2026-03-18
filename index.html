@@ -625,7 +625,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.6.2</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.6.3</p>
     </footer>
   </div>
 
@@ -639,7 +639,14 @@
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession:    true,
+        autoRefreshToken:  true,
+        detectSessionInUrl: true,
+        storageKey: 'tmig-auth', // fixed key so nothing varies between environments
+      }
+    });
 
     // ============================================================
     // FREE TIER LIMITS
@@ -1028,12 +1035,45 @@
     // INIT — restore session on page load
     // ============================================================
     (async function initAuth() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      const urlParams = new URLSearchParams(window.location.search);
+      const justUpgraded = urlParams.get('upgraded') === '1';
+
+      // Try to restore session. If the lock error wiped it, try a forced refresh.
+      let { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        const refreshed = await supabaseClient.auth.refreshSession();
+        session = refreshed.data?.session || null;
+      }
+
       currentUser = session?.user || null;
       if (currentUser) await checkProStatus();
       updateAuthBar();
       updatePaywall();
+
+      // Coming back from Stripe checkout
+      if (justUpgraded) {
+        // Clean the URL so refreshing doesn't re-trigger this
+        window.history.replaceState({}, '', '/');
+        showUpgradeBanner(!!currentUser);
+      }
     })();
+
+    function showUpgradeBanner(isSignedIn) {
+      const banner = document.createElement('div');
+      banner.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+        background: var(--pro); color: #fff;
+        text-align: center; padding: 14px 24px; font-size: 14px;
+        font-weight: 600; font-family: var(--font-body);
+        box-shadow: 0 4px 16px rgba(124,58,237,.4);
+        animation: fadeUp .3s ease;
+      `;
+      banner.textContent = isSignedIn
+        ? '⭐ Payment received! Your account is being upgraded — refresh in a moment if Pro hasn\'t activated yet.'
+        : '⭐ Payment received! Sign in to activate your Pro account.';
+      document.body.prepend(banner);
+      setTimeout(() => banner.remove(), 8000);
+    }
 
 
     // ============================================================

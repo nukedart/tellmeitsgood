@@ -5,6 +5,29 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.6.3 — 2026-03-18
+
+### Fixed
+- Session lost after returning from Stripe checkout. Two fixes:
+  1. Explicit Supabase auth options: `persistSession`, `autoRefreshToken`,
+     `detectSessionInUrl`, and a fixed `storageKey: 'tmig-auth'` so the
+     storage key never varies between environments.
+  2. `initAuth()` now calls `refreshSession()` as a fallback if `getSession()`
+     returns null (happens when the Web Lock is broken by the AbortError).
+
+### Added
+- Post-payment banner — when Stripe redirects back with `?upgraded=1`:
+  - Shows a purple "Payment received!" strip for 8 seconds.
+  - Signed-in users: told to refresh if Pro hasn't activated yet.
+  - Signed-out users: told to sign in to activate Pro.
+  - URL param is cleaned immediately so refreshing doesn't retrigger it.
+
+### Setup required
+- In Stripe → Payment Link → Edit → After payment → Redirect URL:
+  change to `https://tellmeitsgood.com?upgraded=1`
+
+---
+
 ## v0.6.2 — 2026-03-18
 
 ### Added
