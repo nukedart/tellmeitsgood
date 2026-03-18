@@ -5,6 +5,16 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.8.0 — 2026-03-18
+
+### Added
+- **Directory page** at `/directory` — public, browsable catalog of all researched products. Filter by badge type (Tell Me It's Good, Clean Pick, Ethical Pick, Quality Pick, Not Listed). Cards show badge, score, product name, brand, TL;DR snippet, and age. Paginated at 24 per page with load-more. Affiliate-ready: each card links to `/p/[slug]` verdict page.
+- **Directory link** in auth bar for all users (logged in and out) — links to `/directory`.
+- **Server-side free tier enforcement** via `/api/check-limit.js` — tracks daily search counts by hashed IP in Supabase `free_searches` table. Cannot be bypassed by clearing localStorage. Fails open (Supabase outage won't block users).
+- Free limit now applies to logged-in free users too (previously any logged-in user had unlimited searches regardless of Pro status).
+
+---
+
 ## v0.7.1 — 2026-03-18
 
 ### Optimized

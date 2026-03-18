@@ -93,6 +93,8 @@
     /* Sign in — proper button, not a link */
     .auth-bar-signin { font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 18px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
     .auth-bar-signin:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(47,111,237,.3); }
+    .auth-bar-dir-link { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; padding: 8px 12px; border-radius: var(--radius-md); transition: color .15s; }
+    .auth-bar-dir-link:hover { color: var(--accent); }
     .auth-bar-signout { font-size: 12px; font-weight: 500; color: var(--text-3); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 5px 12px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
     .auth-bar-signout:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface-2); }
     .pro-badge-btn { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--pro); background: var(--pro-surf); border: 1.5px solid var(--pro-border); border-radius: 100px; padding: 5px 12px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
@@ -643,7 +645,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.7.1</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.8.0</p>
     </footer>
   </div>
 
@@ -705,9 +707,20 @@
     }
 
     function isAtFreeLimit() {
-      // Pro users and logged-in users (who may be pro) bypass the local limit
-      if (currentUser) return false;
+      // Pro users have no local limit — server enforces rate limits for them
+      if (currentUserPro) return false;
+      // All other users (anonymous OR logged-in free) share the daily cap
       return getUsage().count >= FREE_LIMIT;
+    }
+
+    // Server-side limit check — real gate that localStorage can't bypass
+    async function checkServerLimit() {
+      try {
+        const res = await fetch('/api/check-limit', { method: 'POST' });
+        return await res.json(); // { allowed, remaining }
+      } catch {
+        return { allowed: true, remaining: 1 }; // fail open
+      }
     }
 
     // ============================================================
@@ -765,6 +778,13 @@
           left.appendChild(upgradeBtn);
         }
 
+        // Directory link
+        const dirLink = document.createElement('a');
+        dirLink.className = 'auth-bar-dir-link';
+        dirLink.href = '/directory';
+        dirLink.textContent = 'Browse directory';
+        left.appendChild(dirLink);
+
         // Gear icon — opens settings modal
         const gearBtn = document.createElement('button');
         gearBtn.className = 'auth-bar-gear';
@@ -786,6 +806,11 @@
           ? 'No searches left today'
           : `${remaining} free search${remaining !== 1 ? 'es' : ''} left`;
 
+        const dirLink = document.createElement('a');
+        dirLink.className = 'auth-bar-dir-link';
+        dirLink.href = '/directory';
+        dirLink.textContent = 'Browse directory';
+
         const signInBtn = document.createElement('button');
         signInBtn.className = 'auth-bar-signin';
         signInBtn.textContent = 'Sign in / Sign up';
@@ -794,6 +819,7 @@
         left.innerHTML = '';
         right.innerHTML = '';
         left.appendChild(usagePill);
+        right.appendChild(dirLink);
         right.appendChild(signInBtn);
       }
     }
@@ -1174,10 +1200,20 @@
     async function handleSubmit() {
       hideError();
 
-      // Block free users who've hit their limit
+      // Fast client-side pre-check (avoids a network round-trip when obviously at limit)
       if (isAtFreeLimit()) {
         updatePaywall();
         return;
+      }
+
+      // Server-side check for all non-Pro users — localStorage can't bypass this
+      if (!currentUserPro) {
+        const limit = await checkServerLimit();
+        if (!limit.allowed) {
+          incrementUsage(); // sync local state so UI shows exhausted
+          updatePaywall();
+          return;
+        }
       }
 
       if (usingFallback) {

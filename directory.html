@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Directory — Tell Me It's Good</title>
+  <meta name="description" content="Browse AI-researched product verdicts — quality, safety, and ethics scored across hundreds of products." />
+  <meta property="og:title" content="Product Directory — Tell Me It's Good" />
+  <meta property="og:description" content="Browse AI-researched product verdicts — quality, safety, and ethics scored." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAF8F5; --surface: #F3F0EB; --surface-2: #EAE6DF;
+      --border: #DDD9D2; --border-strong: #C8C3BB;
+      --text: #1C1917; --text-2: #6B6560; --text-3: #A09891;
+      --accent: #2F6FED; --accent-hover: #1A57D4; --accent-surf: #EBF1FD; --accent-text: #1A4FB8;
+      --card: #FFFFFF; --success: #3A9E6F; --success-surf: #ECFDF5;
+      --warning: #D4872A; --danger: #D94F4F; --danger-surf: #FEF2F2;
+      --pro: #7C3AED; --pro-surf: #F5F3FF;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #18161A; --surface: #211F24; --surface-2: #2B2830;
+        --border: #38343D; --border-strong: #49444F;
+        --text: #F0EDE8; --text-2: #9B9299; --text-3: #67636B;
+        --accent: #5A8FFF; --accent-surf: #1C2744; --accent-text: #8AB4FF;
+        --card: #211F24; --success: #4CB87F; --success-surf: #0D2B1E;
+        --warning: #E09640; --danger: #E86060; --danger-surf: #2B1212;
+        --pro: #A78BFA; --pro-surf: #1E1533;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); position: sticky; top: 0; z-index: 10; }
+    .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .top-bar-cta { font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 18px; cursor: pointer; text-decoration: none; font-family: var(--font-body); transition: background .15s; }
+    .top-bar-cta:hover { background: var(--accent-hover); }
+
+    /* ── Page ── */
+    .page { max-width: 1040px; margin: 0 auto; padding: 48px 20px 80px; }
+
+    /* ── Hero ── */
+    .dir-hero { margin-bottom: 36px; }
+    .dir-hero h1 { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); color: var(--text); margin-bottom: 10px; }
+    .dir-hero p { font-size: 15px; color: var(--text-2); line-height: 1.6; max-width: 520px; }
+
+    /* ── Filter bar ── */
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+    .filter-btn { font-size: 12px; font-weight: 600; letter-spacing: .05em; padding: 6px 14px; border-radius: 100px; border: 1.5px solid var(--border); background: var(--card); color: var(--text-2); cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .filter-btn.TELL_ME_ITS_GOOD.active { background: var(--success); border-color: var(--success); }
+    .filter-btn.CLEAN_PICK.active { background: #0F6E56; border-color: #0F6E56; }
+    .filter-btn.ETHICAL_PICK.active { background: #4338CA; border-color: #4338CA; }
+    .filter-btn.QUALITY_PICK.active { background: var(--accent); border-color: var(--accent); }
+    .filter-btn.NOT_LISTED.active { background: var(--danger); border-color: var(--danger); }
+
+    /* ── Grid ── */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    /* ── Product card ── */
+    .product-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; transition: box-shadow .15s, transform .15s; text-decoration: none; color: inherit; }
+    .product-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .card-badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+    .card-badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); border: 1px solid var(--success); }
+    .card-badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; border: 1px solid #3A9E6F; }
+    .card-badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
+    .card-badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
+    .card-badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); border: 1px solid var(--danger); }
+    .card-score { font-family: var(--font-display); font-size: 22px; color: var(--text); flex-shrink: 0; }
+    .card-score span { font-family: var(--font-body); font-size: 11px; color: var(--text-3); }
+    .card-name { font-family: var(--font-display); font-size: 16px; line-height: 1.3; color: var(--text); }
+    .card-brand { font-size: 12px; color: var(--text-3); font-weight: 500; }
+    .card-tldr { font-size: 13px; color: var(--text-2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-footer { margin-top: auto; display: flex; align-items: center; justify-content: space-between; }
+    .card-age { font-size: 11px; color: var(--text-3); }
+    .card-cta { font-size: 12px; font-weight: 600; color: var(--accent); }
+
+    /* ── Empty / loading states ── */
+    .state-center { text-align: center; padding: 80px 24px; }
+    .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .state-text { font-size: 15px; color: var(--text-2); }
+
+    /* ── Load more ── */
+    .load-more-wrap { text-align: center; margin-top: 40px; }
+    .load-more-btn { font-size: 14px; font-weight: 600; color: var(--accent); background: transparent; border: 1.5px solid var(--accent); border-radius: var(--radius-md); padding: 10px 28px; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+    .load-more-btn:hover { background: var(--accent-surf); }
+    .load-more-btn:disabled { opacity: .4; cursor: default; }
+
+    /* ── Count ── */
+    .result-count { font-size: 13px; color: var(--text-3); margin-bottom: 16px; }
+
+    /* ── Footer ── */
+    .footer { text-align: center; margin-top: 64px; font-size: 12px; color: var(--text-3); }
+  </style>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a class="top-bar-logo" href="/"><span class="top-bar-logo-dot"></span>tellmeitsgood.com</a>
+    <a class="top-bar-cta" href="/">Research a product →</a>
+  </div>
+
+  <div class="page">
+    <div class="dir-hero">
+      <h1>Product Directory</h1>
+      <p>AI-researched verdicts on quality, safety, and company ethics. No ads, no sponsored placements.</p>
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-badge="ALL" onclick="setFilter('ALL', this)">All products</button>
+      <button class="filter-btn TELL_ME_ITS_GOOD" data-badge="TELL_ME_ITS_GOOD" onclick="setFilter('TELL_ME_ITS_GOOD', this)">Tell Me It's Good</button>
+      <button class="filter-btn CLEAN_PICK" data-badge="CLEAN_PICK" onclick="setFilter('CLEAN_PICK', this)">Clean Pick</button>
+      <button class="filter-btn ETHICAL_PICK" data-badge="ETHICAL_PICK" onclick="setFilter('ETHICAL_PICK', this)">Ethical Pick</button>
+      <button class="filter-btn QUALITY_PICK" data-badge="QUALITY_PICK" onclick="setFilter('QUALITY_PICK', this)">Quality Pick</button>
+      <button class="filter-btn NOT_LISTED" data-badge="NOT_LISTED" onclick="setFilter('NOT_LISTED', this)">Not Listed</button>
+    </div>
+
+    <div class="result-count" id="resultCount"></div>
+    <div class="product-grid" id="productGrid">
+      <div class="state-center" style="grid-column:1/-1">
+        <div class="spinner"></div>
+        <p class="state-text">Loading products...</p>
+      </div>
+    </div>
+
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">Load more</button>
+    </div>
+
+    <footer class="footer">
+      <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads</p>
+    </footer>
+  </div>
+
+  <script>
+    const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+    const PAGE_SIZE = 24;
+
+    let currentFilter = 'ALL';
+    let currentOffset = 0;
+    let totalCount    = 0;
+    let loading       = false;
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function badgeLabel(badge) {
+      return (badge || 'NOT_LISTED').replace(/_/g, ' ');
+    }
+
+    function ageLabel(researched_at) {
+      const days = Math.floor((Date.now() - new Date(researched_at).getTime()) / 86400000);
+      if (days === 0) return 'Today';
+      if (days === 1) return '1 day ago';
+      return `${days} days ago`;
+    }
+
+    function renderCard(product) {
+      const r     = product.full_result || {};
+      const badge = product.badge || r.badge || 'NOT_LISTED';
+      const name  = product.product_name || r.productName || 'Unknown product';
+      const brand = product.brand || r.brand || '';
+      const score = product.overall_score ?? r.overallScore ?? '—';
+      const tldr  = r.summary?.tldr || r.tldr || '';
+      const age   = ageLabel(product.researched_at);
+
+      return `
+        <a class="product-card" href="/p/${escapeHtml(product.slug)}">
+          <div class="card-top">
+            <div class="card-badge ${escapeHtml(badge)}">${escapeHtml(badgeLabel(badge))}</div>
+            <div class="card-score">${score}<span> /10</span></div>
+          </div>
+          <div>
+            <div class="card-name">${escapeHtml(name)}</div>
+            ${brand ? `<div class="card-brand">${escapeHtml(brand)}</div>` : ''}
+          </div>
+          ${tldr ? `<div class="card-tldr">${escapeHtml(tldr)}</div>` : ''}
+          <div class="card-footer">
+            <span class="card-age">${escapeHtml(age)}</span>
+            <span class="card-cta">View verdict →</span>
+          </div>
+        </a>`;
+    }
+
+    async function fetchProducts(offset = 0) {
+      let url = `${SUPABASE_URL}/rest/v1/products?is_public=eq.true&select=*&order=researched_at.desc&limit=${PAGE_SIZE}&offset=${offset}`;
+      if (currentFilter !== 'ALL') {
+        url += `&badge=eq.${encodeURIComponent(currentFilter)}`;
+      }
+
+      const res = await fetch(url, {
+        headers: {
+          'apikey':        SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer':        'count=exact',
+        },
+      });
+
+      // Supabase returns total count in Content-Range header
+      const range = res.headers.get('Content-Range'); // e.g. "0-23/157"
+      if (range) {
+        const total = parseInt(range.split('/')[1], 10);
+        if (!isNaN(total)) totalCount = total;
+      }
+
+      return res.json();
+    }
+
+    async function loadProducts(reset = false) {
+      if (loading) return;
+      loading = true;
+
+      if (reset) {
+        currentOffset = 0;
+        totalCount    = 0;
+        document.getElementById('productGrid').innerHTML = `
+          <div class="state-center" style="grid-column:1/-1">
+            <div class="spinner"></div>
+            <p class="state-text">Loading products...</p>
+          </div>`;
+        document.getElementById('loadMoreWrap').style.display = 'none';
+        document.getElementById('resultCount').textContent = '';
+      }
+
+      try {
+        const products = await fetchProducts(currentOffset);
+
+        if (reset) document.getElementById('productGrid').innerHTML = '';
+
+        if (!products || products.length === 0) {
+          if (reset) {
+            document.getElementById('productGrid').innerHTML = `
+              <div class="state-center" style="grid-column:1/-1">
+                <p class="state-text">No products found yet. <a href="/" style="color:var(--accent);font-weight:600">Be the first to research one →</a></p>
+              </div>`;
+          }
+          document.getElementById('loadMoreWrap').style.display = 'none';
+          loading = false;
+          return;
+        }
+
+        const grid = document.getElementById('productGrid');
+        products.forEach(p => {
+          grid.insertAdjacentHTML('beforeend', renderCard(p));
+        });
+
+        currentOffset += products.length;
+
+        // Update count display
+        const countEl = document.getElementById('resultCount');
+        countEl.textContent = totalCount > 0
+          ? `${currentOffset} of ${totalCount} product${totalCount !== 1 ? 's' : ''}`
+          : `${currentOffset} product${currentOffset !== 1 ? 's' : ''}`;
+
+        // Show/hide load more
+        const hasMore = currentOffset < totalCount || products.length === PAGE_SIZE;
+        document.getElementById('loadMoreWrap').style.display = hasMore ? 'block' : 'none';
+
+      } catch (err) {
+        if (reset) {
+          document.getElementById('productGrid').innerHTML = `
+            <div class="state-center" style="grid-column:1/-1">
+              <p class="state-text">Could not load products. Please refresh.</p>
+            </div>`;
+        }
+      }
+
+      loading = false;
+    }
+
+    function setFilter(badge, btn) {
+      if (currentFilter === badge) return;
+      currentFilter = badge;
+
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      loadProducts(true);
+    }
+
+    function loadMore() {
+      loadProducts(false);
+    }
+
+    // Initial load
+    loadProducts(true);
+  </script>
+</body>
+</html>
