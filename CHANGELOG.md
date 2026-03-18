@@ -5,6 +5,21 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.6.6 — 2026-03-18
+
+### Fixed
+- Session wiped after Stripe redirect. Two bad ideas removed:
+  1. `storageKey: 'tmig-auth'` — custom key caused Supabase to look
+     in a different localStorage slot than where the session was saved,
+     making every returning visit appear logged out.
+  2. `refreshSession()` fallback — when called with no valid session,
+     Supabase internally calls signOut() which actively clears localStorage,
+     making things worse instead of better.
+- Reverted to plain `supabase.createClient()` with no extra auth options.
+  Supabase's defaults handle persistence and token refresh correctly.
+
+---
+
 ## v0.6.5 — 2026-03-18
 
 ### Fixed
