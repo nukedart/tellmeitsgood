@@ -260,6 +260,15 @@
     .save-confirm { display: none; background: var(--success-surf); border: 1px solid var(--success); border-radius: var(--radius-md); padding: 10px 16px; font-size: 13px; color: var(--success); margin-bottom: 14px; animation: fadeUp .2s ease; }
     .save-confirm.visible { display: flex; align-items: center; gap: 8px; }
 
+    /* ── Cache strip ── */
+    .cache-strip { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 16px; margin-bottom: 14px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; gap: 8px; }
+    .cache-strip.visible { display: flex; align-items: center; justify-content: space-between; }
+    .cache-strip-actions { display: flex; align-items: center; gap: 14px; }
+    .cache-strip-share { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+    .cache-strip-share:hover { text-decoration: underline; }
+    .cache-strip-refresh { font-size: 13px; font-weight: 600; color: var(--warning); background: none; border: none; cursor: pointer; font-family: var(--font-body); padding: 0; }
+    .cache-strip-refresh:hover { text-decoration: underline; }
+
     /* ── Product header ── */
     .product-header { margin-bottom: 16px; }
     .product-name { font-family: var(--font-display); font-size: clamp(20px, 4vw, 28px); line-height: 1.2; color: var(--text); margin-bottom: 6px; }
@@ -520,6 +529,15 @@
       <!-- Saved confirmation -->
       <div class="save-confirm" id="saveConfirm">✓ Saved to your history</div>
 
+      <!-- Cache info strip -->
+      <div class="cache-strip" id="cacheStrip">
+        <span id="cacheStripText"></span>
+        <div class="cache-strip-actions">
+          <a class="cache-strip-share" id="cacheShareLink" href="#" target="_blank">Share verdict →</a>
+          <button class="cache-strip-refresh" id="cacheRefreshBtn" onclick="handleCacheRefresh()" style="display:none">↻ Refresh research</button>
+        </div>
+      </div>
+
       <div class="product-header">
         <div class="product-name" id="productName"></div>
         <div class="product-meta">
@@ -625,7 +643,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.6.6</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.7.0</p>
     </footer>
   </div>
 
@@ -655,6 +673,10 @@
     let currentUserPro = false; // whether they're a Pro subscriber
     let activeTab      = 'name';
     let usingFallback  = false;
+
+    // ── cache state ──
+    let currentSlug        = null; // slug of the currently displayed result
+    let currentSearchQuery = null; // query that produced it (for refresh)
 
     // ============================================================
     // USAGE TRACKING (localStorage — free users only)
@@ -897,6 +919,64 @@
     }
 
     // ============================================================
+    // CACHE — lookup, save, display strip, refresh
+    // ============================================================
+
+    async function checkCache(query) {
+      try {
+        const res = await fetch('/api/cache-lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query }),
+        });
+        if (!res.ok) return { hit: false };
+        return await res.json();
+      } catch { return { hit: false }; }
+    }
+
+    async function saveToCache(query, researchData) {
+      try {
+        const res = await fetch('/api/cache-save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, researchData }),
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch { return null; }
+    }
+
+    function showCacheStrip(daysOld, slug, isStale) {
+      const strip      = document.getElementById('cacheStrip');
+      const text       = document.getElementById('cacheStripText');
+      const shareLink  = document.getElementById('cacheShareLink');
+      const refreshBtn = document.getElementById('cacheRefreshBtn');
+
+      text.textContent = daysOld === 0
+        ? '✓ Just researched'
+        : `📂 From database · Researched ${daysOld} day${daysOld !== 1 ? 's' : ''} ago`;
+
+      shareLink.href = `/p/${slug}`;
+      refreshBtn.style.display = isStale ? 'inline' : 'none';
+      strip.classList.add('visible');
+    }
+
+    function hideCacheStrip() {
+      document.getElementById('cacheStrip').classList.remove('visible');
+      currentSlug = null;
+    }
+
+    async function handleCacheRefresh() {
+      if (!currentSearchQuery) return;
+      const q = currentSearchQuery;
+      document.getElementById('resultsSection').classList.remove('visible');
+      hideCacheStrip();
+      document.getElementById('postSection').classList.remove('visible');
+      showLoading('Refreshing research for ' + q + '...', 'Fetching the latest reviews and company info');
+      await runResearch({ query: q });
+    }
+
+    // ============================================================
     // MODAL HELPERS
     // ============================================================
     function openModal(id) {
@@ -1111,6 +1191,27 @@
       } else if (activeTab === 'name') {
         const q = document.getElementById('queryInput').value.trim();
         if (!q || q.length < 3) { showError('Enter a product name or brand to search.'); return; }
+
+        currentSearchQuery = q;
+
+        // ── Check cache first ──
+        showLoading('Checking our research database...', 'Looking for a recent result');
+        const cached = await checkCache(q);
+
+        if (cached.hit) {
+          // We have a result — use it (fresh or stale)
+          if (!currentUser) { incrementUsage(); updateAuthBar(); updatePaywall(); }
+          currentSlug = cached.slug;
+          hideLoading();
+          displayResearch(cached.data);
+          showCacheStrip(cached.daysOld, cached.slug, !cached.fresh);
+          saveSearch(cached.data);
+          showPostLoading();
+          await runPost(cached.data);
+          return;
+        }
+
+        // ── No cache — run fresh research ──
         showLoading('Researching ' + q + '...', 'Claude is searching reviews, ingredients, and company records');
         await runResearch({ query: q });
 
@@ -1174,6 +1275,16 @@
 
         // Save to history for logged-in users (non-blocking)
         saveSearch(research);
+
+        // Save to public cache for name searches (non-blocking)
+        if (currentSearchQuery) {
+          saveToCache(currentSearchQuery, research).then(saved => {
+            if (saved?.slug) {
+              currentSlug = saved.slug;
+              showCacheStrip(0, saved.slug, false);
+            }
+          });
+        }
 
         // Generate the listing post
         showPostLoading();
@@ -1341,7 +1452,7 @@
       document.getElementById('queryInput').value = '';
       document.getElementById('fallbackInput').value = '';
       ['gate1Bar','gate2Bar','gate3Bar'].forEach(id => document.getElementById(id).style.width = '0%');
-      hideFallback(); hideError(); usingFallback = false;
+      hideCacheStrip(); hideError(); hideFallback(); usingFallback = false; currentSearchQuery = null;
       switchTab('name');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

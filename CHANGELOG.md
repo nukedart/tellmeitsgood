@@ -5,6 +5,20 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.7.0 — 2026-03-18
+
+### Added
+- Product caching system — research results saved to Supabase `products` table after every successful analysis.
+- Cache lookup on every name-tab search — returns instantly if a fresh result (< 30 days) exists, skipping Claude entirely.
+- Cache strip UI — shown below results with age, share link, and "↻ Refresh research" button for users who want fresh data.
+- Public shareable verdict pages at `/p/[slug]` — fully rendered product page with badge, scores, pros/cons, and SEO meta tags. Fetches directly from Supabase (no extra API hop).
+- `/api/cache-lookup.js` — checks `products` table by slug or exact query, returns hit/miss with freshness metadata.
+- `/api/cache-save.js` — upserts research result to `products` table using service role key; overwrites stale data on slug conflict.
+- `vercel.json` rewrite: `/p/:slug` → `product.html`.
+- Supabase `products` table with RLS policy: public rows readable by anyone, writes restricted to service role.
+
+---
+
 ## v0.6.6 — 2026-03-18
 
 ### Fixed

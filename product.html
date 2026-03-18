@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tell Me It's Good</title>
+  <meta name="description" content="AI-researched product verdict — quality, safety, and ethics scored." />
+  <meta property="og:title" content="Tell Me It's Good" />
+  <meta property="og:description" content="AI-researched product verdict." />
+  <meta property="og:type" content="article" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAF8F5; --surface: #F3F0EB; --surface-2: #EAE6DF;
+      --border: #DDD9D2; --border-strong: #C8C3BB;
+      --text: #1C1917; --text-2: #6B6560; --text-3: #A09891;
+      --accent: #2F6FED; --accent-hover: #1A57D4; --accent-surf: #EBF1FD; --accent-text: #1A4FB8;
+      --card: #FFFFFF; --success: #3A9E6F; --success-surf: #ECFDF5;
+      --warning: #D4872A; --danger: #D94F4F; --danger-surf: #FEF2F2;
+      --pro: #7C3AED; --pro-surf: #F5F3FF;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #18161A; --surface: #211F24; --surface-2: #2B2830;
+        --border: #38343D; --border-strong: #49444F;
+        --text: #F0EDE8; --text-2: #9B9299; --text-3: #67636B;
+        --accent: #5A8FFF; --accent-surf: #1C2744; --accent-text: #8AB4FF;
+        --card: #211F24; --success: #4CB87F; --success-surf: #0D2B1E;
+        --warning: #E09640; --danger: #E86060; --danger-surf: #2B1212;
+        --pro: #A78BFA; --pro-surf: #1E1533;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); }
+    .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .top-bar-cta { font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 18px; cursor: pointer; text-decoration: none; font-family: var(--font-body); transition: background .15s; }
+    .top-bar-cta:hover { background: var(--accent-hover); }
+
+    /* ── Layout ── */
+    .page { max-width: 680px; margin: 0 auto; padding: 40px 16px 80px; }
+    @media (min-width: 520px) { .page { padding: 60px 24px 80px; } }
+
+    /* ── Loading / error states ── */
+    .state-center { text-align: center; padding: 80px 24px; }
+    .spinner { width: 32px; height: 32px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .state-title { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 8px; }
+    .state-text { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Researched strip ── */
+    .researched-strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 16px; margin-bottom: 20px; font-size: 13px; color: var(--text-2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; animation: fadeUp .3s ease; }
+    .researched-strip a { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+    .researched-strip a:hover { text-decoration: underline; }
+
+    /* ── Product header ── */
+    .product-header { margin-bottom: 20px; animation: fadeUp .35s ease; }
+    .product-name { font-family: var(--font-display); font-size: clamp(22px, 5vw, 32px); line-height: 1.2; color: var(--text); margin-bottom: 8px; }
+    .product-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .product-price { font-size: 20px; font-weight: 600; color: var(--text-2); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 5px 12px; border-radius: 100px; }
+    .badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); border: 1px solid var(--success); }
+    .badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; border: 1px solid #3A9E6F; }
+    .badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
+    .badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
+    .badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); border: 1px solid var(--danger); }
+
+    /* ── TL;DR ── */
+    .tldr-strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 22px; margin-bottom: 14px; font-family: var(--font-display); font-size: 18px; color: var(--text); line-height: 1.4; animation: fadeUp .4s ease; }
+
+    /* ── Overall score ── */
+    .overall-score-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px 24px; margin-bottom: 14px; display: flex; align-items: center; gap: 20px; box-shadow: var(--shadow-sm); flex-wrap: wrap; animation: fadeUp .45s ease; }
+    .overall-score-num { font-family: var(--font-display); font-size: clamp(40px, 10vw, 56px); line-height: 1; color: var(--text); flex-shrink: 0; }
+    .overall-score-num span { font-family: var(--font-body); font-size: 18px; color: var(--text-3); }
+    .overall-score-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .overall-score-desc { font-size: 13px; color: var(--text-2); }
+
+    /* ── Gates ── */
+    .gates-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; animation: fadeUp .5s ease; }
+    @media (min-width: 520px) { .gates-grid { grid-template-columns: 1fr 1fr 1fr; } }
+    .gate-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
+    .gate-card.passes { border-top: 3px solid var(--success); }
+    .gate-card.fails  { border-top: 3px solid var(--danger); }
+    .gate-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .gate-name  { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .gate-score-num { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--text); margin-bottom: 8px; }
+    .gate-score-num span { font-family: var(--font-body); font-size: 12px; color: var(--text-3); }
+    .gate-bar-wrap { height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .gate-bar-fill { height: 100%; border-radius: 100px; }
+    .gate-pass-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 8px; }
+    .gate-card.passes .gate-pass-label { color: var(--success); }
+    .gate-card.fails  .gate-pass-label { color: var(--danger); }
+
+    /* ── Pros / Cons ── */
+    .pros-cons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; animation: fadeUp .55s ease; }
+    @media (max-width: 480px) { .pros-cons-grid { grid-template-columns: 1fr; } }
+    .pros-card { background: var(--success-surf); border: 1px solid var(--success); border-radius: var(--radius-lg); padding: 18px; }
+    .cons-card { background: var(--danger-surf);  border: 1px solid var(--danger);  border-radius: var(--radius-lg); padding: 18px; }
+    .pros-cons-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+    .pros-card .pros-cons-title { color: var(--success); }
+    .cons-card .pros-cons-title { color: var(--danger); }
+    .pros-cons-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .pros-cons-list li { display: flex; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.45; }
+    .pros-card .pros-cons-list li::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
+    .cons-card .pros-cons-list li::before { content: '✗'; color: var(--danger);  font-weight: 700; flex-shrink: 0; }
+
+    /* ── Real Talk ── */
+    .result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 12px; box-shadow: var(--shadow-sm); animation: fadeUp .6s ease; }
+    .result-card-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+    .real-talk-box { background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 16px 20px; font-size: 14px; color: var(--text); line-height: 1.6; font-style: italic; }
+
+    /* ── CTA ── */
+    .cta-section { margin-top: 32px; text-align: center; animation: fadeUp .65s ease; }
+    .cta-headline { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 8px; }
+    .cta-text { font-size: 14px; color: var(--text-2); margin-bottom: 20px; }
+    .cta-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 15px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 0 32px; height: 50px; text-decoration: none; transition: background .15s; }
+    .cta-btn:hover { background: var(--accent-hover); }
+
+    /* ── Footer ── */
+    .footer { text-align: center; margin-top: 64px; font-size: 12px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a class="top-bar-logo" href="/"><span class="top-bar-logo-dot"></span>tellmeitsgood.com</a>
+    <a class="top-bar-cta" href="/">Research a product →</a>
+  </div>
+
+  <div class="page" id="pageContent">
+    <div class="state-center" id="loadingState">
+      <div class="spinner"></div>
+      <p class="state-text">Loading verdict...</p>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+    // Extract slug from URL: /p/allbirds-tree-runners → allbirds-tree-runners
+    const slug = window.location.pathname.replace(/^\/p\//, '').split('?')[0];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function loadProduct() {
+      if (!slug) { showError('No product specified.'); return; }
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=*`,
+          { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        const rows = await res.json();
+        const product = rows?.[0];
+        if (!product) { showError('Product not found.'); return; }
+        renderProduct(product);
+      } catch (err) {
+        showError('Could not load this verdict. Please try again.');
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="state-center">
+          <div class="state-title">Hmm.</div>
+          <p class="state-text">${escapeHtml(msg)}</p>
+          <a href="/" style="display:inline-block;margin-top:20px;font-size:14px;font-weight:600;color:var(--accent)">← Research a product</a>
+        </div>`;
+    }
+
+    function renderProduct(product) {
+      const r = product.full_result;
+      if (!r) { showError('No data found for this product.'); return; }
+
+      // ── SEO meta tags ──
+      const title = `${escapeHtml(r.productName || product.product_name)} — Tell Me It's Good`;
+      const desc  = r.tldr || `${r.badge} · Score ${r.overallScore}/10 · AI-researched verdict on quality, safety, and ethics.`;
+      document.title = title;
+      document.querySelector('meta[name="description"]').content = desc;
+      document.querySelector('meta[property="og:title"]').content = title;
+      document.querySelector('meta[property="og:description"]').content = desc;
+
+      // ── Age ──
+      const daysOld = Math.floor((Date.now() - new Date(product.researched_at).getTime()) / 86400000);
+      const ageText = daysOld === 0 ? 'Today' : daysOld === 1 ? '1 day ago' : `${daysOld} days ago`;
+
+      // ── Gates ──
+      const gates = r.gates || [];
+      const gateCards = (r.gateNames || ['Value & Quality','Clean & Safe','Ethical Company']).map((name, i) => {
+        const gate   = gates[i] || {};
+        const score  = gate.score ?? '—';
+        const passes = gate.passes !== false;
+        const pct    = typeof score === 'number' ? score * 10 : 0;
+        const colors = ['var(--accent)','var(--success)','#818CF8'];
+        return `
+          <div class="gate-card ${passes ? 'passes' : 'fails'}">
+            <div class="gate-label">Gate ${i+1}</div>
+            <div class="gate-name">${escapeHtml(name)}</div>
+            <div class="gate-score-num">${score}<span> / 10</span></div>
+            <div class="gate-bar-wrap"><div class="gate-bar-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
+            <div class="gate-pass-label">${passes ? 'PASSES' : 'FAILS'}</div>
+          </div>`;
+      }).join('');
+
+      // ── Pros / Cons ──
+      const pros = (r.pros || []).map(p => `<li>${escapeHtml(p)}</li>`).join('');
+      const cons = (r.cons || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+
+      document.getElementById('pageContent').innerHTML = `
+        <div class="researched-strip">
+          <span>📂 Researched ${ageText} · AI-sourced, not sponsored</span>
+          <a href="/">Research your own product →</a>
+        </div>
+
+        <div class="product-header">
+          <div class="product-name">${escapeHtml(r.productName || product.product_name)}</div>
+          <div class="product-meta">
+            ${r.price ? `<div class="product-price">${escapeHtml(r.price)}</div>` : ''}
+            <div class="badge ${escapeHtml(r.badge || 'NOT_LISTED')}">${escapeHtml(r.badge || 'NOT_LISTED').replace(/_/g,' ')}</div>
+          </div>
+        </div>
+
+        ${r.tldr ? `<div class="tldr-strip">${escapeHtml(r.tldr)}</div>` : ''}
+
+        <div class="overall-score-card">
+          <div class="overall-score-num">${r.overallScore ?? '—'}<span> / 10</span></div>
+          <div>
+            <div class="overall-score-label">Overall TMIG Score</div>
+            <div class="overall-score-desc">Quality · Clean · Ethics</div>
+          </div>
+        </div>
+
+        <div class="gates-grid">${gateCards}</div>
+
+        ${pros || cons ? `
+        <div class="pros-cons-grid">
+          <div class="pros-card"><div class="pros-cons-title">Pros</div><ul class="pros-cons-list">${pros}</ul></div>
+          <div class="cons-card"><div class="pros-cons-title">Cons</div><ul class="pros-cons-list">${cons}</ul></div>
+        </div>` : ''}
+
+        ${r.realTalk ? `
+        <div class="result-card">
+          <div class="result-card-title">Real Talk</div>
+          <div class="real-talk-box">${escapeHtml(r.realTalk)}</div>
+        </div>` : ''}
+
+        <div class="cta-section">
+          <div class="cta-headline">Research your next purchase</div>
+          <p class="cta-text">High quality. Non-toxic. From honest companies. AI-researched, not ad-sponsored.</p>
+          <a class="cta-btn" href="/">Start researching →</a>
+        </div>
+
+        <footer class="footer">
+          <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads</p>
+        </footer>
+      `;
+    }
+
+    loadProduct();
+  </script>
+</body>
+</html>
