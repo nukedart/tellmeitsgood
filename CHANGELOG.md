@@ -118,3 +118,91 @@ Format: Version · Date · What changed · Why
   - /api/post: 10 requests per IP per hour
   - /api/scrape: 20 requests per IP per hour
 - Rate limit headers on all responses: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After
+
+---
+
+## v0.5.0 — 2026-03-18
+
+### Added — Pro tier infrastructure
+
+**Search history (logged-in users)**
+- api/save-search.js — new serverless function. Verifies user session
+  server-side, writes result to Supabase searches table.
+- After every successful research, saves full JSON to Supabase automatically.
+- "Saved to your history" confirmation strip fades in on results page.
+- History modal — shows last 50 searches, sorted newest first. Click any
+  row to re-display that result instantly without a new API call.
+- History button in auth bar, visible only when logged in.
+
+**Usage tracking & paywall**
+- Free tier: 3 searches/day tracked in localStorage (resets at midnight).
+- Usage pill in auth bar shows searches remaining. Turns amber at 1, red at 0.
+- Paywall banner appears when free limit is reached: "You've used your 3 free searches".
+- Input card dimmed and submit button disabled when paywalled.
+- Paywall shows "Go Pro" and "Sign in if you have an account" CTAs.
+
+**Pro upgrade modal**
+- Lists Pro features: 25 searches/day, full history, priority access.
+- Price: $9/month.
+- Pro CTA button — currently shows contact message. Replace with Stripe
+  Checkout link when ready: window.location.href = 'https://buy.stripe.com/...'
+
+**Auth bar refresh**
+- Left side: usage pill (logged out) or History button (logged in).
+- Right side: Pro badge / Go Pro button + email + Sign out (logged in),
+  or Sign in link (logged out).
+- Pro badge shown if profiles.is_pro = true in Supabase.
+
+### Supabase tables required
+Run this SQL in Supabase → SQL Editor before deploying:
+
+  CREATE TABLE searches (
+    id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id      uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    product_name text NOT NULL,
+    brand        text,
+    price        text,
+    badge        text,
+    overall_score numeric(4,1),
+    full_result  jsonb NOT NULL,
+    created_at   timestamptz DEFAULT now() NOT NULL
+  );
+
+  ALTER TABLE searches ENABLE ROW LEVEL SECURITY;
+
+  CREATE POLICY "Users can read own searches"
+    ON searches FOR SELECT
+    USING (auth.uid() = user_id);
+
+  CREATE TABLE profiles (
+    id       uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    is_pro   boolean DEFAULT false NOT NULL,
+    created_at timestamptz DEFAULT now()
+  );
+
+  ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+  CREATE POLICY "Users can read own profile"
+    ON profiles FOR SELECT
+    USING (auth.uid() = id);
+
+  CREATE OR REPLACE FUNCTION public.handle_new_user()
+  RETURNS trigger AS $$
+  BEGIN
+    INSERT INTO public.profiles (id) VALUES (new.id);
+    RETURN new;
+  END;
+  $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+### New Vercel env var required
+  SUPABASE_SERVICE_ROLE_KEY — from Supabase → Settings → API → service_role key
+  (This is SECRET — never put it in frontend JS)
+
+### TODO: Stripe integration
+  In index.html handleProCheckout(), replace the alert with:
+  window.location.href = 'https://buy.stripe.com/YOUR_LINK';
+  After payment, use a Stripe webhook to set profiles.is_pro = true.
