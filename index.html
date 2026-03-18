@@ -698,24 +698,21 @@
 
       if (currentUser) {
         // ── Logged in ──
-        const histBtn = document.createElement('button');
-        histBtn.className = 'auth-bar-history-btn visible';
-        histBtn.innerHTML = '📋 History';
-        histBtn.onclick = openHistory;
-
         left.innerHTML = '';
-        left.appendChild(histBtn);
-
-        // Show Pro badge or upgrade prompt
-        const proEl = document.createElement('span');
         if (currentUserPro) {
-          proEl.className = 'pro-badge-btn';
-          proEl.textContent = '⭐ Pro';
-          proEl.style.cursor = 'default';
+          // Pro users get the History button
+          const histBtn = document.createElement('button');
+          histBtn.className = 'auth-bar-history-btn visible';
+          histBtn.innerHTML = '📋 History';
+          histBtn.onclick = openHistory;
+          left.appendChild(histBtn);
         } else {
-          proEl.className = 'pro-badge-btn';
-          proEl.textContent = 'Go Pro';
-          proEl.onclick = () => openModal('proModal');
+          // Free logged-in users get a Go Pro nudge on the left
+          const upgradeBtn = document.createElement('button');
+          upgradeBtn.className = 'pro-badge-btn';
+          upgradeBtn.textContent = '⭐ Upgrade for history';
+          upgradeBtn.onclick = () => openModal('proModal');
+          left.appendChild(upgradeBtn);
         }
 
         const emailEl = document.createElement('span');
@@ -723,13 +720,20 @@
         emailEl.textContent = currentUser.email;
         emailEl.title = currentUser.email;
 
+        // Pro badge (right side, Pro users only)
         const signOutBtn = document.createElement('button');
         signOutBtn.className = 'auth-bar-signout';
         signOutBtn.textContent = 'Sign out';
         signOutBtn.onclick = handleSignOut;
 
         right.innerHTML = '';
-        right.appendChild(proEl);
+        if (currentUserPro) {
+          const proBadge = document.createElement('span');
+          proBadge.className = 'pro-badge-btn';
+          proBadge.textContent = '⭐ Pro';
+          proBadge.style.cursor = 'default';
+          right.appendChild(proBadge);
+        }
         right.appendChild(emailEl);
         right.appendChild(signOutBtn);
 
