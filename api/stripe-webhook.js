@@ -65,22 +65,26 @@ function verifyStripeSignature(rawBody, signatureHeader, secret) {
 }
 
 // ── Set user pro in Supabase ──────────────────────────────────
+// Uses upsert (POST + merge-duplicates) so it works whether or not
+// the profiles row exists yet (e.g. users who signed up before the
+// trigger was added won't have a row, and PATCH would silently do nothing).
 async function setUserPro(userId) {
   const res = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`,
+    `${process.env.SUPABASE_URL}/rest/v1/profiles`,
     {
-      method: 'PATCH',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Prefer':        'resolution=merge-duplicates',
       },
-      body: JSON.stringify({ is_pro: true }),
+      body: JSON.stringify({ id: userId, is_pro: true }),
     }
   );
   if (!res.ok) {
     const err = await res.text();
-    console.error('Supabase PATCH error:', res.status, err);
+    console.error('Supabase upsert error:', res.status, err);
   } else {
     console.log('Set is_pro=true for user:', userId);
   }

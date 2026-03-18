@@ -5,6 +5,17 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.6.4 — 2026-03-18
+
+### Fixed
+- Pro upgrade not activating after payment. Root cause: `setUserPro()` in
+  `api/stripe-webhook.js` used PATCH which silently does nothing if the
+  profiles row doesn't exist (users who signed up before the trigger was
+  added have no row). Switched to POST with `Prefer: resolution=merge-duplicates`
+  (Supabase upsert) — creates the row if missing, updates it if present.
+
+---
+
 ## v0.6.3 — 2026-03-18
 
 ### Fixed
