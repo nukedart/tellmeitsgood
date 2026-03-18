@@ -14,12 +14,10 @@
 
 export default async function handler(req, res) {
 
-  // ── 1. Only accept POST requests ──────────────────────────
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  // ── 2. Read the URL from the request body ─────────────────
   const { url } = req.body;
 
   if (!url || url.trim().length === 0) {
@@ -28,7 +26,6 @@ export default async function handler(req, res) {
 
   const trimmedUrl = url.trim();
 
-  // Must start with http:// or https://
   if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
     return res.status(400).json({
       error: 'INVALID_URL',
@@ -36,9 +33,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 3. Call the Firecrawl API ──────────────────────────────
-  // Firecrawl scrapes the page and returns clean markdown text.
-  // FIRECRAWL_API_KEY is stored in Vercel env vars — never sent to browser.
   try {
     const firecrawlRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -48,16 +42,14 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         url: trimmedUrl,
-        formats: ['markdown'],  // Text only — no screenshots needed
+        formats: ['markdown'],
       }),
     });
 
-    // ── 4. Handle Firecrawl errors ─────────────────────────
     if (!firecrawlRes.ok) {
       const errData = await firecrawlRes.json().catch(() => ({}));
       console.error('Firecrawl API error:', firecrawlRes.status, errData);
 
-      // 402 = out of Firecrawl credits
       if (firecrawlRes.status === 402) {
         return res.status(402).json({
           error: 'SCRAPE_FAILED',
@@ -71,8 +63,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── 5. Parse Firecrawl's response ──────────────────────
-    // Firecrawl returns: { success: true, data: { markdown: "...", metadata: {...} } }
     const firecrawlData = await firecrawlRes.json();
     const markdown = firecrawlData?.data?.markdown;
 
@@ -83,11 +73,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── 6. Trim content so we don't blow up Claude's context ──
-    // 12,000 chars covers all product details while cutting nav/footer noise
     const trimmedMarkdown = markdown.slice(0, 12000);
 
-    // ── 7. Send the scraped text back to the browser ───────
     return res.status(200).json({
       success: true,
       productData: trimmedMarkdown,

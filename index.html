@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
+  <!-- Supabase JS client — loaded from CDN, no npm needed -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     /* ============================================================
        DESIGN OS — CALM SAAS TOKENS
@@ -81,6 +84,230 @@
       transition: background .25s, color .25s;
     }
 
+    /* ============================================================
+       AUTH HEADER BAR
+       Sits at the very top of the page, above all content.
+       Non-intrusive — just 44px tall with subtle styling.
+    ============================================================ */
+    .auth-bar {
+      width: 100%;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      gap: 12px;
+      min-height: 44px;
+    }
+
+    /* Shown when logged out */
+    .auth-bar-signin {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-3);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      padding: 0;
+      transition: color .15s;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--border);
+    }
+
+    .auth-bar-signin:hover {
+      color: var(--accent);
+      text-decoration-color: var(--accent);
+    }
+
+    /* User's email shown when logged in */
+    .auth-bar-email {
+      font-size: 12px;
+      color: var(--text-2);
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Sign out button shown when logged in */
+    .auth-bar-signout {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-3);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all .15s;
+    }
+
+    .auth-bar-signout:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+      background: var(--surface-2);
+    }
+
+    /* ============================================================
+       MODAL OVERLAY
+       Dark backdrop behind the sign-in modal.
+       Hidden by default — .visible shows it.
+    ============================================================ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(3px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    /* ============================================================
+       MODAL CARD
+    ============================================================ */
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      animation: fadeUp .25s ease;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      font-family: var(--font-body);
+    }
+
+    .modal-close:hover { background: var(--surface-2); color: var(--text); }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 14px;
+      color: var(--text-2);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .modal-email-input {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s, background .25s;
+      margin-bottom: 12px;
+    }
+
+    .modal-email-input::placeholder { color: var(--text-3); }
+
+    .modal-email-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-surf);
+      background: var(--card);
+    }
+
+    .modal-submit-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-md);
+      height: 44px;
+      cursor: pointer;
+      transition: background .15s, box-shadow .15s;
+    }
+
+    .modal-submit-btn:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px rgba(47,111,237,.3);
+    }
+
+    .modal-submit-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+    /* Error shown inside modal */
+    .modal-error {
+      display: none;
+      background: var(--danger-surf);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--danger);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .modal-error.visible { display: block; }
+
+    /* Form content hidden after success */
+    .modal-form-content { display: block; }
+    .modal-form-content.hidden { display: none; }
+
+    /* Success confirmation shown after email is sent */
+    .modal-success { display: none; text-align: center; padding: 8px 0; }
+    .modal-success.visible { display: block; }
+    .modal-success-icon { font-size: 40px; margin-bottom: 16px; }
+    .modal-success-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .modal-success-text { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+    .modal-privacy {
+      font-size: 11px;
+      color: var(--text-3);
+      text-align: center;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ── */
     .page {
       max-width: 680px;
       margin: 0 auto;
@@ -88,10 +315,7 @@
     }
 
     /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 48px;
-    }
+    .header { text-align: center; margin-bottom: 48px; }
 
     .logo {
       display: inline-flex;
@@ -105,12 +329,7 @@
       margin-bottom: 24px;
     }
 
-    .logo-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 
     .headline {
       font-family: var(--font-display);
@@ -365,13 +584,7 @@
       margin-bottom: 6px;
     }
 
-    .product-meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
+    .product-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .product-price { font-size: 20px; font-weight: 600; color: var(--text-2); }
 
     /* ── Badge ── */
@@ -428,11 +641,10 @@
     }
 
     .overall-score-num span { font-family: var(--font-body); font-size: 18px; color: var(--text-3); }
-
     .overall-score-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
     .overall-score-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; }
 
-    /* ── Gate score rows ── */
+    /* ── Gate score cards ── */
     .gates-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -450,20 +662,12 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .gate-card.passes  { border-top: 3px solid var(--success); }
-    .gate-card.fails   { border-top: 3px solid var(--danger); }
+    .gate-card.passes       { border-top: 3px solid var(--success); }
+    .gate-card.fails        { border-top: 3px solid var(--danger); }
     .gate-card.disqualified { border-top: 3px solid var(--danger); background: var(--danger-surf); }
 
-    .gate-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      margin-bottom: 6px;
-    }
-
-    .gate-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .gate-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .gate-name  { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
 
     .gate-score-num {
       font-family: var(--font-display);
@@ -478,16 +682,9 @@
     .gate-bar-wrap { height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
     .gate-bar-fill { height: 100%; border-radius: 100px; transition: width 1s ease; width: 0%; }
 
-    .gate-pass-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin-top: 8px;
-    }
-
-    .gate-card.passes .gate-pass-label  { color: var(--success); }
-    .gate-card.fails .gate-pass-label   { color: var(--danger); }
+    .gate-pass-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 8px; }
+    .gate-card.passes .gate-pass-label       { color: var(--success); }
+    .gate-card.fails .gate-pass-label        { color: var(--danger); }
     .gate-card.disqualified .gate-pass-label { color: var(--danger); }
 
     /* ── Criteria accordion ── */
@@ -512,9 +709,9 @@
     .criteria-header:hover { background: var(--surface); }
 
     .criteria-gate-name { font-size: 13px; font-weight: 600; color: var(--text); }
-    .criteria-toggle { font-size: 12px; color: var(--text-3); }
+    .criteria-toggle    { font-size: 12px; color: var(--text-3); }
 
-    .criteria-body { display: none; border-top: 1px solid var(--border); }
+    .criteria-body      { display: none; border-top: 1px solid var(--border); }
     .criteria-body.open { display: block; }
 
     .criterion-row {
@@ -540,11 +737,11 @@
       margin-top: 2px;
     }
 
-    .criterion-score-badge.high   { background: var(--success-surf); color: var(--success); }
-    .criterion-score-badge.mid    { background: var(--warning-surf); color: var(--warning); }
-    .criterion-score-badge.low    { background: var(--danger-surf); color: var(--danger); }
+    .criterion-score-badge.high { background: var(--success-surf); color: var(--success); }
+    .criterion-score-badge.mid  { background: var(--warning-surf); color: var(--warning); }
+    .criterion-score-badge.low  { background: var(--danger-surf);  color: var(--danger); }
 
-    .criterion-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .criterion-label    { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
     .criterion-evidence { font-size: 12px; color: var(--text-2); line-height: 1.5; }
 
     .criterion-source {
@@ -578,50 +775,20 @@
     }
 
     /* ── Pros / Cons ── */
-    .pros-cons-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
+    .pros-cons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 
     @media (max-width: 480px) { .pros-cons-grid { grid-template-columns: 1fr; } }
 
-    .pros-card {
-      background: var(--success-surf);
-      border: 1px solid var(--success);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-    }
+    .pros-card { background: var(--success-surf); border: 1px solid var(--success); border-radius: var(--radius-lg); padding: 18px; }
+    .cons-card { background: var(--danger-surf);  border: 1px solid var(--danger);  border-radius: var(--radius-lg); padding: 18px; }
 
-    .cons-card {
-      background: var(--danger-surf);
-      border: 1px solid var(--danger);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-    }
-
-    .pros-cons-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
+    .pros-cons-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
     .pros-card .pros-cons-title { color: var(--success); }
     .cons-card .pros-cons-title { color: var(--danger); }
 
     .pros-cons-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 
-    .pros-cons-list li {
-      display: flex;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text);
-      line-height: 1.45;
-    }
-
+    .pros-cons-list li { display: flex; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.45; }
     .pros-cons-list li::before { flex-shrink: 0; margin-top: 2px; font-size: 12px; }
     .pros-card .pros-cons-list li::before { content: '✓'; color: var(--success); font-weight: 700; }
     .cons-card .pros-cons-list li::before { content: '✗'; color: var(--danger);  font-weight: 700; }
@@ -631,14 +798,8 @@
 
     @media (max-width: 400px) { .alternatives-grid { grid-template-columns: 1fr; } }
 
-    .alt-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-    }
-
-    .alt-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .alt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
+    .alt-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
     .alt-reason { font-size: 12px; color: var(--text-2); line-height: 1.45; }
 
     /* ── Real Talk ── */
@@ -654,46 +815,15 @@
     }
 
     /* ── Listing post section ── */
-    .post-section {
-      display: none;
-      animation: fadeUp .4s ease;
-      margin-top: 8px;
-    }
-
+    .post-section { display: none; animation: fadeUp .4s ease; margin-top: 8px; }
     .post-section.visible { display: block; }
 
-    .post-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 24px 0 20px;
-    }
-
+    .post-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 20px; }
     .post-divider-line { flex: 1; height: 1px; background: var(--border); }
+    .post-divider-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; }
 
-    .post-divider-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      white-space: nowrap;
-    }
-
-    .post-hook {
-      font-family: var(--font-display);
-      font-size: 22px;
-      line-height: 1.3;
-      color: var(--text);
-      margin-bottom: 16px;
-    }
-
-    .post-verdict {
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.7;
-      margin-bottom: 16px;
-    }
+    .post-hook { font-family: var(--font-display); font-size: 22px; line-height: 1.3; color: var(--text); margin-bottom: 16px; }
+    .post-verdict { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 16px; }
 
     .post-gate-summaries {
       background: var(--surface);
@@ -727,33 +857,14 @@
 
     .post-gate-text { font-size: 13px; color: var(--text); line-height: 1.6; }
 
-    .post-buyer-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
+    .post-buyer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 
     @media (max-width: 480px) { .post-buyer-grid { grid-template-columns: 1fr; } }
 
-    .post-buyer-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-    }
-
-    .post-buyer-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .post-buyer-card.for .post-buyer-label  { color: var(--success); }
-    .post-buyer-card.not .post-buyer-label  { color: var(--danger); }
-
+    .post-buyer-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
+    .post-buyer-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+    .post-buyer-card.for .post-buyer-label { color: var(--success); }
+    .post-buyer-card.not .post-buyer-label { color: var(--danger); }
     .post-buyer-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 
     .post-bottom-line {
@@ -768,18 +879,8 @@
     }
 
     /* ── Loading post ── */
-    .post-loading {
-      display: none;
-      text-align: center;
-      padding: 32px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      margin-top: 8px;
-    }
-
+    .post-loading { display: none; text-align: center; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-top: 8px; }
     .post-loading.visible { display: block; }
-
     .post-loading-text { font-size: 14px; color: var(--text-2); margin-top: 12px; }
 
     /* ── Footer ── */
@@ -794,6 +895,64 @@
 </head>
 
 <body>
+
+  <!-- ============================================================
+       AUTH BAR
+       Always visible at the very top of the page.
+       JS populates it after checking auth state.
+  ============================================================ -->
+  <div class="auth-bar" id="authBar">
+    <!-- Populated by updateAuthBar() in the script below -->
+  </div>
+
+  <!-- ============================================================
+       MAGIC LINK MODAL
+       Hidden by default. Opens when user clicks "Sign in".
+  ============================================================ -->
+  <div class="modal-overlay" id="authModal" onclick="handleModalBackdropClick(event)">
+    <div class="modal-card">
+
+      <button class="modal-close" onclick="closeAuthModal()" aria-label="Close">×</button>
+
+      <!-- Form state — shown before email is sent -->
+      <div class="modal-form-content" id="modalFormContent">
+        <div class="modal-title">Sign in</div>
+        <p class="modal-subtitle">
+          We'll email you a magic link — no password needed.<br>
+          Click it and you're in.
+        </p>
+
+        <div class="modal-error" id="modalError"></div>
+
+        <input
+          type="email"
+          id="modalEmailInput"
+          class="modal-email-input"
+          placeholder="your@email.com"
+          autocomplete="email"
+        />
+
+        <button class="modal-submit-btn" id="modalSubmitBtn" onclick="handleSendMagicLink()">
+          Send me a login link →
+        </button>
+
+        <p class="modal-privacy">No password. No spam. One-click login link.</p>
+      </div>
+
+      <!-- Success state — shown after email is sent -->
+      <div class="modal-success" id="modalSuccess">
+        <div class="modal-success-icon">📬</div>
+        <div class="modal-success-title">Check your email</div>
+        <p class="modal-success-text">
+          We sent a login link to <strong id="modalSuccessEmail"></strong>.<br>
+          It expires in 1 hour. Click it and this page updates automatically.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Main page ── -->
   <div class="page">
 
     <!-- ── Header ── -->
@@ -858,7 +1017,6 @@
           ></textarea>
         </div>
 
-        <!-- Error message -->
         <div class="error-msg" id="errorMsg"></div>
 
         <div class="input-actions">
@@ -868,7 +1026,6 @@
         </div>
       </div>
 
-      <!-- Example chips -->
       <p class="examples-hint">Try an example:</p>
       <div class="examples">
         <span class="example-chip" onclick="fillExample('url', 'https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p')">Sony XM5 (Best Buy)</span>
@@ -928,12 +1085,12 @@
           <div class="gate-label">Gate 3</div>
           <div class="gate-name">Ethical Company</div>
           <div class="gate-score-num" id="gate3Score">—<span> / 10</span></div>
-          <div class="gate-bar-wrap"><div class="gate-bar-fill" id="gate3Bar" style="background: #818CF8)"></div></div>
+          <div class="gate-bar-wrap"><div class="gate-bar-fill" id="gate3Bar" style="background: #818CF8"></div></div>
           <div class="gate-pass-label" id="gate3Pass"></div>
         </div>
       </div>
 
-      <!-- Criteria detail accordions (one per gate) -->
+      <!-- Criteria detail accordions -->
       <div id="criteriaSection"></div>
 
       <!-- Pros / Cons -->
@@ -1021,15 +1178,221 @@
     <!-- ── Footer ── -->
     <footer class="footer">
       <p>Quality · Clean · Ethics · No ads · No sponsored listings</p>
+      <p style="margin-top: 6px; font-size: 11px; opacity: 0.5;">v0.4.0</p>
     </footer>
 
-  </div>
+  </div><!-- end .page -->
+
 
   <script>
     // ============================================================
-    // STATE
+    // SUPABASE SETUP
     // ============================================================
-    let activeTab = 'url';       // 'url' or 'name'
+    //
+    // ⚠️  REPLACE THESE TWO VALUES before deploying.
+    //     Find them at: supabase.com → your project → Settings → API
+    //
+    //     These ARE safe to put in frontend JS — the anon key is
+    //     designed to be public. It is NOT the same as the secret
+    //     service-role key. Anyone can read your page source and
+    //     see these, and that's completely fine by Supabase's design.
+    //
+    const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co'; // ← replace this
+    const SUPABASE_ANON_KEY = 'eyJ...YOUR_ANON_KEY_HERE...';         // ← replace this
+
+    // Initialize the Supabase client.
+    // supabase.createClient() comes from the CDN <script> in <head>.
+    // It automatically handles session storage in localStorage — that's
+    // how users stay logged in when they refresh the page or come back later.
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // AUTH STATE LISTENER
+    // ============================================================
+    //
+    // onAuthStateChange fires whenever the session changes:
+    //   SIGNED_IN  → user just logged in (includes magic link redirect)
+    //   SIGNED_OUT → logged out or session expired
+    //   TOKEN_REFRESHED → Supabase silently refreshed their token
+    //
+    // This is the ONE place that syncs auth state to the UI.
+    // You never need to manually track "isLoggedIn" anywhere else.
+    //
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event, '| User:', session?.user?.email || 'none');
+
+      // Close the modal automatically when the user logs in
+      // (This fires when they click the magic link and land back on the page)
+      if (event === 'SIGNED_IN') {
+        closeAuthModal();
+      }
+
+      // Always re-render the header bar to match current state
+      updateAuthBar(session?.user || null);
+    });
+
+    // ============================================================
+    // UPDATE AUTH BAR
+    // ============================================================
+    //
+    // Renders either the "Sign in" link (logged out)
+    // or the email + Sign out button (logged in).
+    //
+    // @param {object|null} user — Supabase user object, or null
+    //
+    function updateAuthBar(user) {
+      const bar = document.getElementById('authBar');
+
+      if (user) {
+        // Logged in — show email and sign out option
+        bar.innerHTML = `
+          <span class="auth-bar-email" title="${user.email}">${user.email}</span>
+          <button class="auth-bar-signout" onclick="handleSignOut()">Sign out</button>
+        `;
+      } else {
+        // Logged out — show subtle sign-in prompt
+        bar.innerHTML = `
+          <button class="auth-bar-signin" onclick="openAuthModal()">
+            Sign in to save searches
+          </button>
+        `;
+      }
+    }
+
+    // ============================================================
+    // MODAL — OPEN / CLOSE
+    // ============================================================
+
+    function openAuthModal() {
+      // Reset form to clean state every time it opens
+      document.getElementById('modalFormContent').classList.remove('hidden');
+      document.getElementById('modalSuccess').classList.remove('visible');
+      document.getElementById('modalError').classList.remove('visible');
+      document.getElementById('modalEmailInput').value = '';
+      document.getElementById('modalSubmitBtn').disabled = false;
+      document.getElementById('modalSubmitBtn').textContent = 'Send me a login link →';
+
+      document.getElementById('authModal').classList.add('visible');
+
+      // Focus the email field for keyboard users
+      setTimeout(() => document.getElementById('modalEmailInput').focus(), 50);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.remove('visible');
+    }
+
+    // Close when clicking the dark backdrop (but NOT the card itself)
+    function handleModalBackdropClick(event) {
+      if (event.target === document.getElementById('authModal')) {
+        closeAuthModal();
+      }
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeAuthModal();
+    });
+
+    // ============================================================
+    // SEND MAGIC LINK
+    // ============================================================
+    //
+    // How magic links work end-to-end:
+    //   1. signInWithOtp() → Supabase emails a one-time link
+    //   2. User clicks the link in their email
+    //   3. The link contains a token in the URL hash (#access_token=...)
+    //   4. Supabase JS reads the token, creates a localStorage session
+    //   5. onAuthStateChange fires with SIGNED_IN → modal closes, bar updates
+    //
+    async function handleSendMagicLink() {
+      const email = document.getElementById('modalEmailInput').value.trim();
+      const errorEl = document.getElementById('modalError');
+
+      // Basic validation
+      if (!email || !email.includes('@')) {
+        errorEl.textContent = 'Enter a valid email address.';
+        errorEl.classList.add('visible');
+        return;
+      }
+
+      errorEl.classList.remove('visible');
+
+      // Show loading state while we wait for Supabase
+      const btn = document.getElementById('modalSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email: email,
+          options: {
+            // Send users back to the app after clicking the link
+            // window.location.origin = current domain (e.g. https://tellmeitsgood.vercel.app)
+            emailRedirectTo: window.location.origin,
+          },
+        });
+
+        if (error) throw error;
+
+        // Success — hide the form, show the confirmation message
+        document.getElementById('modalFormContent').classList.add('hidden');
+        document.getElementById('modalSuccessEmail').textContent = email;
+        document.getElementById('modalSuccess').classList.add('visible');
+
+      } catch (err) {
+        // Show error inside the modal
+        errorEl.textContent = err.message || 'Something went wrong. Please try again.';
+        errorEl.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Send me a login link →';
+        console.error('Magic link error:', err);
+      }
+    }
+
+    // Enter key support for modal email input
+    document.getElementById('modalEmailInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleSendMagicLink();
+    });
+
+    // ============================================================
+    // SIGN OUT
+    // ============================================================
+    //
+    // signOut() clears the localStorage session.
+    // onAuthStateChange fires with SIGNED_OUT automatically —
+    // no need to call updateAuthBar() manually here.
+    //
+    async function handleSignOut() {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) console.error('Sign out error:', error);
+    }
+
+    // ============================================================
+    // INIT — restore session on page load
+    // ============================================================
+    //
+    // When the page loads, Supabase checks localStorage for a saved
+    // session. If found (user logged in before and hasn't signed out),
+    // it restores it automatically.
+    //
+    // getSession() gives us the current state immediately so we can
+    // render the auth bar right away without a flash of wrong content.
+    //
+    // This also handles the magic link redirect: when a user clicks
+    // the email link, Supabase reads the URL token, creates a session,
+    // and fires SIGNED_IN via onAuthStateChange — no extra code needed.
+    //
+    (async function initAuth() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      updateAuthBar(session?.user || null);
+    })();
+
+
+    // ============================================================
+    // APP STATE (existing code below — unchanged)
+    // ============================================================
+    let activeTab = 'url';
     let usingFallback = false;
 
     // ============================================================
@@ -1067,7 +1430,6 @@
       hideError();
 
       if (usingFallback) {
-        // Fallback manual text path
         const manualText = document.getElementById('fallbackInput').value.trim();
         if (!manualText || manualText.length < 10) {
           showError('Describe the product a bit more so we can give you a useful verdict.');
@@ -1076,7 +1438,6 @@
         await runResearch({ productData: manualText });
 
       } else if (activeTab === 'name') {
-        // Name search path — goes straight to research with query
         const query = document.getElementById('queryInput').value.trim();
         if (!query || query.length < 3) {
           showError('Enter a product name or brand to search.');
@@ -1086,7 +1447,6 @@
         await runResearch({ query });
 
       } else {
-        // URL path — scrape first, then research
         const url = document.getElementById('urlInput').value.trim();
         if (!url) {
           showError('Paste a full product link starting with https://');
@@ -1173,7 +1533,6 @@
         });
 
         if (!response.ok) {
-          // Post failing is non-fatal — hide loader silently
           hidePostLoading();
           return;
         }
@@ -1182,23 +1541,20 @@
         displayPost(result.post);
 
       } catch (err) {
-        // Non-fatal — scores already shown, just hide the post loader
         hidePostLoading();
         console.error('Post generation error:', err);
       }
     }
 
     // ============================================================
-    // DISPLAY RESEARCH — fills the scores + criteria sections
+    // DISPLAY RESEARCH — fills scores + criteria sections
     // ============================================================
     function displayResearch(data) {
       hideLoading();
 
-      // ── Product name + price ──
       document.getElementById('productName').textContent = data.productName || 'Product';
       document.getElementById('productPrice').textContent = data.price || '';
 
-      // ── Badge ──
       const badgeEl = document.getElementById('productBadge');
       const badgeLabels = {
         TELL_ME_ITS_GOOD: "⭐ Tell Me It's Good",
@@ -1210,19 +1566,15 @@
       badgeEl.textContent = badgeLabels[data.badge] || data.badge;
       badgeEl.className = 'badge ' + (data.badge || 'NOT_LISTED');
 
-      // ── TL;DR ──
       document.getElementById('tldrStrip').textContent = '"' + (data.summary?.tldr || '') + '"';
 
-      // ── Overall score ──
       const overall = data.overallScore || 0;
       document.getElementById('overallScoreNum').innerHTML = overall.toFixed(1) + '<span> / 10</span>';
 
-      // ── Gate scores ──
       renderGate('gate1', data.gate1);
       renderGate('gate2', data.gate2);
       renderGate('gate3', data.gate3);
 
-      // ── Criteria accordions ──
       const criteriaSection = document.getElementById('criteriaSection');
       criteriaSection.innerHTML = '';
       [
@@ -1234,7 +1586,6 @@
         criteriaSection.appendChild(buildCriteriaAccordion(key, gate));
       });
 
-      // ── Summary fields ──
       const s = data.summary || {};
 
       document.getElementById('prosList').innerHTML = (s.pros || [])
@@ -1250,12 +1601,10 @@
 
       document.getElementById('realTalkText').textContent = s.realTalk || '';
 
-      // ── Show results, hide input ──
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('resultsSection').classList.add('visible');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Animate bars after short delay
       setTimeout(() => {
         animateGateBar('gate1', data.gate1);
         animateGateBar('gate2', data.gate2);
@@ -1263,7 +1612,6 @@
       }, 150);
     }
 
-    // ── Render a gate card ──
     function renderGate(key, gate) {
       if (!gate) return;
       const avg = gate.average || 0;
@@ -1277,13 +1625,11 @@
       document.getElementById(key + 'Pass').textContent = disq ? 'Disqualified' : passes ? 'Passes' : 'Does not pass';
     }
 
-    // ── Animate gate bar ──
     function animateGateBar(key, gate) {
       if (!gate) return;
       document.getElementById(key + 'Bar').style.width = (gate.average * 10) + '%';
     }
 
-    // ── Build criteria accordion for a gate ──
     function buildCriteriaAccordion(key, gate) {
       const wrapper = document.createElement('div');
       wrapper.className = 'criteria-card';
@@ -1334,19 +1680,19 @@
     }
 
     // ============================================================
-    // DISPLAY POST — fills the listing post section
+    // DISPLAY POST
     // ============================================================
     function displayPost(post) {
       hidePostLoading();
       if (!post) return;
 
-      document.getElementById('postHook').textContent = post.hook || '';
+      document.getElementById('postHook').textContent    = post.hook || '';
       document.getElementById('postVerdict').textContent = post.verdict_paragraph || '';
-      document.getElementById('postGate1').textContent = post.gate_summaries?.gate1 || '';
-      document.getElementById('postGate2').textContent = post.gate_summaries?.gate2 || '';
-      document.getElementById('postGate3').textContent = post.gate_summaries?.gate3 || '';
-      document.getElementById('postFor').textContent = post.who_its_for || '';
-      document.getElementById('postNot').textContent = post.who_its_not_for || '';
+      document.getElementById('postGate1').textContent   = post.gate_summaries?.gate1 || '';
+      document.getElementById('postGate2').textContent   = post.gate_summaries?.gate2 || '';
+      document.getElementById('postGate3').textContent   = post.gate_summaries?.gate3 || '';
+      document.getElementById('postFor').textContent     = post.who_its_for || '';
+      document.getElementById('postNot').textContent     = post.who_its_not_for || '';
       document.getElementById('postBottomLine').textContent = post.bottom_line || '';
 
       document.getElementById('postSection').classList.add('visible');
@@ -1395,7 +1741,7 @@
     // LOADING
     // ============================================================
     function showLoading(text, subtext) {
-      document.getElementById('loadingText').textContent = text || 'Researching...';
+      document.getElementById('loadingText').textContent    = text || 'Researching...';
       document.getElementById('loadingSubtext').textContent = subtext || '';
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('loadingState').classList.add('visible');
@@ -1407,13 +1753,8 @@
       document.getElementById('submitBtn').disabled = false;
     }
 
-    function showPostLoading() {
-      document.getElementById('postLoading').classList.add('visible');
-    }
-
-    function hidePostLoading() {
-      document.getElementById('postLoading').classList.remove('visible');
-    }
+    function showPostLoading() { document.getElementById('postLoading').classList.add('visible'); }
+    function hidePostLoading() { document.getElementById('postLoading').classList.remove('visible'); }
 
     // ============================================================
     // ERROR
@@ -1429,7 +1770,7 @@
       document.getElementById('errorMsg').classList.remove('visible');
     }
 
-    // ── Enter key support ──
+    // Enter key support for main inputs
     document.getElementById('urlInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleSubmit();
     });

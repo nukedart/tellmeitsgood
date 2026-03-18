@@ -16,7 +16,7 @@
 // Flow (name search path):
 //   Browser → POST /api/research { query: "Seventh Generation dish soap" }
 //                ↓
-//   This function → Claude API with web_search tool (finds product + researches it)
+//   This function → Claude API with web_search tool
 //                ↓
 //   Returns same scored JSON
 // =============================================================
@@ -57,7 +57,6 @@ export default async function handler(req, res) {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 3000,
 
-        // ── Web search tool ──────────────────────────────────
         tools: [
           {
             type: 'web_search_20250305',
@@ -98,47 +97,55 @@ For each criterion score, provide:
 - evidence: one specific sentence explaining why (not generic)
 - source_url: the actual URL you found this evidence at (use web_search)
 
-Return ONLY valid JSON. No markdown, no backticks, no explanation outside the JSON:
+CRITICAL OUTPUT RULES — this is the most important part:
+- Your ENTIRE response must be a single valid JSON object.
+- Do NOT write any text before the opening {
+- Do NOT write any text after the closing }
+- Do NOT say "I notice", "I'll research", "Here is", or anything else outside the JSON
+- Do NOT use markdown code fences or backticks
+- Start your response with { and end with }
+
+Return this exact JSON structure:
 
 {
   "productName": "full product name extracted or found",
   "brand": "brand name",
   "price": "price as string e.g. '$24.99' or 'Price not found'",
   "productUrl": "canonical product URL",
-  "badge": "TELL_ME_ITS_GOOD" | "CLEAN_PICK" | "ETHICAL_PICK" | "QUALITY_PICK" | "NOT_LISTED",
-  "overallScore": <weighted average of all three gate averages, 1 decimal>,
+  "badge": "TELL_ME_ITS_GOOD",
+  "overallScore": 7.2,
   "gate1": {
     "name": "Value & Quality",
-    "average": <average of 5 criteria scores, 1 decimal>,
-    "passes": true | false,
+    "average": 7.4,
+    "passes": true,
     "criteria": {
       "performance": {
         "label": "Core performance",
-        "score": <1-10>,
+        "score": 8,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "durability": {
         "label": "Build quality & longevity",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "value": {
         "label": "Price-to-quality ratio",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding with dollar comparison",
         "source_url": "https://..."
       },
       "honest_claims": {
         "label": "Honest product claims",
-        "score": <1-10>,
+        "score": 8,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "usability": {
         "label": "Usability & experience",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       }
@@ -146,38 +153,38 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation outside the JS
   },
   "gate2": {
     "name": "Clean & Safe",
-    "average": <average of 5 criteria scores, 1 decimal>,
-    "passes": true | false,
+    "average": 7.0,
+    "passes": true,
     "disqualified": false,
     "disqualifier_reason": null,
     "criteria": {
       "ingredient_safety": {
         "label": "Ingredient safety",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific finding referencing actual ingredient names or EWG ratings",
         "source_url": "https://..."
       },
       "transparency": {
         "label": "Full ingredient disclosure",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "greenwashing": {
         "label": "No greenwashing",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "children_pets": {
         "label": "Safe around kids & pets",
-        "score": <1-10>,
-        "evidence": "specific one-sentence finding, or 'Not applicable for this product category' if irrelevant",
-        "source_url": "https://... or null"
+        "score": 7,
+        "evidence": "specific one-sentence finding",
+        "source_url": null
       },
       "packaging": {
         "label": "Packaging honesty",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       }
@@ -185,48 +192,48 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation outside the JS
   },
   "gate3": {
     "name": "Ethical Company",
-    "average": <average of 5 criteria scores, 1 decimal>,
-    "passes": true | false,
+    "average": 7.0,
+    "passes": true,
     "disqualified": false,
     "disqualifier_reason": null,
     "criteria": {
       "sourcing": {
         "label": "Supply chain transparency",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "labor": {
         "label": "No major labor violations",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "reviews": {
         "label": "Honest review practices",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "marketing": {
         "label": "No manipulative marketing",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       },
       "accountability": {
         "label": "Accountability track record",
-        "score": <1-10>,
+        "score": 7,
         "evidence": "specific one-sentence finding",
         "source_url": "https://..."
       }
     }
   },
   "summary": {
-    "tldr": "one punchy sentence a friend would text — max 20 words, no corporate language",
-    "brandTax": "specific dollar and % estimate with named alternative, or 'No significant brand tax' with reason",
-    "bestTimeToBuy": "specific actionable advice — name the sale event, timing, or alternative purchase path",
-    "realTalk": "what reviewers and owners actually say vs what the marketing claims — be honest and specific",
+    "tldr": "one punchy sentence a friend would text — max 20 words",
+    "brandTax": "specific dollar and % estimate with named alternative",
+    "bestTimeToBuy": "specific actionable advice",
+    "realTalk": "honest summary of what owners say vs marketing claims",
     "pros": ["pro 1", "pro 2", "pro 3"],
     "cons": ["con 1", "con 2", "con 3"],
     "alternatives": [
@@ -253,8 +260,8 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation outside the JS
     }
 
     // ── 5. Parse Claude's response ──────────────────────────
-    // Claude may return multiple content blocks when using tools
-    // (web_search blocks + final text block). We want the last text block.
+    // Claude may return multiple content blocks when using tools.
+    // We want the last text block.
     const claudeData = await claudeRes.json();
     const textBlock = claudeData.content
       .filter(block => block.type === 'text')
@@ -264,8 +271,15 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation outside the JS
       return res.status(502).json({ error: 'Claude returned no text content.' });
     }
 
-    // Strip any accidental markdown fences
-    const cleaned = textBlock.text.replace(/```json|```/g, '').trim();
+    // Extract JSON even if Claude wrapped it in prose — find the
+    // outermost { ... } in the response regardless of what else is there
+    const rawText = textBlock.text;
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(502).json({ error: 'Claude did not return valid JSON.' });
+    }
+
+    const cleaned = jsonMatch[0].trim();
     const research = JSON.parse(cleaned);
 
     // ── 6. Send the research result back to the browser ─────
