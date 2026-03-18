@@ -44,7 +44,6 @@
       --shadow-lg:     0 12px 32px rgba(0,0,0,.12);
     }
 
-    /* ── Dark mode ── */
     @media (prefers-color-scheme: dark) {
       :root {
         --bg:            #18161A;
@@ -71,7 +70,6 @@
       }
     }
 
-    /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -83,7 +81,6 @@
       transition: background .25s, color .25s;
     }
 
-    /* ── Layout ── */
     .page {
       max-width: 680px;
       margin: 0 auto;
@@ -141,6 +138,37 @@
       margin-bottom: 20px;
     }
 
+    /* ── Tab switcher (URL vs Name) ── */
+    .input-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .input-tab {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+
+    .input-tab.active {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
     .input-label {
       display: block;
       font-size: 13px;
@@ -150,8 +178,7 @@
       letter-spacing: .02em;
     }
 
-    /* URL input — single line, styled to match the old textarea */
-    .url-input {
+    .url-input, .query-input {
       width: 100%;
       font-family: var(--font-body);
       font-size: 15px;
@@ -163,20 +190,22 @@
       outline: none;
       transition: border-color .15s, box-shadow .15s, background .25s;
       line-height: 1.5;
-      /* Prevent iOS zoom on focus (font-size must be >= 16px on mobile) */
     }
 
     @media (max-width: 480px) {
-      .url-input { font-size: 16px; }
+      .url-input, .query-input { font-size: 16px; }
     }
 
-    .url-input::placeholder { color: var(--text-3); }
+    .url-input::placeholder, .query-input::placeholder { color: var(--text-3); }
 
-    .url-input:focus {
+    .url-input:focus, .query-input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-surf);
       background: var(--card);
     }
+
+    .input-panel { display: none; }
+    .input-panel.active { display: block; }
 
     .input-actions {
       display: flex;
@@ -185,7 +214,7 @@
       margin-top: 14px;
     }
 
-    /* ── Button ── */
+    /* ── Buttons ── */
     .btn-primary {
       display: inline-flex;
       align-items: center;
@@ -202,24 +231,34 @@
       cursor: pointer;
       transition: background .15s, transform .1s, box-shadow .15s;
       white-space: nowrap;
-      flex-shrink: 0;
     }
 
-    .btn-primary:hover {
-      background: var(--accent-hover);
-      box-shadow: 0 4px 12px rgba(47,111,237,.3);
-    }
-
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(47,111,237,.3); }
     .btn-primary:active { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    .btn-primary:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+    .btn-reset {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all .15s;
     }
 
-    /* ── Error state ── */
+    .btn-reset:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── Error ── */
     .error-msg {
       display: none;
       background: var(--danger-surf);
@@ -231,15 +270,10 @@
       margin-top: 12px;
       line-height: 1.5;
     }
-
     .error-msg.visible { display: block; }
 
-    /* Fallback textarea — shown only when scraping fails */
-    .fallback-section {
-      display: none;
-      margin-top: 16px;
-    }
-
+    /* ── Fallback textarea ── */
+    .fallback-section { display: none; margin-top: 16px; }
     .fallback-section.visible { display: block; }
 
     .fallback-label {
@@ -264,19 +298,10 @@
       transition: border-color .15s, box-shadow .15s;
       line-height: 1.5;
     }
-
-    .fallback-textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-surf);
-    }
+    .fallback-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); }
 
     /* ── Example chips ── */
-    .examples-hint {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-3);
-      margin-bottom: 10px;
-    }
+    .examples-hint { text-align: center; font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
 
     .examples {
       display: flex;
@@ -299,19 +324,10 @@
       white-space: nowrap;
     }
 
-    .example-chip:hover {
-      background: var(--accent-surf);
-      border-color: var(--accent);
-      color: var(--accent-text);
-    }
+    .example-chip:hover { background: var(--accent-surf); border-color: var(--accent); color: var(--accent-text); }
 
-    /* ── Loading state ── */
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 48px 24px;
-    }
-
+    /* ── Loading ── */
+    .loading { display: none; text-align: center; padding: 48px 24px; }
     .loading.visible { display: block; }
 
     .spinner {
@@ -326,24 +342,11 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .loading-text {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
+    .loading-text { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .loading-subtext { font-size: 13px; color: var(--text-3); }
 
-    .loading-subtext {
-      font-size: 13px;
-      color: var(--text-3);
-    }
-
-    /* ── Results — animate in ── */
-    .results {
-      display: none;
-      animation: fadeUp .35s ease;
-    }
-
+    /* ── Results ── */
+    .results { display: none; animation: fadeUp .35s ease; }
     .results.visible { display: block; }
 
     @keyframes fadeUp {
@@ -352,9 +355,7 @@
     }
 
     /* ── Product header ── */
-    .product-header {
-      margin-bottom: 16px;
-    }
+    .product-header { margin-bottom: 16px; }
 
     .product-name {
       font-family: var(--font-display);
@@ -364,11 +365,33 @@
       margin-bottom: 6px;
     }
 
-    .product-price {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--text-2);
+    .product-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
+
+    .product-price { font-size: 20px; font-weight: 600; color: var(--text-2); }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+    }
+
+    .badge.TELL_ME_ITS_GOOD  { background: var(--success-surf); color: var(--success); border: 1px solid var(--success); }
+    .badge.CLEAN_PICK        { background: #ECFDF5; color: #0F6E56; border: 1px solid #3A9E6F; }
+    .badge.ETHICAL_PICK      { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
+    .badge.QUALITY_PICK      { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
+    .badge.NOT_LISTED        { background: var(--danger-surf); color: var(--danger); border: 1px solid var(--danger); }
 
     /* ── TL;DR ── */
     .tldr-strip {
@@ -383,126 +406,157 @@
       line-height: 1.4;
     }
 
-    /* ── Value verdict banner ── */
-    .verdict-banner {
+    /* ── Overall score ── */
+    .overall-score-card {
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 24px 28px;
       margin-bottom: 14px;
       display: flex;
       align-items: center;
-      gap: 18px;
-    }
-
-    .verdict-banner.great_deal { background: var(--success-surf); border: 1.5px solid var(--success); }
-    .verdict-banner.fair_price { background: var(--warning-surf); border: 1.5px solid var(--warning); }
-    .verdict-banner.overpriced { background: var(--danger-surf);  border: 1.5px solid var(--danger);  }
-
-    .verdict-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
-
-    .verdict-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      margin-bottom: 3px;
-    }
-
-    .verdict-banner.great_deal .verdict-label { color: var(--success); }
-    .verdict-banner.fair_price .verdict-label { color: var(--warning); }
-    .verdict-banner.overpriced .verdict-label { color: var(--danger);  }
-
-    .verdict-title {
-      font-family: var(--font-display);
-      font-size: 20px;
-      color: var(--text);
-      line-height: 1.2;
-    }
-
-    /* ── Score bars ── */
-    .scores-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .score-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
+      gap: 24px;
       box-shadow: var(--shadow-sm);
     }
 
-    .score-card-label {
-      font-size: 11px;
+    .overall-score-num {
+      font-family: var(--font-display);
+      font-size: 56px;
+      line-height: 1;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .overall-score-num span { font-family: var(--font-body); font-size: 18px; color: var(--text-3); }
+
+    .overall-score-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .overall-score-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+    /* ── Gate score rows ── */
+    .gates-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 480px) { .gates-grid { grid-template-columns: 1fr; } }
+
+    .gate-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .gate-card.passes  { border-top: 3px solid var(--success); }
+    .gate-card.fails   { border-top: 3px solid var(--danger); }
+    .gate-card.disqualified { border-top: 3px solid var(--danger); background: var(--danger-surf); }
+
+    .gate-label {
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: .08em;
       text-transform: uppercase;
       color: var(--text-3);
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
-    .score-number {
+    .gate-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+
+    .gate-score-num {
       font-family: var(--font-display);
-      font-size: 32px;
+      font-size: 28px;
       line-height: 1;
       color: var(--text);
       margin-bottom: 8px;
     }
 
-    .score-number span {
-      font-family: var(--font-body);
-      font-size: 14px;
-      color: var(--text-3);
+    .gate-score-num span { font-family: var(--font-body); font-size: 12px; color: var(--text-3); }
+
+    .gate-bar-wrap { height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .gate-bar-fill { height: 100%; border-radius: 100px; transition: width 1s ease; width: 0%; }
+
+    .gate-pass-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-top: 8px;
     }
 
-    .score-bar-wrap {
-      height: 5px;
-      background: var(--border);
-      border-radius: 100px;
+    .gate-card.passes .gate-pass-label  { color: var(--success); }
+    .gate-card.fails .gate-pass-label   { color: var(--danger); }
+    .gate-card.disqualified .gate-pass-label { color: var(--danger); }
+
+    /* ── Criteria accordion ── */
+    .criteria-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
 
-    .score-bar-fill {
-      height: 100%;
-      border-radius: 100px;
-      transition: width 1s ease;
-      width: 0%; /* starts at 0, animated via JS */
+    .criteria-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
     }
 
-    /* ── Brand tax callout ── */
-    .brand-tax-box {
-      background: var(--accent-surf);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
-      margin-bottom: 14px;
+    .criteria-header:hover { background: var(--surface); }
+
+    .criteria-gate-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .criteria-toggle { font-size: 12px; color: var(--text-3); }
+
+    .criteria-body { display: none; border-top: 1px solid var(--border); }
+    .criteria-body.open { display: block; }
+
+    .criterion-row {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .brand-tax-icon {
-      font-size: 20px;
+    .criterion-row:last-child { border-bottom: none; }
+
+    .criterion-score-badge {
       flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .brand-tax-label {
-      font-size: 11px;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--accent-text);
-      margin-bottom: 4px;
+      margin-top: 2px;
     }
 
-    .brand-tax-text {
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.5;
+    .criterion-score-badge.high   { background: var(--success-surf); color: var(--success); }
+    .criterion-score-badge.mid    { background: var(--warning-surf); color: var(--warning); }
+    .criterion-score-badge.low    { background: var(--danger-surf); color: var(--danger); }
+
+    .criterion-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .criterion-evidence { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+    .criterion-source {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--accent-text);
+      text-decoration: none;
+      word-break: break-all;
     }
+
+    .criterion-source:hover { text-decoration: underline; }
 
     /* ── Result cards (shared) ── */
     .result-card {
@@ -523,7 +577,7 @@
       margin-bottom: 14px;
     }
 
-    /* ── Pros / Cons columns ── */
+    /* ── Pros / Cons ── */
     .pros-cons-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -531,10 +585,7 @@
       margin-bottom: 12px;
     }
 
-    @media (max-width: 480px) {
-      .pros-cons-grid { grid-template-columns: 1fr; }
-      .scores-row { grid-template-columns: 1fr 1fr; } /* keep side by side even on mobile */
-    }
+    @media (max-width: 480px) { .pros-cons-grid { grid-template-columns: 1fr; } }
 
     .pros-card {
       background: var(--success-surf);
@@ -559,14 +610,9 @@
     }
 
     .pros-card .pros-cons-title { color: var(--success); }
-    .cons-card .pros-cons-title { color: var(--danger);  }
+    .cons-card .pros-cons-title { color: var(--danger); }
 
-    .pros-cons-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .pros-cons-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 
     .pros-cons-list li {
       display: flex;
@@ -576,44 +622,14 @@
       line-height: 1.45;
     }
 
-    .pros-cons-list li::before {
-      flex-shrink: 0;
-      margin-top: 2px;
-      font-size: 12px;
-    }
-
+    .pros-cons-list li::before { flex-shrink: 0; margin-top: 2px; font-size: 12px; }
     .pros-card .pros-cons-list li::before { content: '✓'; color: var(--success); font-weight: 700; }
     .cons-card .pros-cons-list li::before { content: '✗'; color: var(--danger);  font-weight: 700; }
 
-    /* ── Best time to buy ── */
-    .buy-timing {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .buy-timing-icon {
-      font-size: 22px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .buy-timing-text {
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.6;
-    }
-
     /* ── Alternatives ── */
-    .alternatives-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    .alternatives-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    @media (max-width: 400px) {
-      .alternatives-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 400px) { .alternatives-grid { grid-template-columns: 1fr; } }
 
     .alt-card {
       background: var(--surface);
@@ -622,18 +638,8 @@
       padding: 14px 16px;
     }
 
-    .alt-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .alt-reason {
-      font-size: 12px;
-      color: var(--text-2);
-      line-height: 1.45;
-    }
+    .alt-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .alt-reason { font-size: 12px; color: var(--text-2); line-height: 1.45; }
 
     /* ── Real Talk ── */
     .real-talk-box {
@@ -647,44 +653,141 @@
       font-style: italic;
     }
 
-    /* ── Reset button ── */
-    .btn-reset {
+    /* ── Listing post section ── */
+    .post-section {
+      display: none;
+      animation: fadeUp .4s ease;
+      margin-top: 8px;
+    }
+
+    .post-section.visible { display: block; }
+
+    .post-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0 20px;
+    }
+
+    .post-divider-line { flex: 1; height: 1px; background: var(--border); }
+
+    .post-divider-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    .post-hook {
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.3;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .post-verdict {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .post-gate-summaries {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .post-gate-row { display: flex; gap: 12px; align-items: flex-start; }
+
+    .post-gate-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      width: 100%;
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-2);
-      background: var(--surface);
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .post-gate-icon.g1 { background: var(--accent-surf); color: var(--accent-text); }
+    .post-gate-icon.g2 { background: var(--success-surf); color: var(--success); }
+    .post-gate-icon.g3 { background: #EEF2FF; color: #4338CA; }
+
+    .post-gate-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+    .post-buyer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 480px) { .post-buyer-grid { grid-template-columns: 1fr; } }
+
+    .post-buyer-card {
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 12px;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: all .15s;
+      padding: 14px 16px;
     }
 
-    .btn-reset:hover {
-      background: var(--surface-2);
-      color: var(--text);
+    .post-buyer-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
+
+    .post-buyer-card.for .post-buyer-label  { color: var(--success); }
+    .post-buyer-card.not .post-buyer-label  { color: var(--danger); }
+
+    .post-buyer-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+    .post-bottom-line {
+      background: var(--accent-surf);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      font-family: var(--font-display);
+      font-size: 17px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* ── Loading post ── */
+    .post-loading {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-top: 8px;
+    }
+
+    .post-loading.visible { display: block; }
+
+    .post-loading-text { font-size: 14px; color: var(--text-2); margin-top: 12px; }
 
     /* ── Footer ── */
-    .footer {
-      text-align: center;
-      margin-top: 64px;
-      font-size: 12px;
-      color: var(--text-3);
-    }
+    .footer { text-align: center; margin-top: 64px; font-size: 12px; color: var(--text-3); }
 
-    /* ── Responsive ── */
     @media (max-width: 480px) {
       .page { padding: 40px 16px 60px; }
       .input-card { padding: 20px; }
-      .verdict-banner { flex-direction: column; align-items: flex-start; gap: 12px; }
     }
   </style>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -699,28 +802,49 @@
         <span class="logo-dot"></span>
         tellmeitsgood.com
       </div>
-      <h1 class="headline">Is it worth buying?</h1>
-      <p class="subheadline">Paste any product link. Get an honest value analysis in seconds — no fluff, no ads.</p>
+      <h1 class="headline">Buy less. Buy better.</h1>
+      <p class="subheadline">Paste a product link or type a name. We research quality, safety, and ethics — then tell you straight.</p>
     </header>
 
     <!-- ── Input section ── -->
     <div id="inputSection">
       <div class="input-card">
-        <label class="input-label" for="urlInput">Paste a product link</label>
 
-        <!-- URL input — the new main input -->
-        <input
-          type="url"
-          id="urlInput"
-          class="url-input"
-          placeholder="Paste any product link — Amazon, Best Buy, anywhere..."
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        />
+        <!-- Tab switcher -->
+        <div class="input-tabs">
+          <button class="input-tab active" id="tabUrl" onclick="switchTab('url')">Paste a link</button>
+          <button class="input-tab" id="tabName" onclick="switchTab('name')">Search by name</button>
+        </div>
 
-        <!-- Fallback textarea — only shown when scraping fails -->
+        <!-- URL panel -->
+        <div class="input-panel active" id="panelUrl">
+          <label class="input-label" for="urlInput">Product URL</label>
+          <input
+            type="url"
+            id="urlInput"
+            class="url-input"
+            placeholder="https://www.bestbuy.com/..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <!-- Name search panel -->
+        <div class="input-panel" id="panelName">
+          <label class="input-label" for="queryInput">Product name or brand</label>
+          <input
+            type="text"
+            id="queryInput"
+            class="query-input"
+            placeholder="e.g. Seventh Generation dish soap"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <!-- Fallback textarea (shown when URL scraping fails) -->
         <div class="fallback-section" id="fallbackSection">
           <label class="fallback-label" for="fallbackInput">
             Or paste the product name and price manually:
@@ -730,7 +854,7 @@
             class="fallback-textarea"
             rows="3"
             maxlength="800"
-            placeholder="e.g. Sony WH-1000XM5 headphones, $279, noise cancelling, used for commuting..."
+            placeholder="e.g. Blueland dish soap tablets, $14, plant-based, refillable tin..."
           ></textarea>
         </div>
 
@@ -739,77 +863,80 @@
 
         <div class="input-actions">
           <button class="btn-primary" id="submitBtn" onclick="handleSubmit()">
-            Analyse this product →
+            Research this product →
           </button>
         </div>
       </div>
 
-      <!-- Example URLs hint -->
+      <!-- Example chips -->
       <p class="examples-hint">Try an example:</p>
       <div class="examples">
-        <span class="example-chip" onclick="fillExample('https://www.amazon.com/dp/B0CHWRXH8B')">AirPods Pro (Amazon)</span>
-        <span class="example-chip" onclick="fillExample('https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p')">Sony XM5 (Best Buy)</span>
-        <span class="example-chip" onclick="fillExample('https://www.amazon.com/dp/B08N5WRWNW')">Echo Dot (Amazon)</span>
+        <span class="example-chip" onclick="fillExample('url', 'https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p')">Sony XM5 (Best Buy)</span>
+        <span class="example-chip" onclick="fillExample('name', 'Blueland dish soap tablets')">Blueland dish soap</span>
+        <span class="example-chip" onclick="fillExample('name', 'Seventh Generation laundry detergent')">Seventh Generation</span>
       </div>
     </div>
 
     <!-- ── Loading state ── -->
-    <!-- Two different messages shown depending on which step we're on -->
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
-      <p class="loading-text" id="loadingText">Reading the product page...</p>
-      <p class="loading-subtext" id="loadingSubtext">Fetching details from the URL</p>
+      <p class="loading-text" id="loadingText">Researching...</p>
+      <p class="loading-subtext" id="loadingSubtext">This takes 20–40 seconds — Claude is searching real sources</p>
     </div>
 
     <!-- ── Results ── -->
     <div class="results" id="resultsSection">
 
-      <!-- Product name + price -->
+      <!-- Product name + price + badge -->
       <div class="product-header">
         <div class="product-name" id="productName"></div>
-        <div class="product-price" id="productPrice"></div>
+        <div class="product-meta">
+          <div class="product-price" id="productPrice"></div>
+          <div class="badge" id="productBadge"></div>
+        </div>
       </div>
 
-      <!-- TL;DR — punchy one-liner at the top -->
+      <!-- TL;DR -->
       <div class="tldr-strip" id="tldrStrip"></div>
 
-      <!-- Value verdict banner -->
-      <div class="verdict-banner" id="verdictBanner">
-        <div class="verdict-icon" id="verdictIcon"></div>
+      <!-- Overall score -->
+      <div class="overall-score-card">
+        <div class="overall-score-num" id="overallScoreNum">—<span> / 10</span></div>
         <div>
-          <div class="verdict-label" id="verdictLabel"></div>
-          <div class="verdict-title" id="verdictTitle"></div>
+          <div class="overall-score-label">Overall TMIG Score</div>
+          <div class="overall-score-desc" id="overallScoreDesc">Quality · Clean · Ethics</div>
         </div>
       </div>
 
-      <!-- Value Score + Quality Score side by side -->
-      <div class="scores-row">
-        <div class="score-card">
-          <div class="score-card-label">Value Score</div>
-          <div class="score-number" id="valueScoreNum">—<span> / 10</span></div>
-          <div class="score-bar-wrap">
-            <div class="score-bar-fill" id="valueBarFill" style="background: var(--accent)"></div>
-          </div>
+      <!-- Three gate cards -->
+      <div class="gates-grid">
+        <div class="gate-card" id="gate1Card">
+          <div class="gate-label">Gate 1</div>
+          <div class="gate-name">Value & Quality</div>
+          <div class="gate-score-num" id="gate1Score">—<span> / 10</span></div>
+          <div class="gate-bar-wrap"><div class="gate-bar-fill" id="gate1Bar" style="background: var(--accent)"></div></div>
+          <div class="gate-pass-label" id="gate1Pass"></div>
         </div>
-        <div class="score-card">
-          <div class="score-card-label">Quality Score</div>
-          <div class="score-number" id="qualityScoreNum">—<span> / 10</span></div>
-          <div class="score-bar-wrap">
-            <div class="score-bar-fill" id="qualityBarFill" style="background: var(--success)"></div>
-          </div>
+        <div class="gate-card" id="gate2Card">
+          <div class="gate-label">Gate 2</div>
+          <div class="gate-name">Clean & Safe</div>
+          <div class="gate-score-num" id="gate2Score">—<span> / 10</span></div>
+          <div class="gate-bar-wrap"><div class="gate-bar-fill" id="gate2Bar" style="background: var(--success)"></div></div>
+          <div class="gate-pass-label" id="gate2Pass"></div>
         </div>
-      </div>
-
-      <!-- Brand Tax callout -->
-      <div class="brand-tax-box" id="brandTaxBox">
-        <div class="brand-tax-icon">🏷️</div>
-        <div>
-          <div class="brand-tax-label">Brand Tax</div>
-          <div class="brand-tax-text" id="brandTaxText"></div>
+        <div class="gate-card" id="gate3Card">
+          <div class="gate-label">Gate 3</div>
+          <div class="gate-name">Ethical Company</div>
+          <div class="gate-score-num" id="gate3Score">—<span> / 10</span></div>
+          <div class="gate-bar-wrap"><div class="gate-bar-fill" id="gate3Bar" style="background: #818CF8)"></div></div>
+          <div class="gate-pass-label" id="gate3Pass"></div>
         </div>
       </div>
 
-      <!-- Pros / Cons in two columns -->
+      <!-- Criteria detail accordions (one per gate) -->
+      <div id="criteriaSection"></div>
+
+      <!-- Pros / Cons -->
       <div class="pros-cons-grid">
         <div class="pros-card">
           <div class="pros-cons-title">Pros</div>
@@ -824,9 +951,7 @@
       <!-- Best time to buy -->
       <div class="result-card">
         <div class="result-card-title">⏰ Best Time to Buy</div>
-        <div class="buy-timing">
-          <div class="buy-timing-text" id="bestTimeToBuy"></div>
-        </div>
+        <div id="bestTimeToBuy" style="font-size:14px; color:var(--text); line-height:1.6;"></div>
       </div>
 
       <!-- Alternatives -->
@@ -841,15 +966,61 @@
         <div class="real-talk-box" id="realTalkText"></div>
       </div>
 
+      <!-- Post loading indicator -->
+      <div class="post-loading" id="postLoading">
+        <div class="spinner"></div>
+        <div class="post-loading-text">Writing the full verdict...</div>
+      </div>
+
+      <!-- Generated listing post -->
+      <div class="post-section" id="postSection">
+        <div class="post-divider">
+          <div class="post-divider-line"></div>
+          <div class="post-divider-label">The verdict</div>
+          <div class="post-divider-line"></div>
+        </div>
+
+        <div class="post-hook" id="postHook"></div>
+        <div class="post-verdict" id="postVerdict"></div>
+
+        <div class="post-gate-summaries">
+          <div class="post-gate-row">
+            <div class="post-gate-icon g1">1</div>
+            <div class="post-gate-text" id="postGate1"></div>
+          </div>
+          <div class="post-gate-row">
+            <div class="post-gate-icon g2">2</div>
+            <div class="post-gate-text" id="postGate2"></div>
+          </div>
+          <div class="post-gate-row">
+            <div class="post-gate-icon g3">3</div>
+            <div class="post-gate-text" id="postGate3"></div>
+          </div>
+        </div>
+
+        <div class="post-buyer-grid">
+          <div class="post-buyer-card for">
+            <div class="post-buyer-label">Buy it if...</div>
+            <div class="post-buyer-text" id="postFor"></div>
+          </div>
+          <div class="post-buyer-card not">
+            <div class="post-buyer-label">Skip it if...</div>
+            <div class="post-buyer-text" id="postNot"></div>
+          </div>
+        </div>
+
+        <div class="post-bottom-line" id="postBottomLine"></div>
+      </div>
+
       <!-- Reset -->
       <button class="btn-reset" onclick="resetApp()">
-        ← Analyse another product
+        ← Research another product
       </button>
     </div>
 
     <!-- ── Footer ── -->
     <footer class="footer">
-      <p>Built with calm intentions · No data stored · No ads</p>
+      <p>Quality · Clean · Ethics · No ads · No sponsored listings</p>
     </footer>
 
   </div>
@@ -858,72 +1029,93 @@
     // ============================================================
     // STATE
     // ============================================================
-    // Tracks whether we're in URL mode or fallback (manual text) mode
+    let activeTab = 'url';       // 'url' or 'name'
     let usingFallback = false;
 
     // ============================================================
-    // FILL EXAMPLE — puts a demo URL into the input
+    // TAB SWITCHER
     // ============================================================
-    function fillExample(url) {
-      document.getElementById('urlInput').value = url;
-      document.getElementById('urlInput').focus();
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabUrl').classList.toggle('active', tab === 'url');
+      document.getElementById('tabName').classList.toggle('active', tab === 'name');
+      document.getElementById('panelUrl').classList.toggle('active', tab === 'url');
+      document.getElementById('panelName').classList.toggle('active', tab === 'name');
+      hideError();
+      hideFallback();
+      usingFallback = false;
+    }
+
+    // ============================================================
+    // FILL EXAMPLE
+    // ============================================================
+    function fillExample(type, value) {
+      switchTab(type);
+      if (type === 'url') {
+        document.getElementById('urlInput').value = value;
+        document.getElementById('urlInput').focus();
+      } else {
+        document.getElementById('queryInput').value = value;
+        document.getElementById('queryInput').focus();
+      }
     }
 
     // ============================================================
     // HANDLE SUBMIT
-    // Called when the user clicks "Analyse this product →"
     // ============================================================
     async function handleSubmit() {
       hideError();
 
-      // ── Step 1: Figure out if we're in URL mode or fallback text mode ──
       if (usingFallback) {
-        // Fallback: user typed product info manually after scraping failed
+        // Fallback manual text path
         const manualText = document.getElementById('fallbackInput').value.trim();
         if (!manualText || manualText.length < 10) {
-          showError('Describe the product a bit more so I can give you a useful verdict.');
+          showError('Describe the product a bit more so we can give you a useful verdict.');
           return;
         }
-        await runAnalysis(manualText);
-      } else {
-        // Normal: user pasted a URL — scrape it first
-        const url = document.getElementById('urlInput').value.trim();
+        await runResearch({ productData: manualText });
 
+      } else if (activeTab === 'name') {
+        // Name search path — goes straight to research with query
+        const query = document.getElementById('queryInput').value.trim();
+        if (!query || query.length < 3) {
+          showError('Enter a product name or brand to search.');
+          return;
+        }
+        showLoading('Researching ' + query + '...', 'Claude is searching reviews, ingredients, and company records');
+        await runResearch({ query });
+
+      } else {
+        // URL path — scrape first, then research
+        const url = document.getElementById('urlInput').value.trim();
         if (!url) {
           showError('Paste a full product link starting with https://');
           return;
         }
-
-        // Quick client-side URL check before even hitting the server
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
           showError('Paste a full product link starting with https://');
           return;
         }
 
-        // ── Step 2: Scrape the URL ──
         showLoading('Reading the product page...', 'Fetching details from the URL');
 
-        let productData;
+        let scraped;
         try {
-          productData = await scrapeUrl(url);
+          scraped = await scrapeUrl(url);
         } catch (err) {
-          // Scraping failed — show friendly error + reveal fallback textarea
           hideLoading();
-          showError('This site blocked us. Try copying the product name and price instead.');
+          showError('This site blocked us. Try pasting the product name in the "Search by name" tab instead.');
           showFallback();
           return;
         }
 
-        // ── Step 3: Send scraped text to Claude ──
-        showLoading('Analysing the value...', 'Claude is reading the reviews and specs');
-
-        await runAnalysis(productData);
+        showLoading('Running the Triple Filter...', 'Claude is searching reviews, ingredients, and company records — this takes ~30 seconds');
+        await runResearch({ productData: scraped.productData, sourceUrl: scraped.sourceUrl });
       }
     }
 
     // ============================================================
-    // SCRAPE URL — calls our /api/scrape serverless function
-    // Returns the scraped markdown text, or throws on failure
+    // SCRAPE URL
     // ============================================================
     async function scrapeUrl(url) {
       const response = await fetch('/api/scrape', {
@@ -933,24 +1125,21 @@
       });
 
       const data = await response.json();
-
       if (!response.ok || !data.success) {
-        // Throw with the server's error message so we can show it
         throw new Error(data.message || 'Scraping failed');
       }
-
-      return data.productData; // the scraped markdown text
+      return data;
     }
 
     // ============================================================
-    // RUN ANALYSIS — calls /api/verdict with the product text
+    // RUN RESEARCH — calls /api/research
     // ============================================================
-    async function runAnalysis(productData) {
+    async function runResearch(payload) {
       try {
-        const response = await fetch('/api/verdict', {
+        const response = await fetch('/api/research', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productData }),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -958,127 +1147,242 @@
           throw new Error(err.error || `Server error ${response.status}`);
         }
 
-        const result = await response.json();
-        displayResults(result);
+        const research = await response.json();
+        displayResearch(research);
+
+        // Auto-trigger the post generation
+        showPostLoading();
+        await runPost(research);
 
       } catch (err) {
         hideLoading();
-        showError('Something went wrong while analysing. Try again in a moment — ' + err.message);
-        console.error('Analysis error:', err);
-        // Show input again so user can retry
+        showError('Something went wrong while researching. Try again — ' + err.message);
         document.getElementById('inputSection').style.display = 'block';
       }
     }
 
     // ============================================================
-    // DISPLAY RESULTS — fills all the result fields with Claude's data
+    // RUN POST — calls /api/post with the research data
     // ============================================================
-    function displayResults(data) {
+    async function runPost(research) {
+      try {
+        const response = await fetch('/api/post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ research }),
+        });
+
+        if (!response.ok) {
+          // Post failing is non-fatal — hide loader silently
+          hidePostLoading();
+          return;
+        }
+
+        const result = await response.json();
+        displayPost(result.post);
+
+      } catch (err) {
+        // Non-fatal — scores already shown, just hide the post loader
+        hidePostLoading();
+        console.error('Post generation error:', err);
+      }
+    }
+
+    // ============================================================
+    // DISPLAY RESEARCH — fills the scores + criteria sections
+    // ============================================================
+    function displayResearch(data) {
       hideLoading();
-
-      // ── Verdict config: maps Claude's string to UI properties ──
-      const verdictConfig = {
-        great_deal: { icon: '🟢', label: 'Great Deal',  cssClass: 'great_deal', title: 'Solid value for money.' },
-        fair_price: { icon: '🟡', label: 'Fair Price',  cssClass: 'fair_price', title: 'You get what you pay for.' },
-        overpriced: { icon: '🔴', label: 'Overpriced',  cssClass: 'overpriced', title: 'You can probably do better.' },
-      };
-
-      // Fallback if Claude returns something unexpected
-      const cfg = verdictConfig[data.valueVerdict] || verdictConfig['fair_price'];
 
       // ── Product name + price ──
       document.getElementById('productName').textContent = data.productName || 'Product';
       document.getElementById('productPrice').textContent = data.price || '';
 
+      // ── Badge ──
+      const badgeEl = document.getElementById('productBadge');
+      const badgeLabels = {
+        TELL_ME_ITS_GOOD: "⭐ Tell Me It's Good",
+        CLEAN_PICK:       "🌿 Clean Pick",
+        ETHICAL_PICK:     "🤝 Ethical Pick",
+        QUALITY_PICK:     "✓ Quality Pick",
+        NOT_LISTED:       "✗ Not Listed",
+      };
+      badgeEl.textContent = badgeLabels[data.badge] || data.badge;
+      badgeEl.className = 'badge ' + (data.badge || 'NOT_LISTED');
+
       // ── TL;DR ──
-      document.getElementById('tldrStrip').textContent = `"${data.tldr}"`;
+      document.getElementById('tldrStrip').textContent = '"' + (data.summary?.tldr || '') + '"';
 
-      // ── Verdict banner ──
-      const banner = document.getElementById('verdictBanner');
-      banner.className = `verdict-banner ${cfg.cssClass}`;
-      document.getElementById('verdictIcon').textContent = cfg.icon;
-      document.getElementById('verdictLabel').textContent = cfg.label;
-      document.getElementById('verdictTitle').textContent = cfg.title;
+      // ── Overall score ──
+      const overall = data.overallScore || 0;
+      document.getElementById('overallScoreNum').innerHTML = overall.toFixed(1) + '<span> / 10</span>';
 
-      // ── Score bars — animate after a tiny delay so the CSS transition fires ──
-      const valueScore = clamp(data.valueScore || 5, 1, 10);
-      const qualityScore = clamp(data.qualityScore || 5, 1, 10);
+      // ── Gate scores ──
+      renderGate('gate1', data.gate1);
+      renderGate('gate2', data.gate2);
+      renderGate('gate3', data.gate3);
 
-      document.getElementById('valueScoreNum').innerHTML = `${valueScore}<span> / 10</span>`;
-      document.getElementById('qualityScoreNum').innerHTML = `${qualityScore}<span> / 10</span>`;
+      // ── Criteria accordions ──
+      const criteriaSection = document.getElementById('criteriaSection');
+      criteriaSection.innerHTML = '';
+      [
+        { key: 'gate1', data: data.gate1 },
+        { key: 'gate2', data: data.gate2 },
+        { key: 'gate3', data: data.gate3 },
+      ].forEach(({ key, data: gate }) => {
+        if (!gate) return;
+        criteriaSection.appendChild(buildCriteriaAccordion(key, gate));
+      });
 
-      setTimeout(() => {
-        document.getElementById('valueBarFill').style.width = `${valueScore * 10}%`;
-        document.getElementById('qualityBarFill').style.width = `${qualityScore * 10}%`;
-      }, 120);
+      // ── Summary fields ──
+      const s = data.summary || {};
 
-      // ── Brand Tax ──
-      document.getElementById('brandTaxText').textContent = data.brandTax || 'No significant brand premium detected.';
+      document.getElementById('prosList').innerHTML = (s.pros || [])
+        .map(p => `<li>${p}</li>`).join('');
+      document.getElementById('consList').innerHTML = (s.cons || [])
+        .map(c => `<li>${c}</li>`).join('');
 
-      // ── Pros ──
-      document.getElementById('prosList').innerHTML = (data.pros || [])
-        .map(pro => `<li>${pro}</li>`)
+      document.getElementById('bestTimeToBuy').textContent = s.bestTimeToBuy || '';
+
+      document.getElementById('alternativesGrid').innerHTML = (s.alternatives || [])
+        .map(a => `<div class="alt-card"><div class="alt-name">${a.name}</div><div class="alt-reason">${a.reason}</div></div>`)
         .join('');
 
-      // ── Cons ──
-      document.getElementById('consList').innerHTML = (data.cons || [])
-        .map(con => `<li>${con}</li>`)
-        .join('');
-
-      // ── Best time to buy ──
-      document.getElementById('bestTimeToBuy').textContent = data.bestTimeToBuy || '';
-
-      // ── Alternatives ──
-      const altGrid = document.getElementById('alternativesGrid');
-      altGrid.innerHTML = (data.alternatives || []).map(alt => `
-        <div class="alt-card">
-          <div class="alt-name">${alt.name}</div>
-          <div class="alt-reason">${alt.reason}</div>
-        </div>
-      `).join('');
-
-      // ── Real Talk ──
-      document.getElementById('realTalkText').textContent = data.realTalk || '';
+      document.getElementById('realTalkText').textContent = s.realTalk || '';
 
       // ── Show results, hide input ──
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('resultsSection').classList.add('visible');
-
-      // Scroll to top so user sees the product name first
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Animate bars after short delay
+      setTimeout(() => {
+        animateGateBar('gate1', data.gate1);
+        animateGateBar('gate2', data.gate2);
+        animateGateBar('gate3', data.gate3);
+      }, 150);
+    }
+
+    // ── Render a gate card ──
+    function renderGate(key, gate) {
+      if (!gate) return;
+      const avg = gate.average || 0;
+      const passes = gate.passes;
+      const disq = gate.disqualified;
+
+      const card = document.getElementById(key + 'Card');
+      card.className = 'gate-card ' + (disq ? 'disqualified' : passes ? 'passes' : 'fails');
+
+      document.getElementById(key + 'Score').innerHTML = avg.toFixed(1) + '<span> / 10</span>';
+      document.getElementById(key + 'Pass').textContent = disq ? 'Disqualified' : passes ? 'Passes' : 'Does not pass';
+    }
+
+    // ── Animate gate bar ──
+    function animateGateBar(key, gate) {
+      if (!gate) return;
+      document.getElementById(key + 'Bar').style.width = (gate.average * 10) + '%';
+    }
+
+    // ── Build criteria accordion for a gate ──
+    function buildCriteriaAccordion(key, gate) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'criteria-card';
+
+      const header = document.createElement('div');
+      header.className = 'criteria-header';
+      header.innerHTML = `
+        <span class="criteria-gate-name">${gate.name} — criteria breakdown</span>
+        <span class="criteria-toggle" id="${key}Toggle">Show ↓</span>
+      `;
+      header.onclick = () => toggleCriteria(key);
+      wrapper.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = 'criteria-body';
+      body.id = key + 'Body';
+
+      const criteriaEntries = Object.values(gate.criteria || {});
+      criteriaEntries.forEach(criterion => {
+        const score = criterion.score || 0;
+        const scoreClass = score >= 7 ? 'high' : score >= 4 ? 'mid' : 'low';
+
+        const row = document.createElement('div');
+        row.className = 'criterion-row';
+        row.innerHTML = `
+          <div class="criterion-score-badge ${scoreClass}">${score}</div>
+          <div>
+            <div class="criterion-label">${criterion.label || ''}</div>
+            <div class="criterion-evidence">${criterion.evidence || ''}</div>
+            ${criterion.source_url && criterion.source_url !== 'null'
+              ? `<a class="criterion-source" href="${criterion.source_url}" target="_blank" rel="noopener">↗ Source</a>`
+              : ''}
+          </div>
+        `;
+        body.appendChild(row);
+      });
+
+      wrapper.appendChild(body);
+      return wrapper;
+    }
+
+    function toggleCriteria(key) {
+      const body = document.getElementById(key + 'Body');
+      const toggle = document.getElementById(key + 'Toggle');
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open', !isOpen);
+      toggle.textContent = isOpen ? 'Show ↓' : 'Hide ↑';
     }
 
     // ============================================================
-    // RESET — go back to the input state
+    // DISPLAY POST — fills the listing post section
+    // ============================================================
+    function displayPost(post) {
+      hidePostLoading();
+      if (!post) return;
+
+      document.getElementById('postHook').textContent = post.hook || '';
+      document.getElementById('postVerdict').textContent = post.verdict_paragraph || '';
+      document.getElementById('postGate1').textContent = post.gate_summaries?.gate1 || '';
+      document.getElementById('postGate2').textContent = post.gate_summaries?.gate2 || '';
+      document.getElementById('postGate3').textContent = post.gate_summaries?.gate3 || '';
+      document.getElementById('postFor').textContent = post.who_its_for || '';
+      document.getElementById('postNot').textContent = post.who_its_not_for || '';
+      document.getElementById('postBottomLine').textContent = post.bottom_line || '';
+
+      document.getElementById('postSection').classList.add('visible');
+    }
+
+    // ============================================================
+    // RESET
     // ============================================================
     function resetApp() {
-      // Hide results, show input
       document.getElementById('resultsSection').classList.remove('visible');
+      document.getElementById('postSection').classList.remove('visible');
+      document.getElementById('postLoading').classList.remove('visible');
+      document.getElementById('criteriaSection').innerHTML = '';
       document.getElementById('inputSection').style.display = 'block';
 
-      // Clear inputs
       document.getElementById('urlInput').value = '';
+      document.getElementById('queryInput').value = '';
       document.getElementById('fallbackInput').value = '';
 
-      // Reset score bars to 0 (so they animate again next time)
-      document.getElementById('valueBarFill').style.width = '0%';
-      document.getElementById('qualityBarFill').style.width = '0%';
+      ['gate1Bar', 'gate2Bar', 'gate3Bar'].forEach(id => {
+        document.getElementById(id).style.width = '0%';
+      });
 
-      // Hide fallback and errors
       hideFallback();
       hideError();
       usingFallback = false;
-
+      switchTab('url');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ============================================================
-    // FALLBACK — shown when scraping fails so user can type manually
+    // FALLBACK
     // ============================================================
     function showFallback() {
       usingFallback = true;
       document.getElementById('fallbackSection').classList.add('visible');
-      document.getElementById('submitBtn').textContent = 'Analyse this product →';
       document.getElementById('fallbackInput').focus();
     }
 
@@ -1088,10 +1392,10 @@
     }
 
     // ============================================================
-    // LOADING STATE — two different messages for scrape vs analyse
+    // LOADING
     // ============================================================
     function showLoading(text, subtext) {
-      document.getElementById('loadingText').textContent = text || 'Loading...';
+      document.getElementById('loadingText').textContent = text || 'Researching...';
       document.getElementById('loadingSubtext').textContent = subtext || '';
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('loadingState').classList.add('visible');
@@ -1103,14 +1407,21 @@
       document.getElementById('submitBtn').disabled = false;
     }
 
+    function showPostLoading() {
+      document.getElementById('postLoading').classList.add('visible');
+    }
+
+    function hidePostLoading() {
+      document.getElementById('postLoading').classList.remove('visible');
+    }
+
     // ============================================================
-    // ERROR STATE
+    // ERROR
     // ============================================================
     function showError(msg) {
       const el = document.getElementById('errorMsg');
       el.textContent = msg;
       el.classList.add('visible');
-      // Make sure the input section is visible so user sees the error
       document.getElementById('inputSection').style.display = 'block';
     }
 
@@ -1118,15 +1429,11 @@
       document.getElementById('errorMsg').classList.remove('visible');
     }
 
-    // ============================================================
-    // UTILITY — clamp a number between min and max
-    // ============================================================
-    function clamp(val, min, max) {
-      return Math.min(Math.max(val, min), max);
-    }
-
-    // ── Allow submit with Enter key in URL input ──
-    document.getElementById('urlInput').addEventListener('keydown', function(e) {
+    // ── Enter key support ──
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+    document.getElementById('queryInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleSubmit();
     });
   </script>
