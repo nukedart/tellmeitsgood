@@ -625,7 +625,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.6.4</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.6.5</p>
     </footer>
   </div>
 
@@ -1038,6 +1038,11 @@
       const urlParams = new URLSearchParams(window.location.search);
       const justUpgraded = urlParams.get('upgraded') === '1';
 
+      // Render immediately with logged-out defaults so the nav
+      // appears instantly — no waiting for network calls.
+      updateAuthBar();
+      updatePaywall();
+
       // Try to restore session. If the lock error wiped it, try a forced refresh.
       let { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -1047,12 +1052,13 @@
 
       currentUser = session?.user || null;
       if (currentUser) await checkProStatus();
+
+      // Update nav with real auth state (silently swaps if user is signed in)
       updateAuthBar();
       updatePaywall();
 
       // Coming back from Stripe checkout
       if (justUpgraded) {
-        // Clean the URL so refreshing doesn't re-trigger this
         window.history.replaceState({}, '', '/');
         showUpgradeBanner(!!currentUser);
       }

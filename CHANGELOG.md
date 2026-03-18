@@ -5,6 +5,17 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.6.5 — 2026-03-18
+
+### Fixed
+- Nav bar slow to appear on Brave and privacy-focused browsers.
+  `updateAuthBar()` previously only ran after the full async chain
+  (getSession → checkProStatus network call). Now renders immediately
+  with logged-out defaults, then silently updates once auth resolves.
+  Nav is visible instantly on every browser.
+
+---
+
 ## v0.6.4 — 2026-03-18
 
 ### Fixed
