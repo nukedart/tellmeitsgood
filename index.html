@@ -74,7 +74,8 @@
     body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 
     /* ── Auth bar ── */
-    .auth-bar { width: 100%; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border-strong); background: var(--card); min-height: 60px; box-shadow: var(--shadow-sm); }
+    .auth-bar { width: 100%; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border-strong); background: var(--card); min-height: 56px; box-shadow: var(--shadow-sm); }
+    @media (min-width: 520px) { .auth-bar { padding: 14px 28px; min-height: 60px; } }
     .auth-bar-left { display: flex; align-items: center; gap: 14px; }
     .auth-bar-right { display: flex; align-items: center; gap: 12px; }
     /* Usage pill — large enough to actually read */
@@ -164,15 +165,17 @@
     .paywall-signin-btn:hover { background: var(--surface-2); color: var(--text); }
 
     /* ── Layout ── */
-    .page { max-width: 680px; margin: 0 auto; padding: 60px 24px 80px; }
+    .page { max-width: 680px; margin: 0 auto; padding: 32px 16px 60px; }
+    @media (min-width: 520px) { .page { padding: 60px 24px 80px; } }
     .header { text-align: center; margin-bottom: 48px; }
     .logo { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 24px; }
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-    .headline { font-family: var(--font-display); font-size: clamp(32px, 6vw, 48px); line-height: 1.15; color: var(--text); margin-bottom: 16px; }
+    .headline { font-family: var(--font-display); font-size: clamp(26px, 6vw, 44px); line-height: 1.15; color: var(--text); margin-bottom: 12px; }
     .subheadline { font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 480px; margin: 0 auto; }
 
     /* ── Input card ── */
-    .input-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-md); margin-bottom: 20px; }
+    .input-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px 16px; box-shadow: var(--shadow-md); margin-bottom: 20px; }
+    @media (min-width: 520px) { .input-card { padding: 28px; } }
     .input-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius-md); padding: 4px; margin-bottom: 20px; }
     .input-tab { flex: 1; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent; border: none; border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; transition: all .15s; text-align: center; }
     .input-tab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
@@ -193,6 +196,14 @@
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn-reset { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; cursor: pointer; margin-top: 8px; transition: all .15s; }
     .btn-reset:hover { background: var(--surface-2); color: var(--text); }
+    /* ── Results CTA area ── */
+    .results-cta { margin: 20px 0 8px; display: flex; flex-direction: column; gap: 12px; }
+    .btn-buy-now { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-family: var(--font-body); font-size: 16px; font-weight: 700; color: #fff; background: var(--success); border: none; border-radius: var(--radius-lg); padding: 16px 24px; cursor: pointer; text-decoration: none; transition: all .15s; letter-spacing: .01em; }
+    .btn-buy-now:hover { background: #2E8B57; box-shadow: 0 4px 16px rgba(58,158,111,.35); transform: translateY(-1px); }
+    .results-signup-nudge { background: var(--accent-surf); border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .nudge-text { font-size: 14px; color: var(--text); line-height: 1.4; flex: 1; min-width: 180px; }
+    .nudge-btn { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 16px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+    .nudge-btn:hover { background: var(--accent-hover); }
 
     /* ── Error ── */
     .error-msg { display: none; background: var(--danger-surf); border: 1px solid var(--danger); border-radius: var(--radius-md); padding: 14px 16px; font-size: 13px; color: var(--danger); margin-top: 12px; line-height: 1.5; }
@@ -246,15 +257,15 @@
     .tldr-strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 22px; margin-bottom: 14px; font-family: var(--font-display); font-size: 18px; color: var(--text); line-height: 1.4; }
 
     /* ── Overall score ── */
-    .overall-score-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px 28px; margin-bottom: 14px; display: flex; align-items: center; gap: 24px; box-shadow: var(--shadow-sm); }
-    .overall-score-num { font-family: var(--font-display); font-size: 56px; line-height: 1; color: var(--text); flex-shrink: 0; }
+    .overall-score-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px 24px; margin-bottom: 14px; display: flex; align-items: center; gap: 20px; box-shadow: var(--shadow-sm); flex-wrap: wrap; }
+    .overall-score-num { font-family: var(--font-display); font-size: clamp(40px, 10vw, 56px); line-height: 1; color: var(--text); flex-shrink: 0; }
     .overall-score-num span { font-family: var(--font-body); font-size: 18px; color: var(--text-3); }
     .overall-score-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
     .overall-score-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; }
 
     /* ── Gate cards ── */
-    .gates-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    @media (max-width: 480px) { .gates-grid { grid-template-columns: 1fr; } }
+    .gates-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
+    @media (min-width: 520px) { .gates-grid { grid-template-columns: 1fr 1fr 1fr; } }
     .gate-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
     .gate-card.passes       { border-top: 3px solid var(--success); }
     .gate-card.fails        { border-top: 3px solid var(--danger); }
@@ -332,8 +343,8 @@
     .post-gate-icon.g2 { background: var(--success-surf); color: var(--success); }
     .post-gate-icon.g3 { background: #EEF2FF; color: #4338CA; }
     .post-gate-text { font-size: 13px; color: var(--text); line-height: 1.6; }
-    .post-buyer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-    @media (max-width: 480px) { .post-buyer-grid { grid-template-columns: 1fr; } }
+    .post-buyer-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
+    @media (min-width: 520px) { .post-buyer-grid { grid-template-columns: 1fr 1fr; } }
     .post-buyer-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
     .post-buyer-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
     .post-buyer-card.for .post-buyer-label { color: var(--success); }
@@ -414,8 +425,8 @@
   <div class="page">
     <header class="header">
       <div class="logo"><span class="logo-dot"></span>tellmeitsgood.com</div>
-      <h1 class="headline">Buy less. Buy better.</h1>
-      <p class="subheadline">Paste a product link or type a name. We research quality, safety, and ethics — then tell you straight.</p>
+      <h1 class="headline">The trusted place to discover products worth buying.</h1>
+      <p class="subheadline">High quality. Non-toxic. From honest companies. AI-researched so it stays current — not sponsored, not curated by ads.</p>
     </header>
 
     <!-- ── Input section ── -->
@@ -444,11 +455,14 @@
         </div>
       </div>
 
-      <p class="examples-hint">Try an example:</p>
-      <div class="examples">
-        <span class="example-chip" onclick="fillExample('url', 'https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p')">Sony XM5 (Best Buy)</span>
+      <p class="examples-hint">People are researching right now:</p>
+      <div class="examples" id="exampleChips">
+        <span class="example-chip" onclick="fillExample('name', 'Allbirds Tree Runners')">Allbirds shoes</span>
         <span class="example-chip" onclick="fillExample('name', 'Blueland dish soap tablets')">Blueland dish soap</span>
+        <span class="example-chip" onclick="fillExample('name', 'Patagonia Better Sweater fleece')">Patagonia fleece</span>
+        <span class="example-chip" onclick="fillExample('name', 'Pela iPhone case')">Pela phone case</span>
         <span class="example-chip" onclick="fillExample('name', 'Seventh Generation laundry detergent')">Seventh Generation</span>
+        <span class="example-chip" onclick="fillExample('name', 'Dr. Bronners castile soap')">Dr. Bronner's soap</span>
       </div>
 
       <!-- Paywall banner — shown below input when free limit reached -->
@@ -467,7 +481,7 @@
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
       <p class="loading-text" id="loadingText">Researching...</p>
-      <p class="loading-subtext" id="loadingSubtext">This takes 20–40 seconds — Claude is searching real sources</p>
+      <p class="loading-subtext" id="loadingSubtext"></p>
     </div>
 
     <!-- ── Results ── -->
@@ -565,11 +579,22 @@
         <div class="post-bottom-line" id="postBottomLine"></div>
       </div>
 
+      <!-- Buy now + sign up nudge — shown after results -->
+      <div class="results-cta" id="resultsCta">
+        <a class="btn-buy-now" id="buyNowBtn" href="#" target="_blank" rel="noopener sponsored" style="display:none">
+          Buy this product →
+        </a>
+        <div class="results-signup-nudge" id="resultsSignupNudge" style="display:none">
+          <div class="nudge-text">Like this verdict? <strong>Sign up free</strong> to save your searches and get history across every device.</div>
+          <button class="nudge-btn" onclick="openModal('authModal')">Save this result</button>
+        </div>
+      </div>
+
       <button class="btn-reset" onclick="resetApp()">← Research another product</button>
     </div>
 
     <footer class="footer">
-      <p>Quality · Clean · Ethics · No ads · No sponsored listings</p>
+      <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
       <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.5.0</p>
     </footer>
   </div>
@@ -778,12 +803,16 @@
           return;
         }
 
+        // Store results in a map so onclick just passes an ID (avoids escaping issues)
+        window._historyCache = {};
+        data.forEach(row => { window._historyCache[row.id] = row.full_result; });
+
         list.innerHTML = '<div class="history-list">' +
           data.map(row => {
             const date = new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             const score = row.overall_score ? row.overall_score.toFixed(1) : '—';
             return `
-              <div class="history-item" onclick="loadHistoryItem('${row.id}', ${JSON.stringify(JSON.stringify(row.full_result))})">
+              <div class="history-item" onclick="loadHistoryItem('${row.id}')">
                 <div class="history-badge-dot ${row.badge || 'NOT_LISTED'}"></div>
                 <div class="history-item-name">${escapeHtml(row.product_name || 'Unknown')}</div>
                 <div class="history-item-score">${score}/10</div>
@@ -800,12 +829,14 @@
       }
     }
 
-    function loadHistoryItem(id, fullResultJson) {
+    function loadHistoryItem(id) {
       closeModal('historyModal');
       try {
-        const research = JSON.parse(fullResultJson);
-        displayResearch(research);
-        // Don't re-save when loading from history
+        const research = window._historyCache[id];
+        if (!research) { console.error('History item not found in cache:', id); return; }
+        // full_result may be stored as a JSON string or already an object
+        const data = typeof research === 'string' ? JSON.parse(research) : research;
+        displayResearch(data);
       } catch (err) {
         console.error('Could not load history item:', err);
       }
@@ -1129,6 +1160,12 @@
       document.getElementById('resultsSection').classList.add('visible');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
+      // Wire up buy now + signup nudge
+      updateResultsCta(data);
+
+      // Rotate chips for next search
+      rotateExampleChips();
+
       setTimeout(() => {
         animateGateBar('gate1', data.gate1);
         animateGateBar('gate2', data.gate2);
@@ -1237,6 +1274,174 @@
 
     document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
     document.getElementById('queryInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
+
+    // ============================================================
+    // ANIMATED LOADING MESSAGES
+    // Cycles through entertaining copy while Claude researches.
+    // Different message sets for scraping vs full research.
+    // ============================================================
+    const LOADING_MESSAGES = {
+      scrape: [
+        "Reading the product page...",
+        "Grabbing specs and pricing...",
+        "Getting the details...",
+      ],
+      research: [
+        ["Checking quality reviews...",          "Digging through Wirecutter, Reddit, and owner reports"],
+        ["Sniffing out the ingredients...",       "Cross-referencing EWG Skin Deep and safety databases"],
+        ["Investigating the company...",          "Checking BBB, labor records, and greenwashing claims"],
+        ["Crunching the scores...",               "Applying the Triple Filter across 15 criteria"],
+        ["Reading between the lines...",          "What do actual owners say vs what the marketing claims?"],
+        ["Almost there...",                       "Writing your honest verdict — no ads, no spin"],
+        ["Still going (it's thorough)...",        "Claude is searching multiple sources for each score"],
+      ],
+    };
+
+    let _loadingInterval = null;
+
+    function startLoadingMessages(phase) {
+      clearInterval(_loadingInterval);
+      const msgs = LOADING_MESSAGES[phase] || LOADING_MESSAGES.research;
+      let i = 0;
+
+      function update() {
+        const entry = msgs[i % msgs.length];
+        if (Array.isArray(entry)) {
+          document.getElementById('loadingText').textContent    = entry[0];
+          document.getElementById('loadingSubtext').textContent = entry[1];
+        } else {
+          document.getElementById('loadingText').textContent    = entry;
+          document.getElementById('loadingSubtext').textContent = '';
+        }
+        i++;
+      }
+
+      update(); // show first message immediately
+      _loadingInterval = setInterval(update, 3500);
+    }
+
+    function stopLoadingMessages() {
+      clearInterval(_loadingInterval);
+      _loadingInterval = null;
+    }
+
+    // Override showLoading to also start the message cycle
+    const _origShowLoading = showLoading;
+    function showLoading(text, sub) {
+      document.getElementById('loadingText').textContent    = text || 'Researching...';
+      document.getElementById('loadingSubtext').textContent = sub || '';
+      document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('loadingState').classList.add('visible');
+      document.getElementById('submitBtn').disabled = true;
+    }
+
+    const _origHideLoading = hideLoading;
+    function hideLoading() {
+      document.getElementById('loadingState').classList.remove('visible');
+      document.getElementById('submitBtn').disabled = false;
+      stopLoadingMessages();
+    }
+
+    // Patch handleSubmit to use animated messages
+    // We do this by monkey-patching scrapeUrl and runResearch calls
+    // via overriding the loading call points in the flow.
+    // Simpler: we override showLoading calls at call sites.
+    // Actually — we add a startup hook on the submit button directly.
+    document.getElementById('submitBtn').addEventListener('click', function() {
+      // Give the normal handler a tick, then start animation
+      setTimeout(() => {
+        if (document.getElementById('loadingState').classList.contains('visible')) {
+          // If we're in URL mode, start with scrape messages
+          const isUrlMode = document.getElementById('tabUrl').classList.contains('active');
+          startLoadingMessages(isUrlMode ? 'scrape' : 'research');
+          // Switch to research messages after ~5s (after scraping completes)
+          if (isUrlMode) {
+            setTimeout(() => {
+              if (document.getElementById('loadingState').classList.contains('visible')) {
+                startLoadingMessages('research');
+              }
+            }, 6000);
+          }
+        }
+      }, 100);
+    }, true); // capture phase so it fires before onclick
+
+    // ============================================================
+    // BUY NOW BUTTON + SIGNUP NUDGE wiring
+    // Called from displayResearch with the product URL if available
+    // ============================================================
+    function updateResultsCta(data) {
+      const buyBtn   = document.getElementById('buyNowBtn');
+      const nudge    = document.getElementById('resultsSignupNudge');
+
+      // Buy Now — show if we have a product URL
+      // Using Amazon affiliate tag as placeholder — replace with your tag
+      const productUrl = data.productUrl || null;
+      if (productUrl && productUrl !== 'null' && productUrl.startsWith('http')) {
+        // Append affiliate tag if it's an Amazon URL
+        let finalUrl = productUrl;
+        if (productUrl.includes('amazon.com') && !productUrl.includes('tag=')) {
+          finalUrl = productUrl + (productUrl.includes('?') ? '&' : '?') + 'tag=tellmeitsgood-20';
+        }
+        buyBtn.href = finalUrl;
+        buyBtn.style.display = 'flex';
+
+        // Personalise the button text based on verdict
+        const verdict = data.badge || '';
+        if (verdict === 'TELL_ME_ITS_GOOD') {
+          buyBtn.textContent = '✓ Buy this — it earned the badge →';
+        } else if (verdict === 'NOT_LISTED') {
+          buyBtn.textContent = 'View product page (we had concerns) →';
+          buyBtn.style.background = 'var(--text-2)';
+        } else {
+          buyBtn.textContent = 'View product page →';
+          buyBtn.style.background = 'var(--text-2)';
+        }
+      } else {
+        buyBtn.style.display = 'none';
+      }
+
+      // Signup nudge — show only for logged-out users
+      nudge.style.display = !currentUser ? 'flex' : 'none';
+    }
+
+    // ============================================================
+    // ROTATING EXAMPLE CHIPS
+    // Shows 4 random chips from a larger pool each visit/search
+    // ============================================================
+    const EXAMPLE_POOL = [
+      { type: 'name', label: 'Allbirds shoes',            value: 'Allbirds Tree Runners' },
+      { type: 'name', label: 'Blueland dish soap',        value: 'Blueland dish soap tablets' },
+      { type: 'name', label: 'Patagonia fleece',          value: 'Patagonia Better Sweater fleece' },
+      { type: 'name', label: 'Pela phone case',           value: 'Pela eco-friendly iPhone case' },
+      { type: 'name', label: 'Seventh Generation',        value: 'Seventh Generation laundry detergent' },
+      { type: 'name', label: "Dr. Bronner's soap",        value: "Dr. Bronner's castile soap" },
+      { type: 'name', label: 'Burt's Bees lip balm',    value: "Burt's Bees beeswax lip balm" },
+      { type: 'name', label: 'Hydro Flask bottle',        value: 'Hydro Flask 32oz water bottle' },
+      { type: 'name', label: 'Grove Co. cleaner',         value: 'Grove Collaborative multi-surface spray' },
+      { type: 'name', label: 'Bombas socks',              value: 'Bombas ankle socks' },
+      { type: 'name', label: 'Sonos speaker',             value: 'Sonos Era 100 speaker' },
+      { type: 'name', label: 'Stanley tumbler',           value: 'Stanley Quencher 40oz tumbler' },
+      { type: 'name', label: 'EWG Verified sunscreen',    value: 'Badger Sport sunscreen SPF 40' },
+      { type: 'name', label: 'Cotopaxi backpack',         value: 'Cotopaxi Allpa 35L backpack' },
+    ];
+
+    function rotateExampleChips() {
+      const container = document.getElementById('exampleChips');
+      if (!container) return;
+
+      // Pick 5 random chips without repeating
+      const shuffled = [...EXAMPLE_POOL].sort(() => Math.random() - 0.5).slice(0, 5);
+      container.innerHTML = shuffled.map(chip => `
+        <span class="example-chip" onclick="fillExample('${chip.type}', '${chip.value.replace(/'/g, "\'")}')">
+          ${chip.label}
+        </span>
+      `).join('');
+    }
+
+    // Rotate on page load
+    rotateExampleChips();
+
   </script>
 </body>
 </html>
