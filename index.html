@@ -960,10 +960,14 @@
     // When you add Stripe: replace this with a redirect to your
     // Stripe Checkout link. For now it opens the contact/waitlist.
     function handleProCheckout() {
-      // TODO: Replace with your Stripe payment link
-      // window.location.href = 'https://buy.stripe.com/YOUR_LINK';
-      alert('Pro subscriptions coming very soon! Email hello@tellmeitsgood.com to get early access.');
-      closeModal('proModal');
+      const BASE = 'https://buy.stripe.com/test_aFa9AUgcVgP4cWmcNIgMw00';
+      // Pass the user's Supabase ID so the webhook knows who paid.
+      // Also prefill their email so Stripe checkout is one less step.
+      const params = new URLSearchParams();
+      if (currentUser?.id)    params.set('client_reference_id', currentUser.id);
+      if (currentUser?.email) params.set('prefilled_email', currentUser.email);
+      const query = params.toString();
+      window.location.href = query ? `${BASE}?${query}` : BASE;
     }
 
     // ============================================================
