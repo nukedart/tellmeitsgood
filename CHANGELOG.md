@@ -95,3 +95,26 @@ Format: Version · Date · What changed · Why
 - Directory UI — curated product listings that passed the Triple Filter
 - Email capture via Tally.so
 - DNS pointed correctly at Vercel
+
+---
+
+## v0.4.1 — 2026-03-18
+
+### Fixed
+- research.js: `max_tokens` raised from 3000 → 6000. The 15-criteria JSON
+  response with web search results frequently exceeded 3000 tokens, causing
+  truncated responses that failed JSON parsing.
+- research.js: Replaced regex JSON extraction with `extractOutermostJson()` —
+  a brace-depth-tracking parser that correctly finds the outermost { } block
+  even when Claude prepends prose like "Based on my research..." despite
+  being instructed not to.
+- index.html: Error messages now show clean, user-friendly text instead of
+  raw JSON parse errors. Rate limit errors show retry time.
+
+### Added
+- api/_rateLimit.js: Shared in-memory rate limiting utility.
+- Rate limits applied to all three API routes:
+  - /api/research: 5 requests per IP per hour (most expensive — Claude + web search)
+  - /api/post: 10 requests per IP per hour
+  - /api/scrape: 20 requests per IP per hour
+- Rate limit headers on all responses: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After

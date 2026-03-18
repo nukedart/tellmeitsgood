@@ -1197,7 +1197,7 @@
     //     service-role key. Anyone can read your page source and
     //     see these, and that's completely fine by Supabase's design.
     //
-    const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co'; // ← replace this
+    const SUPABASE_URL      = 'https://YOUR_PROJECT_ID.supabase.co'; // ← replace this
     const SUPABASE_ANON_KEY = 'eyJ...YOUR_ANON_KEY_HERE...';         // ← replace this
 
     // Initialize the Supabase client.
@@ -1504,6 +1504,11 @@
 
         if (!response.ok) {
           const err = await response.json().catch(() => ({}));
+          // Handle rate limiting (429) with a specific friendly message
+          if (response.status === 429) {
+            const mins = err.retryAfterMinutes || 60;
+            throw new Error(`You've hit the research limit. Try again in ${mins} minute${mins !== 1 ? 's' : ''}.`);
+          }
           throw new Error(err.error || `Server error ${response.status}`);
         }
 
@@ -1516,7 +1521,11 @@
 
       } catch (err) {
         hideLoading();
-        showError('Something went wrong while researching. Try again — ' + err.message);
+        // Show a clean error — strip internal server details from the message
+        const msg = err.message.includes('Unexpected token') || err.message.includes('JSON')
+          ? 'The research took too long and the response was incomplete. Please try again.'
+          : err.message;
+        showError(msg);
         document.getElementById('inputSection').style.display = 'block';
       }
     }

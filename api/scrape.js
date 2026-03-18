@@ -12,7 +12,18 @@
 //   This function → sends scraped markdown back to browser
 // =============================================================
 
+import { rateLimit } from './_rateLimit.js';
+
 export default async function handler(req, res) {
+
+  // ── 0. Rate limiting ───────────────────────────────────────
+  // 20 scrapes per IP per hour — plenty for real use, stops bill abuse.
+  const limited = rateLimit(req, res, {
+    windowMs: 60 * 60 * 1000,
+    max: 20,
+    message: 'Too many requests. Please try again in an hour.',
+  });
+  if (limited) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });

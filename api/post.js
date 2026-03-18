@@ -12,7 +12,18 @@
 //   Returns structured post JSON ready to render in the UI
 // =============================================================
 
+import { rateLimit } from './_rateLimit.js';
+
 export default async function handler(req, res) {
+
+  // ── 0. Rate limiting ───────────────────────────────────────
+  // Post generation runs Claude. 10 per hour per IP is sufficient.
+  const limited = rateLimit(req, res, {
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    message: 'Too many requests. Please try again in an hour.',
+  });
+  if (limited) return;
 
   // ── 1. Only accept POST requests ──────────────────────────
   if (req.method !== 'POST') {
