@@ -414,29 +414,18 @@
     <!-- ── Input section ── -->
     <div id="inputSection">
 
-      <!-- Paywall banner — shown when free limit reached -->
-      <div class="paywall-banner" id="paywallBanner">
-        <div class="paywall-icon">🔒</div>
-        <div class="paywall-title">You've used your 3 free searches</div>
-        <p class="paywall-desc">Go Pro for $9/month and get 25 searches a day plus your full search history saved.</p>
-        <div class="paywall-actions">
-          <button class="paywall-pro-btn" onclick="openModal('proModal')">⭐ Go Pro — $9/month</button>
-          <button class="paywall-signin-btn" id="paywallSigninBtn" onclick="openModal('authModal')" style="display:none">Sign in if you have an account</button>
-        </div>
-      </div>
-
       <div class="input-card" id="inputCard">
         <div class="input-tabs">
-          <button class="input-tab active" id="tabUrl" onclick="switchTab('url')">Paste a link</button>
-          <button class="input-tab" id="tabName" onclick="switchTab('name')">Search by name</button>
+          <button class="input-tab active" id="tabName" onclick="switchTab('name')">Search by name</button>
+          <button class="input-tab" id="tabUrl" onclick="switchTab('url')">Paste a link</button>
         </div>
-        <div class="input-panel active" id="panelUrl">
-          <label class="input-label" for="urlInput">Product URL</label>
-          <input type="url" id="urlInput" class="url-input" placeholder="https://www.bestbuy.com/..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-        </div>
-        <div class="input-panel" id="panelName">
+        <div class="input-panel active" id="panelName">
           <label class="input-label" for="queryInput">Product name or brand</label>
           <input type="text" id="queryInput" class="query-input" placeholder="e.g. Seventh Generation dish soap" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="input-panel" id="panelUrl">
+          <label class="input-label" for="urlInput">Product URL</label>
+          <input type="url" id="urlInput" class="url-input" placeholder="https://www.bestbuy.com/..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
         </div>
         <div class="fallback-section" id="fallbackSection">
           <label class="fallback-label" for="fallbackInput">Or paste the product name and price manually:</label>
@@ -453,6 +442,17 @@
         <span class="example-chip" onclick="fillExample('url', 'https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p')">Sony XM5 (Best Buy)</span>
         <span class="example-chip" onclick="fillExample('name', 'Blueland dish soap tablets')">Blueland dish soap</span>
         <span class="example-chip" onclick="fillExample('name', 'Seventh Generation laundry detergent')">Seventh Generation</span>
+      </div>
+
+      <!-- Paywall banner — shown below input when free limit reached -->
+      <div class="paywall-banner" id="paywallBanner">
+        <div class="paywall-icon">🔒</div>
+        <div class="paywall-title">You've used your 3 free searches</div>
+        <p class="paywall-desc">Go Pro for $9/month and get 25 searches a day, plus your full search history saved.</p>
+        <div class="paywall-actions">
+          <button class="paywall-pro-btn" onclick="openModal('proModal')">⭐ Go Pro — $9/month</button>
+          <button class="paywall-signin-btn" id="paywallSigninBtn" onclick="openModal('authModal')" style="display:none">Already have an account? Sign in</button>
+        </div>
       </div>
     </div>
 
@@ -575,7 +575,7 @@
     //     These are SAFE to put in frontend JS (anon key is public by design).
     // ============================================================
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJ...YOUR_ANON_KEYsb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb_HERE...';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -591,7 +591,7 @@
     // ── current session state ──
     let currentUser    = null;  // Supabase user object or null
     let currentUserPro = false; // whether they're a Pro subscriber
-    let activeTab      = 'url';
+    let activeTab      = 'name';
     let usingFallback  = false;
 
     // ============================================================
@@ -946,10 +946,10 @@
 
     function switchTab(tab) {
       activeTab = tab;
-      document.getElementById('tabUrl').classList.toggle('active', tab === 'url');
       document.getElementById('tabName').classList.toggle('active', tab === 'name');
-      document.getElementById('panelUrl').classList.toggle('active', tab === 'url');
+      document.getElementById('tabUrl').classList.toggle('active', tab === 'url');
       document.getElementById('panelName').classList.toggle('active', tab === 'name');
+      document.getElementById('panelUrl').classList.toggle('active', tab === 'url');
       hideError();
       hideFallback();
       usingFallback = false;
@@ -1207,7 +1207,7 @@
       document.getElementById('fallbackInput').value = '';
       ['gate1Bar','gate2Bar','gate3Bar'].forEach(id => document.getElementById(id).style.width = '0%');
       hideFallback(); hideError(); usingFallback = false;
-      switchTab('url');
+      switchTab('name');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
