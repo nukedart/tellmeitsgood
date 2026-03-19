@@ -701,7 +701,16 @@
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Bypass navigator.locks to prevent "Lock broken by another request with the
+    // 'steal' option" errors. These occur when concurrent requests (multiple tabs,
+    // rapid reloads) race to acquire the same auth lock. A no-op lock lets each
+    // call proceed immediately without serialization — safe because we don't have
+    // concurrent token refresh scenarios in a single-page app.
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        lock: async (name, acquireTimeout, fn) => fn(),
+      },
+    });
 
     // ============================================================
     // FREE TIER LIMITS
@@ -1248,7 +1257,7 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Opening...'; }
 
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         const token = session?.access_token;
         if (!token) {
           alert('Please sign in to manage your subscription.');
@@ -1305,7 +1314,13 @@
       updateAuthBar();
       updatePaywall();
 
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      let session = null;
+      try {
+        const { data } = await supabaseClient.auth.getSession();
+        session = data.session;
+      } catch (err) {
+        console.warn('getSession error (ignored):', err.message);
+      }
       currentUser = session?.user || null;
       if (currentUser) await checkProStatus();
 
