@@ -57,11 +57,12 @@ export default async function handler(req, res) {
     const fresh   = daysOld < CACHE_DAYS;
 
     return res.json({
-      hit:     true,
+      hit:            true,
       fresh,
       daysOld,
-      slug:    product.slug,
-      data:    product.full_result,
+      slug:           product.slug,
+      data:           product.full_result,
+      post_narrative: product.post_narrative || null,
     });
 
   } catch (err) {

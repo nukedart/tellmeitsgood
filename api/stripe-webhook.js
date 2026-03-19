@@ -68,7 +68,11 @@ function verifyStripeSignature(rawBody, signatureHeader, secret) {
 // Uses upsert (POST + merge-duplicates) so it works whether or not
 // the profiles row exists yet (e.g. users who signed up before the
 // trigger was added won't have a row, and PATCH would silently do nothing).
-async function setUserPro(userId) {
+// Also stores the Stripe customer ID so we can open the Customer Portal later.
+async function setUserPro(userId, customerId) {
+  const body = { id: userId, is_pro: true };
+  if (customerId) body.stripe_customer_id = customerId;
+
   const res = await fetch(
     `${process.env.SUPABASE_URL}/rest/v1/profiles`,
     {
@@ -79,14 +83,14 @@ async function setUserPro(userId) {
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
         'Prefer':        'resolution=merge-duplicates',
       },
-      body: JSON.stringify({ id: userId, is_pro: true }),
+      body: JSON.stringify(body),
     }
   );
   if (!res.ok) {
     const err = await res.text();
     console.error('Supabase upsert error:', res.status, err);
   } else {
-    console.log('Set is_pro=true for user:', userId);
+    console.log('Set is_pro=true for user:', userId, customerId ? `(customer: ${customerId})` : '');
   }
 }
 
@@ -118,11 +122,12 @@ export default async function handler(req, res) {
 
   // ── Handle events ───────────────────────────────────────────
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId  = session.client_reference_id; // set by handleProCheckout()
+    const session    = event.data.object;
+    const userId     = session.client_reference_id; // set by handleProCheckout()
+    const customerId = session.customer;             // Stripe customer ID for portal access
 
     if (userId) {
-      await setUserPro(userId);
+      await setUserPro(userId, customerId);
     } else {
       // Fallback: log so you can manually upgrade the user if needed
       console.warn('checkout.session.completed with no client_reference_id. Customer email:', session.customer_details?.email);

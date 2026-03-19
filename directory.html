@@ -53,6 +53,13 @@
     .dir-hero h1 { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); color: var(--text); margin-bottom: 10px; }
     .dir-hero p { font-size: 15px; color: var(--text-2); line-height: 1.6; max-width: 520px; }
 
+    /* ── Search bar ── */
+    .dir-search-wrap { margin-bottom: 16px; position: relative; }
+    .dir-search-input { width: 100%; font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 11px 16px 11px 40px; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .dir-search-input::placeholder { color: var(--text-3); }
+    .dir-search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); }
+    .dir-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 15px; pointer-events: none; }
+
     /* ── Filter bar ── */
     .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
     .filter-btn { font-size: 12px; font-weight: 600; letter-spacing: .05em; padding: 6px 14px; border-radius: 100px; border: 1.5px solid var(--border); background: var(--card); color: var(--text-2); cursor: pointer; font-family: var(--font-body); transition: all .15s; }
@@ -119,6 +126,11 @@
       <p>AI-researched verdicts on quality, safety, and company ethics. No ads, no sponsored placements.</p>
     </div>
 
+    <div class="dir-search-wrap">
+      <span class="dir-search-icon">🔍</span>
+      <input type="search" id="dirSearchInput" class="dir-search-input" placeholder="Search products by name or brand..." autocomplete="off" spellcheck="false" />
+    </div>
+
     <div class="filter-bar" id="filterBar">
       <button class="filter-btn active" data-badge="ALL" onclick="setFilter('ALL', this)">All products</button>
       <button class="filter-btn TELL_ME_ITS_GOOD" data-badge="TELL_ME_ITS_GOOD" onclick="setFilter('TELL_ME_ITS_GOOD', this)">Tell Me It's Good</button>
@@ -151,9 +163,11 @@
     const PAGE_SIZE = 24;
 
     let currentFilter = 'ALL';
+    let currentSearch = '';
     let currentOffset = 0;
     let totalCount    = 0;
     let loading       = false;
+    let searchDebounce = null;
 
     function escapeHtml(str) {
       if (!str) return '';
@@ -202,6 +216,9 @@
       let url = `${SUPABASE_URL}/rest/v1/products?is_public=eq.true&select=*&order=researched_at.desc&limit=${PAGE_SIZE}&offset=${offset}`;
       if (currentFilter !== 'ALL') {
         url += `&badge=eq.${encodeURIComponent(currentFilter)}`;
+      }
+      if (currentSearch) {
+        url += `&or=(product_name.ilike.*${encodeURIComponent(currentSearch)}*,brand.ilike.*${encodeURIComponent(currentSearch)}*)`;
       }
 
       const res = await fetch(url, {
@@ -287,17 +304,25 @@
     function setFilter(badge, btn) {
       if (currentFilter === badge) return;
       currentFilter = badge;
-
-      // Update active button
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
       loadProducts(true);
     }
 
     function loadMore() {
       loadProducts(false);
     }
+
+    // Search input — debounced 350ms
+    document.getElementById('dirSearchInput').addEventListener('input', function() {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        const q = this.value.trim();
+        if (q === currentSearch) return;
+        currentSearch = q;
+        loadProducts(true);
+      }, 350);
+    });
 
     // Initial load
     loadProducts(true);

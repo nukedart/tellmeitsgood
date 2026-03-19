@@ -5,6 +5,38 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.9.0 — 2026-03-19
+
+### Fixed
+- **`/p/[slug]` verdict pages were rendering empty** — `product.html` was reading `r.gates[]` (array) and `r.gateNames`, but the actual research JSON uses `r.gate1`/`r.gate2`/`r.gate3` (named keys) and gate names are stored inside each gate object. Gate scores were using `gate.score` instead of `gate.average`. Similarly, `r.tldr`, `r.pros`, `r.cons`, and `r.realTalk` are nested under `r.summary.*`. All field references corrected. Verdict pages now display correctly.
+- **`VERSION` file** was stuck at `0.5.4` — updated to `0.9.0`.
+
+### Added
+- **Cached post narratives** — the listing post (from `/api/post`) is now saved alongside the research in the `products` cache table (`post_narrative` column). Cache hits display the post instantly without a second Claude call. Saves ~$0.003 per repeat visit and removes the 5–10s post-generation delay for cached products.
+  - `api/cache-save.js` accepts optional `postData` in request body.
+  - `api/cache-lookup.js` returns `post_narrative` alongside `data`.
+  - `index.html`: `runPost()` now returns the post; `saveToCache()` accepts `postData`; cache hits check for `post_narrative` before calling `/api/post`.
+  - **Supabase migration required:** `ALTER TABLE products ADD COLUMN IF NOT EXISTS post_narrative jsonb;`
+
+- **Stripe Customer Portal** — "Manage subscription" in settings now opens the real Stripe billing portal instead of showing an alert to email support. Users can update payment methods, view invoices, and cancel directly.
+  - New `api/stripe-portal.js` — verifies Supabase JWT, reads `stripe_customer_id` from profiles, creates a Stripe billing portal session, returns redirect URL.
+  - `api/stripe-webhook.js` now saves `session.customer` (Stripe customer ID) to `profiles.stripe_customer_id` on `checkout.session.completed`.
+  - **Supabase migration required:** `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id text;`
+  - **Stripe setup required:** Enable Customer Portal at stripe.com/billing/portal → Settings → activate.
+  - **New Vercel env var required:** `STRIPE_SECRET_KEY` (from Stripe → Developers → API keys → Secret key).
+
+- **Badge embed widget** — each `/p/[slug]` verdict page now shows an "Embed this verdict" section at the bottom with a one-click copy HTML snippet. Brands and bloggers can embed the badge to link back to the verdict.
+
+- **Directory text search** — added a search input above the filter bar in the directory. Searches product names and brands via Supabase `ilike` query with 350ms debounce. Works alongside badge filters.
+
+### Upcoming
+- Bookmarks — saved products for logged-in users (`bookmarks` Supabase table)
+- Compare two products — side-by-side Triple Filter comparison
+- Email onboarding sequence for new signups and upgrades
+- Amazon Associates affiliate tag (replace `tellmeitsgood-20` placeholder)
+
+---
+
 ## v0.8.0 — 2026-03-18
 
 ### Added

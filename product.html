@@ -188,7 +188,7 @@
 
       // ── SEO meta tags ──
       const title = `${escapeHtml(r.productName || product.product_name)} — Tell Me It's Good`;
-      const desc  = r.tldr || `${r.badge} · Score ${r.overallScore}/10 · AI-researched verdict on quality, safety, and ethics.`;
+      const desc  = r.summary?.tldr || r.tldr || `${r.badge} · Score ${r.overallScore}/10 · AI-researched verdict on quality, safety, and ethics.`;
       document.title = title;
       document.querySelector('meta[name="description"]').content = desc;
       document.querySelector('meta[property="og:title"]').content = title;
@@ -199,26 +199,30 @@
       const ageText = daysOld === 0 ? 'Today' : daysOld === 1 ? '1 day ago' : `${daysOld} days ago`;
 
       // ── Gates ──
-      const gates = r.gates || [];
-      const gateCards = (r.gateNames || ['Value & Quality','Clean & Safe','Ethical Company']).map((name, i) => {
-        const gate   = gates[i] || {};
-        const score  = gate.score ?? '—';
+      const gates = [r.gate1, r.gate2, r.gate3];
+      const gateCards = gates.map((gate, i) => {
+        if (!gate) return '';
+        const name   = gate.name || ['Value & Quality','Clean & Safe','Ethical Company'][i];
+        const score  = gate.average ?? '—';
         const passes = gate.passes !== false;
+        const disq   = gate.disqualified || false;
         const pct    = typeof score === 'number' ? score * 10 : 0;
         const colors = ['var(--accent)','var(--success)','#818CF8'];
+        const stateClass = disq ? 'fails' : passes ? 'passes' : 'fails';
+        const stateLabel = disq ? 'DISQUALIFIED' : passes ? 'PASSES' : 'FAILS';
         return `
-          <div class="gate-card ${passes ? 'passes' : 'fails'}">
+          <div class="gate-card ${stateClass}">
             <div class="gate-label">Gate ${i+1}</div>
             <div class="gate-name">${escapeHtml(name)}</div>
-            <div class="gate-score-num">${score}<span> / 10</span></div>
+            <div class="gate-score-num">${typeof score === 'number' ? score.toFixed(1) : score}<span> / 10</span></div>
             <div class="gate-bar-wrap"><div class="gate-bar-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
-            <div class="gate-pass-label">${passes ? 'PASSES' : 'FAILS'}</div>
+            <div class="gate-pass-label">${stateLabel}</div>
           </div>`;
       }).join('');
 
       // ── Pros / Cons ──
-      const pros = (r.pros || []).map(p => `<li>${escapeHtml(p)}</li>`).join('');
-      const cons = (r.cons || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+      const pros = (r.summary?.pros || r.pros || []).map(p => `<li>${escapeHtml(p)}</li>`).join('');
+      const cons = (r.summary?.cons || r.cons || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
 
       document.getElementById('pageContent').innerHTML = `
         <div class="researched-strip">
@@ -234,7 +238,7 @@
           </div>
         </div>
 
-        ${r.tldr ? `<div class="tldr-strip">${escapeHtml(r.tldr)}</div>` : ''}
+        ${(r.summary?.tldr || r.tldr) ? `<div class="tldr-strip">${escapeHtml(r.summary?.tldr || r.tldr)}</div>` : ''}
 
         <div class="overall-score-card">
           <div class="overall-score-num">${r.overallScore ?? '—'}<span> / 10</span></div>
@@ -252,10 +256,10 @@
           <div class="cons-card"><div class="pros-cons-title">Cons</div><ul class="pros-cons-list">${cons}</ul></div>
         </div>` : ''}
 
-        ${r.realTalk ? `
+        ${(r.summary?.realTalk || r.realTalk) ? `
         <div class="result-card">
           <div class="result-card-title">Real Talk</div>
-          <div class="real-talk-box">${escapeHtml(r.realTalk)}</div>
+          <div class="real-talk-box">${escapeHtml(r.summary?.realTalk || r.realTalk)}</div>
         </div>` : ''}
 
         <div class="cta-section">
@@ -264,13 +268,43 @@
           <a class="cta-btn" href="/">Start researching →</a>
         </div>
 
+        <div class="result-card" style="margin-top:20px;">
+          <div class="result-card-title">Embed this verdict</div>
+          <p style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.5;">Share the badge on your site or blog. Copy and paste the HTML below.</p>
+          <div id="embedCodeBlock" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;font-family:monospace;font-size:11px;color:var(--text-2);word-break:break-all;line-height:1.6;user-select:all;cursor:text;"></div>
+          <button onclick="copyEmbed()" id="copyEmbedBtn" style="margin-top:10px;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-md);padding:7px 16px;cursor:pointer;font-family:var(--font-body);transition:all .15s;">Copy code</button>
+        </div>
+
         <footer class="footer">
           <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads</p>
         </footer>
       `;
+
+      populateEmbed(product, r);
+    }
+
+    function populateEmbed(product, r) {
+      const name   = escapeHtml(r.productName || product.product_name || 'Product');
+      const score  = r.overallScore ?? '—';
+      const badge  = (r.badge || 'NOT_LISTED').replace(/_/g, ' ');
+      const url    = `https://tellmeitsgood.com/p/${product.slug}`;
+      const colors = { TELL_ME_ITS_GOOD: '#3A9E6F', CLEAN_PICK: '#0F6E56', ETHICAL_PICK: '#4338CA', QUALITY_PICK: '#2F6FED', NOT_LISTED: '#D94F4F' };
+      const color  = colors[r.badge] || '#6B6560';
+      const code = `<a href="${url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px solid ${color};border-radius:100px;background:#fff;color:${color};font-family:sans-serif;font-size:13px;font-weight:700;text-decoration:none;">✓ ${name} — ${badge} · ${score}/10 on tellmeitsgood.com</a>`;
+      const block = document.getElementById('embedCodeBlock');
+      if (block) block.textContent = code;
     }
 
     loadProduct();
+
+    function copyEmbed() {
+      const code = document.getElementById('embedCodeBlock').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyEmbedBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy code'; }, 2000);
+      });
+    }
   </script>
 </body>
 </html>

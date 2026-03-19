@@ -17,7 +17,7 @@ function slugify(str) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { query, researchData } = req.body;
+  const { query, researchData, postData } = req.body;
 
   if (!query || !researchData || typeof researchData !== 'object') {
     return res.status(400).json({ error: 'Missing query or researchData.' });
@@ -45,9 +45,10 @@ export default async function handler(req, res) {
           brand:         researchData.brand        || null,
           badge:         researchData.badge        || null,
           overall_score: researchData.overallScore || null,
-          full_result:   researchData,
-          researched_at: new Date().toISOString(),
-          is_public:     true,
+          full_result:    researchData,
+          post_narrative: postData || null,
+          researched_at:  new Date().toISOString(),
+          is_public:      true,
         }),
       }
     );
