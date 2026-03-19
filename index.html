@@ -124,6 +124,8 @@
     .modal-success-title { font-family: var(--font-display); font-size: 20px; color: var(--text); margin-bottom: 8px; }
     .modal-success-text { font-size: 14px; color: var(--text-2); line-height: 1.6; }
     .modal-privacy { font-size: 11px; color: var(--text-3); text-align: center; margin-top: 12px; line-height: 1.5; }
+    .auth-link-btn { font-size: 12px; font-weight: 500; color: var(--text-3); background: none; border: none; cursor: pointer; font-family: var(--font-body); padding: 0; transition: color .15s; }
+    .auth-link-btn:hover { color: var(--accent); }
 
     /* ── Pro upgrade modal ── */
     .pro-modal-icon { font-size: 36px; margin-bottom: 16px; text-align: center; }
@@ -401,23 +403,63 @@
     <div class="auth-bar-right" id="authBarRight"></div>
   </div>
 
-  <!-- ── Sign in modal ── -->
+  <!-- ── Sign in / Sign up modal ── -->
   <div class="modal-overlay" id="authModal" onclick="handleModalBackdropClick(event, 'authModal')">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('authModal')">×</button>
-      <div class="modal-form-content" id="modalFormContent">
+
+      <!-- Sign in view -->
+      <div id="authSigninView">
         <div class="modal-title">Sign in</div>
-        <p class="modal-subtitle">We'll email you a magic link — no password needed.</p>
-        <div class="modal-error" id="modalError"></div>
-        <input type="email" id="modalEmailInput" class="modal-email-input" placeholder="your@email.com" autocomplete="email" />
-        <button class="modal-submit-btn" id="modalSubmitBtn" onclick="handleSendMagicLink()">Send me a login link →</button>
-        <p class="modal-privacy">No password. No spam. One-click login link.</p>
+        <div class="modal-error" id="authSigninError"></div>
+        <input type="email"    id="authEmail"    class="modal-email-input" placeholder="your@email.com"  autocomplete="email"            />
+        <input type="password" id="authPassword" class="modal-email-input" placeholder="Password"        autocomplete="current-password" style="margin-top:8px;" />
+        <button class="modal-submit-btn" id="authSigninBtn" onclick="handleSignIn()" style="margin-top:12px;">Sign in →</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+          <button class="auth-link-btn" onclick="switchAuthView('signup')">Create account</button>
+          <button class="auth-link-btn" onclick="switchAuthView('forgot')">Forgot password?</button>
+        </div>
       </div>
-      <div class="modal-success" id="modalSuccess">
-        <div class="modal-success-icon">📬</div>
-        <div class="modal-success-title">Check your email</div>
-        <p class="modal-success-text">We sent a login link to <strong id="modalSuccessEmail"></strong>.<br>It expires in 1 hour.</p>
+
+      <!-- Sign up view -->
+      <div id="authSignupView" style="display:none">
+        <div class="modal-title">Create account</div>
+        <div class="modal-error" id="authSignupError"></div>
+        <input type="email"    id="signupEmail"    class="modal-email-input" placeholder="your@email.com"              autocomplete="email"     />
+        <input type="password" id="signupPassword" class="modal-email-input" placeholder="Password (min. 8 characters)" autocomplete="new-password" style="margin-top:8px;" />
+        <button class="modal-submit-btn" id="authSignupBtn" onclick="handleSignUp()" style="margin-top:12px;">Create account →</button>
+        <div style="text-align:center;margin-top:14px;">
+          <button class="auth-link-btn" onclick="switchAuthView('signin')">Already have an account? Sign in</button>
+        </div>
       </div>
+
+      <!-- Forgot password view -->
+      <div id="authForgotView" style="display:none">
+        <div class="modal-title">Reset password</div>
+        <p class="modal-subtitle">Enter your email and we'll send a reset link.</p>
+        <div class="modal-error" id="authForgotError"></div>
+        <input type="email" id="forgotEmail" class="modal-email-input" placeholder="your@email.com" autocomplete="email" />
+        <button class="modal-submit-btn" id="authForgotBtn" onclick="handleForgotPassword()" style="margin-top:12px;">Send reset link →</button>
+        <div style="text-align:center;margin-top:14px;">
+          <button class="auth-link-btn" onclick="switchAuthView('signin')">Back to sign in</button>
+        </div>
+      </div>
+
+      <!-- Set new password view (after clicking reset link) -->
+      <div id="authResetView" style="display:none">
+        <div class="modal-title">Set new password</div>
+        <div class="modal-error" id="authResetError"></div>
+        <input type="password" id="resetPassword" class="modal-email-input" placeholder="New password (min. 8 characters)" autocomplete="new-password" />
+        <button class="modal-submit-btn" id="authResetBtn" onclick="handleResetPassword()" style="margin-top:12px;">Update password →</button>
+      </div>
+
+      <!-- Success view -->
+      <div id="authSuccessView" style="display:none;text-align:center;padding:8px 0;">
+        <div class="modal-success-icon" id="authSuccessIcon">✓</div>
+        <div class="modal-success-title" id="authSuccessTitle"></div>
+        <p class="modal-success-text" id="authSuccessText"></p>
+      </div>
+
     </div>
   </div>
 
@@ -645,7 +687,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.9.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.9.1</p>
     </footer>
   </div>
 
@@ -729,8 +771,13 @@
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
       if (event === 'SIGNED_IN') closeModal('authModal');
+      if (event === 'PASSWORD_RECOVERY') {
+        // User arrived via a password reset link — show the set-new-password form
+        openModal('authModal');
+        switchAuthView('reset');
+        setTimeout(() => document.getElementById('resetPassword')?.focus(), 50);
+      }
       currentUser = session?.user || null;
-      // When user signs in, check if they're Pro
       if (currentUser) await checkProStatus();
       else currentUserPro = false;
       updateAuthBar();
@@ -1008,16 +1055,18 @@
     function openModal(id) {
       document.getElementById(id).classList.add('visible');
       if (id === 'authModal') {
-        // Reset to clean form state
-        document.getElementById('modalFormContent').classList.remove('hidden');
-        document.getElementById('modalSuccess').classList.remove('visible');
-        document.getElementById('modalError').classList.remove('visible');
-        document.getElementById('modalEmailInput').value = '';
-        const btn = document.getElementById('modalSubmitBtn');
-        btn.disabled = false;
-        btn.textContent = 'Send me a login link →';
-        setTimeout(() => document.getElementById('modalEmailInput').focus(), 50);
+        switchAuthView('signin');
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+        setTimeout(() => document.getElementById('authEmail').focus(), 50);
       }
+    }
+
+    function switchAuthView(view) {
+      ['Signin','Signup','Forgot','Reset','Success'].forEach(v => {
+        document.getElementById('auth' + v + 'View').style.display = 'none';
+      });
+      document.getElementById('auth' + view.charAt(0).toUpperCase() + view.slice(1) + 'View').style.display = 'block';
     }
 
     function closeModal(id) {
@@ -1035,43 +1084,120 @@
     });
 
     // ============================================================
-    // MAGIC LINK
+    // EMAIL / PASSWORD AUTH
     // ============================================================
-    async function handleSendMagicLink() {
-      const email = document.getElementById('modalEmailInput').value.trim();
-      const errorEl = document.getElementById('modalError');
 
-      if (!email || !email.includes('@')) {
-        errorEl.textContent = 'Enter a valid email address.';
-        errorEl.classList.add('visible');
-        return;
-      }
+    function authShowError(elId, msg) {
+      const el = document.getElementById(elId);
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+    function authClearError(elId) {
+      document.getElementById(elId).classList.remove('visible');
+    }
+    function authShowSuccess(icon, title, text) {
+      document.getElementById('authSuccessIcon').textContent = icon;
+      document.getElementById('authSuccessTitle').textContent = title;
+      document.getElementById('authSuccessText').innerHTML = text;
+      switchAuthView('success');
+    }
 
-      errorEl.classList.remove('visible');
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.disabled = true;
-      btn.textContent = 'Sending...';
+    async function handleSignIn() {
+      const email    = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      authClearError('authSigninError');
+
+      if (!email || !email.includes('@')) { authShowError('authSigninError', 'Enter a valid email address.'); return; }
+      if (!password)                       { authShowError('authSigninError', 'Enter your password.');        return; }
+
+      const btn = document.getElementById('authSigninBtn');
+      btn.disabled = true; btn.textContent = 'Signing in...';
 
       try {
-        const { error } = await supabaseClient.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: window.location.origin },
-        });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        document.getElementById('modalFormContent').classList.add('hidden');
-        document.getElementById('modalSuccessEmail').textContent = email;
-        document.getElementById('modalSuccess').classList.add('visible');
+        // onAuthStateChange fires SIGNED_IN → closes modal
       } catch (err) {
-        errorEl.textContent = err.message || 'Something went wrong.';
-        errorEl.classList.add('visible');
-        btn.disabled = false;
-        btn.textContent = 'Send me a login link →';
+        const msg = err.message?.includes('Invalid login credentials')
+          ? 'Wrong email or password. If you previously signed in with a magic link, use "Forgot password" to set a password.'
+          : (err.message || 'Something went wrong.');
+        authShowError('authSigninError', msg);
+        btn.disabled = false; btn.textContent = 'Sign in →';
       }
     }
 
-    document.getElementById('modalEmailInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') handleSendMagicLink();
-    });
+    async function handleSignUp() {
+      const email    = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      authClearError('authSignupError');
+
+      if (!email || !email.includes('@'))  { authShowError('authSignupError', 'Enter a valid email address.'); return; }
+      if (!password || password.length < 8) { authShowError('authSignupError', 'Password must be at least 8 characters.'); return; }
+
+      const btn = document.getElementById('authSignupBtn');
+      btn.disabled = true; btn.textContent = 'Creating account...';
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) throw error;
+        if (data.session) {
+          // Email confirmation disabled — signed in immediately, onAuthStateChange closes modal
+        } else {
+          authShowSuccess('📬', 'Check your email', `We sent a confirmation link to <strong>${escapeHtml(email)}</strong>. Click the link to activate your account, then sign in.`);
+        }
+      } catch (err) {
+        authShowError('authSignupError', err.message || 'Something went wrong.');
+        btn.disabled = false; btn.textContent = 'Create account →';
+      }
+    }
+
+    async function handleForgotPassword() {
+      const email = document.getElementById('forgotEmail').value.trim();
+      authClearError('authForgotError');
+
+      if (!email || !email.includes('@')) { authShowError('authForgotError', 'Enter your email address.'); return; }
+
+      const btn = document.getElementById('authForgotBtn');
+      btn.disabled = true; btn.textContent = 'Sending...';
+
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin,
+        });
+        if (error) throw error;
+        authShowSuccess('📬', 'Reset link sent', `Check your inbox at <strong>${escapeHtml(email)}</strong> for a password reset link.`);
+      } catch (err) {
+        authShowError('authForgotError', err.message || 'Could not send reset email.');
+        btn.disabled = false; btn.textContent = 'Send reset link →';
+      }
+    }
+
+    async function handleResetPassword() {
+      const password = document.getElementById('resetPassword').value;
+      authClearError('authResetError');
+
+      if (!password || password.length < 8) { authShowError('authResetError', 'Password must be at least 8 characters.'); return; }
+
+      const btn = document.getElementById('authResetBtn');
+      btn.disabled = true; btn.textContent = 'Updating...';
+
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password });
+        if (error) throw error;
+        authShowSuccess('✓', 'Password updated', "Your password has been set. You're now signed in.");
+        setTimeout(() => closeModal('authModal'), 2000);
+      } catch (err) {
+        authShowError('authResetError', err.message || 'Could not update password.');
+        btn.disabled = false; btn.textContent = 'Update password →';
+      }
+    }
+
+    // Enter key support
+    document.getElementById('authEmail').addEventListener('keydown',    e => { if (e.key === 'Enter') handleSignIn(); });
+    document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleSignIn(); });
+    document.getElementById('signupEmail').addEventListener('keydown',  e => { if (e.key === 'Enter') handleSignUp(); });
+    document.getElementById('signupPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleSignUp(); });
+    document.getElementById('forgotEmail').addEventListener('keydown',  e => { if (e.key === 'Enter') handleForgotPassword(); });
 
     // ============================================================
     // SIGN OUT
@@ -1102,7 +1228,7 @@
             <span class="settings-row-label">Email</span>
             <span class="settings-row-value">${escapeHtml(currentUser.email)}</span>
           </div>
-          <p class="settings-hint">To change your email, sign out and sign in with your new address.</p>
+          <p class="settings-hint">To change your email or password, use "Forgot password" from the sign-in screen.</p>
         </div>
         <div class="settings-section">
           <div class="settings-section-label">Subscription</div>

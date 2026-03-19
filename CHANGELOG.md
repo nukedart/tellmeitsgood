@@ -5,6 +5,22 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v0.9.1 — 2026-03-19
+
+### Changed
+- **Replaced magic link auth with email/password** — magic links were unreliable (inconsistent sessions, email delivery issues). Auth modal now has:
+  - **Sign in** — email + password with Enter key support
+  - **Create account** — email + password (min. 8 chars), handles email confirmation flow if enabled in Supabase
+  - **Forgot password** — sends a reset link via Supabase; on return the modal auto-opens to "Set new password"
+  - **PASSWORD_RECOVERY** event handled in `onAuthStateChange` so the reset form appears automatically when users click their reset link
+- Existing magic-link users: "Forgot password" flow lets them set a password the first time
+- `supabase.auth.signInWithOtp` removed; replaced with `signInWithPassword`, `signUp`, `resetPasswordForEmail`, `updateUser`
+
+### Note
+- In Supabase → Auth → Settings: you can disable "Confirm email" if you want users signed in immediately on signup (simpler UX). If left on, users get a confirmation email first.
+
+---
+
 ## v0.9.0 — 2026-03-19
 
 ### Fixed
