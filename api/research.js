@@ -111,6 +111,7 @@ Return this exact JSON structure (all fields required, no extras):
   "price": "$XX.XX or Price not found",
   "productUrl": string|null,
   "badge": "TELL_ME_ITS_GOOD|CLEAN_PICK|ETHICAL_PICK|QUALITY_PICK|NOT_LISTED",
+  "category": "Personal Care|Cleaning & Home|Food & Drink|Baby & Kids|Clothing & Footwear|Supplements & Health|Pet Care|Electronics|Other",
   "overallScore": number,
   "gate1": {
     "name": "Value & Quality", "average": number, "passes": bool,

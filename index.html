@@ -163,6 +163,9 @@
 
     /* ── History modal ── */
     .history-modal-card { max-width: 560px; max-height: 80vh; overflow-y: auto; }
+    .history-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .history-tab-btn { flex: 1; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--text-3); background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 0; cursor: pointer; transition: all .15s; margin-bottom: -1px; }
+    .history-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
     .history-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; line-height: 1.6; }
     .history-list { display: flex; flex-direction: column; gap: 2px; margin-top: 16px; }
     .history-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-md); cursor: pointer; transition: background .12s; border: 1px solid transparent; }
@@ -272,6 +275,10 @@
     .cache-strip-share:hover { text-decoration: underline; }
     .cache-strip-refresh { font-size: 13px; font-weight: 600; color: var(--warning); background: none; border: none; cursor: pointer; font-family: var(--font-body); padding: 0; }
     .cache-strip-refresh:hover { text-decoration: underline; }
+    .cache-strip-bookmark { font-size: 15px; background: none; border: none; cursor: pointer; padding: 0; line-height: 1; transition: transform .15s; display: none; }
+    .cache-strip-bookmark:hover { transform: scale(1.2); }
+    .cache-strip-compare { font-size: 13px; font-weight: 600; color: var(--text-3); text-decoration: none; transition: color .15s; display: none; }
+    .cache-strip-compare:hover { color: var(--text); }
 
     /* ── Product header ── */
     .product-header { margin-bottom: 16px; }
@@ -357,6 +364,8 @@
     @media (max-width: 400px) { .alternatives-grid { grid-template-columns: 1fr; } }
     .alt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
     .alt-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .alt-link   { color: var(--accent); text-decoration: none; }
+    .alt-link:hover { text-decoration: underline; }
     .alt-reason { font-size: 12px; color: var(--text-2); line-height: 1.45; }
 
     /* ── Real Talk ── */
@@ -489,9 +498,13 @@
   <div class="modal-overlay" id="historyModal" onclick="handleModalBackdropClick(event, 'historyModal')">
     <div class="modal-card history-modal-card">
       <button class="modal-close" onclick="closeModal('historyModal')">×</button>
-      <div class="modal-title">Search history</div>
-      <p class="modal-subtitle" style="margin-bottom: 0;">Click any result to view it again.</p>
+      <div class="modal-title">My account</div>
+      <div class="history-tabs">
+        <button class="history-tab-btn active" id="histTabHistory" onclick="showHistoryTab('history')">History</button>
+        <button class="history-tab-btn" id="histTabSaved" onclick="showHistoryTab('saved')">Saved ♥</button>
+      </div>
       <div id="historyList"></div>
+      <div id="savedList" style="display:none"></div>
     </div>
   </div>
 
@@ -577,8 +590,10 @@
       <div class="cache-strip" id="cacheStrip">
         <span id="cacheStripText"></span>
         <div class="cache-strip-actions">
-          <a class="cache-strip-share" id="cacheShareLink" href="#" target="_blank">Share verdict →</a>
-          <button class="cache-strip-refresh" id="cacheRefreshBtn" onclick="handleCacheRefresh()" style="display:none">↻ Refresh research</button>
+          <button class="cache-strip-bookmark" id="bookmarkBtn" onclick="toggleBookmark()" title="Save product"></button>
+          <a class="cache-strip-compare" id="compareLink" href="#">Compare →</a>
+          <a class="cache-strip-share" id="cacheShareLink" href="#" target="_blank">Share →</a>
+          <button class="cache-strip-refresh" id="cacheRefreshBtn" onclick="handleCacheRefresh()" style="display:none">↻ Refresh</button>
         </div>
       </div>
 
@@ -687,7 +702,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v0.9.1</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.0.0</p>
     </footer>
   </div>
 
@@ -728,8 +743,10 @@
     let usingFallback  = false;
 
     // ── cache state ──
-    let currentSlug        = null; // slug of the currently displayed result
-    let currentSearchQuery = null; // query that produced it (for refresh)
+    let currentSlug        = null;  // slug of the currently displayed result
+    let currentSearchQuery = null;  // query that produced it (for refresh)
+    let currentResearch    = null;  // full research data for the current result
+    let currentBookmarked  = false; // whether current user has bookmarked this
 
     // ============================================================
     // USAGE TRACKING (localStorage — free users only)
@@ -906,6 +923,11 @@
     async function openHistory() {
       if (!currentUser) return;
 
+      // Reset to history tab
+      document.getElementById('historyList').style.display = 'block';
+      document.getElementById('savedList').style.display   = 'none';
+      document.getElementById('histTabHistory').classList.add('active');
+      document.getElementById('histTabSaved').classList.remove('active');
       document.getElementById('historyList').innerHTML =
         '<div class="history-empty">Loading...</div>';
       openModal('historyModal');
@@ -1029,23 +1051,43 @@
     }
 
     function showCacheStrip(daysOld, slug, isStale) {
-      const strip      = document.getElementById('cacheStrip');
-      const text       = document.getElementById('cacheStripText');
-      const shareLink  = document.getElementById('cacheShareLink');
-      const refreshBtn = document.getElementById('cacheRefreshBtn');
+      const strip       = document.getElementById('cacheStrip');
+      const text        = document.getElementById('cacheStripText');
+      const shareLink   = document.getElementById('cacheShareLink');
+      const refreshBtn  = document.getElementById('cacheRefreshBtn');
+      const bookmarkBtn = document.getElementById('bookmarkBtn');
+      const compareLink = document.getElementById('compareLink');
 
       text.textContent = daysOld === 0
         ? '✓ Just researched'
         : `📂 From database · Researched ${daysOld} day${daysOld !== 1 ? 's' : ''} ago`;
 
-      shareLink.href = `/p/${slug}`;
-      refreshBtn.style.display = isStale ? 'inline' : 'none';
+      shareLink.href   = `/p/${slug}`;
+      compareLink.href = `/compare?a=${slug}`;
+      refreshBtn.style.display  = isStale ? 'inline' : 'none';
+      compareLink.style.display = 'inline';
+
+      // Bookmark button — only for logged-in users
+      if (currentUser) {
+        currentBookmarked = false;
+        bookmarkBtn.textContent    = '♡';
+        bookmarkBtn.title          = 'Save product';
+        bookmarkBtn.style.display  = 'inline';
+        checkBookmarkStatus(slug);
+      } else {
+        bookmarkBtn.style.display  = 'none';
+      }
+
       strip.classList.add('visible');
     }
 
     function hideCacheStrip() {
       document.getElementById('cacheStrip').classList.remove('visible');
+      document.getElementById('bookmarkBtn').style.display  = 'none';
+      document.getElementById('compareLink').style.display  = 'none';
       currentSlug = null;
+      currentResearch = null;
+      currentBookmarked = false;
     }
 
     async function handleCacheRefresh() {
@@ -1056,6 +1098,155 @@
       document.getElementById('postSection').classList.remove('visible');
       showLoading('Refreshing research for ' + q + '...', 'Fetching the latest reviews and company info');
       await runResearch({ query: q });
+    }
+
+    // ============================================================
+    // BOOKMARKS
+    // ============================================================
+    async function checkBookmarkStatus(slug) {
+      if (!currentUser || !slug) return;
+      try {
+        const { data } = await supabaseClient
+          .from('bookmarks')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .eq('slug', slug)
+          .maybeSingle();
+        currentBookmarked = !!data;
+        updateBookmarkBtn();
+      } catch {}
+    }
+
+    function updateBookmarkBtn() {
+      const btn = document.getElementById('bookmarkBtn');
+      if (!btn) return;
+      btn.textContent = currentBookmarked ? '♥' : '♡';
+      btn.title       = currentBookmarked ? 'Remove from saved' : 'Save product';
+      btn.style.color = currentBookmarked ? 'var(--danger)' : 'var(--text-3)';
+    }
+
+    async function toggleBookmark() {
+      if (!currentUser) { openModal('authModal'); return; }
+      if (!currentSlug) return;
+
+      const slug = currentSlug;
+      currentBookmarked = !currentBookmarked;
+      updateBookmarkBtn();
+
+      try {
+        if (currentBookmarked) {
+          await supabaseClient.from('bookmarks').upsert({
+            user_id:       currentUser.id,
+            slug,
+            product_name:  currentResearch?.productName || null,
+            badge:         currentResearch?.badge        || null,
+            overall_score: currentResearch?.overallScore || null,
+          }, { onConflict: 'user_id,slug' });
+        } else {
+          await supabaseClient.from('bookmarks')
+            .delete()
+            .eq('user_id', currentUser.id)
+            .eq('slug', slug);
+        }
+      } catch (err) {
+        // Revert on error
+        currentBookmarked = !currentBookmarked;
+        updateBookmarkBtn();
+        console.error('Bookmark error:', err);
+      }
+    }
+
+    // ============================================================
+    // SMART ALTERNATIVES LINKING
+    // ============================================================
+    function slugifyLocal(str) {
+      return String(str).toLowerCase().trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+
+    async function linkAlternatives(alternatives) {
+      if (!alternatives?.length) return;
+      const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+      const checks = alternatives.map(async alt => {
+        const slug = slugifyLocal(alt.name);
+        try {
+          const r = await fetch(
+            `${SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=slug`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+          );
+          const rows = await r.json();
+          return { alt, slug: rows?.[0]?.slug || null };
+        } catch {
+          return { alt, slug: null };
+        }
+      });
+
+      const results = await Promise.all(checks);
+      const grid = document.getElementById('alternativesGrid');
+      if (!grid) return;
+
+      grid.innerHTML = results.map(({ alt, slug }) => `
+        <div class="alt-card">
+          ${slug
+            ? `<a class="alt-name alt-link" href="/p/${slug}">${escapeHtml(alt.name)} →</a>`
+            : `<div class="alt-name">${escapeHtml(alt.name)}</div>`}
+          <div class="alt-reason">${escapeHtml(alt.reason)}</div>
+        </div>`).join('');
+    }
+
+    // ============================================================
+    // HISTORY TABS (History | Saved)
+    // ============================================================
+    function showHistoryTab(tab) {
+      document.getElementById('histTabHistory').classList.toggle('active', tab === 'history');
+      document.getElementById('histTabSaved').classList.toggle('active', tab === 'saved');
+      document.getElementById('historyList').style.display = tab === 'history' ? 'block' : 'none';
+      document.getElementById('savedList').style.display   = tab === 'saved'   ? 'block' : 'none';
+      if (tab === 'saved') loadSavedItems();
+    }
+
+    async function loadSavedItems() {
+      if (!currentUser) return;
+      const list = document.getElementById('savedList');
+      list.innerHTML = '<div class="history-empty">Loading...</div>';
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('bookmarks')
+          .select('slug, product_name, badge, overall_score, created_at')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          list.innerHTML = '<div class="history-empty">No saved products yet.<br>Hit ♡ on any verdict to save it here.</div>';
+          return;
+        }
+
+        list.innerHTML = '<div class="history-list">' +
+          data.map(row => {
+            const score = row.overall_score ? Number(row.overall_score).toFixed(1) : '—';
+            return `
+              <div class="history-item" onclick="window.location.href='/p/${escapeHtml(row.slug)}'">
+                <div class="history-badge-dot ${row.badge || 'NOT_LISTED'}"></div>
+                <div class="history-item-name">${escapeHtml(row.product_name || 'Unknown')}</div>
+                <div class="history-item-score">${score}/10</div>
+                <span style="font-size:13px;color:var(--danger)">♥</span>
+              </div>`;
+          }).join('') +
+        '</div>';
+
+      } catch (err) {
+        list.innerHTML = '<div class="history-empty">Couldn\'t load saved products.</div>';
+        console.error('Saved load error:', err);
+      }
     }
 
     // ============================================================
@@ -1541,6 +1732,7 @@
     // ============================================================
     function displayResearch(data) {
       hideLoading();
+      currentResearch = data;
 
       document.getElementById('productName').textContent  = data.productName || 'Product';
       document.getElementById('productPrice').textContent = data.price || '';
@@ -1574,7 +1766,9 @@
       document.getElementById('consList').innerHTML        = (s.cons || []).map(c => `<li>${c}</li>`).join('');
       document.getElementById('bestTimeToBuy').textContent = s.bestTimeToBuy || '';
       document.getElementById('alternativesGrid').innerHTML = (s.alternatives || [])
-        .map(a => `<div class="alt-card"><div class="alt-name">${a.name}</div><div class="alt-reason">${a.reason}</div></div>`).join('');
+        .map(a => `<div class="alt-card"><div class="alt-name">${escapeHtml(a.name)}</div><div class="alt-reason">${escapeHtml(a.reason)}</div></div>`).join('');
+      // Async — check cache for each alternative and linkify if found
+      linkAlternatives(s.alternatives || []);
       document.getElementById('realTalkText').textContent  = s.realTalk || '';
 
       document.getElementById('saveConfirm').classList.remove('visible');

@@ -1,7 +1,9 @@
 {
   "rewrites": [
-    { "source": "/p/:slug", "destination": "/product.html" },
-    { "source": "/directory", "destination": "/directory.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/sitemap.xml",  "destination": "/api/sitemap" },
+    { "source": "/p/:slug",      "destination": "/product.html" },
+    { "source": "/directory",    "destination": "/directory.html" },
+    { "source": "/compare",      "destination": "/compare.html" },
+    { "source": "/api/(.*)",     "destination": "/api/$1" }
   ]
 }

@@ -74,6 +74,7 @@
     .badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
     .badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
     .badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); border: 1px solid var(--danger); }
+    .category-chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; color: var(--text-3); background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 3px 10px; }
 
     /* ── TL;DR ── */
     .tldr-strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 22px; margin-bottom: 14px; font-family: var(--font-display); font-size: 18px; color: var(--text); line-height: 1.4; animation: fadeUp .4s ease; }
@@ -235,6 +236,7 @@
           <div class="product-meta">
             ${r.price ? `<div class="product-price">${escapeHtml(r.price)}</div>` : ''}
             <div class="badge ${escapeHtml(r.badge || 'NOT_LISTED')}">${escapeHtml(r.badge || 'NOT_LISTED').replace(/_/g,' ')}</div>
+            ${(product.category || r.category) ? `<span class="category-chip">${escapeHtml(product.category || r.category)}</span>` : ''}
           </div>
         </div>
 

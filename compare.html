@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compare Products — Tell Me It's Good</title>
+  <meta name="description" content="Side-by-side Triple Filter comparison: quality, safety, and ethics scores." />
+  <meta property="og:title" content="Compare Products — Tell Me It's Good" />
+  <meta property="og:description" content="Side-by-side Triple Filter comparison: quality, safety, and ethics scores." />
+  <meta property="og:type" content="article" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script defer src="/_vercel/insights/script.js"></script>
+  <style>
+    :root {
+      --bg: #FAF8F5; --surface: #F3F0EB; --surface-2: #EAE6DF;
+      --border: #DDD9D2; --border-strong: #C8C3BB;
+      --text: #1C1917; --text-2: #6B6560; --text-3: #A09891;
+      --accent: #2F6FED; --accent-hover: #1A57D4; --accent-surf: #EBF1FD; --accent-text: #1A4FB8;
+      --card: #FFFFFF; --success: #3A9E6F; --success-surf: #ECFDF5;
+      --warning: #D4872A; --danger: #D94F4F; --danger-surf: #FEF2F2;
+      --pro: #7C3AED; --pro-surf: #F5F3FF;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #18161A; --surface: #211F24; --surface-2: #2B2830;
+        --border: #38343D; --border-strong: #49444F;
+        --text: #F0EDE8; --text-2: #9B9299; --text-3: #67636B;
+        --accent: #5A8FFF; --accent-surf: #1C2744; --accent-text: #8AB4FF;
+        --card: #211F24; --success: #4CB87F; --success-surf: #0D2B1E;
+        --warning: #E09640; --danger: #E86060; --danger-surf: #2B1212;
+        --pro: #A78BFA; --pro-surf: #1E1533;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); }
+    .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .top-bar-cta { font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 18px; cursor: pointer; text-decoration: none; font-family: var(--font-body); transition: background .15s; }
+    .top-bar-cta:hover { background: var(--accent-hover); }
+
+    /* ── Layout ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 40px 16px 80px; }
+    @media (min-width: 520px) { .page { padding: 48px 24px 80px; } }
+
+    /* ── Loading / error states ── */
+    .state-center { text-align: center; padding: 80px 24px; }
+    .spinner { width: 32px; height: 32px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .state-title { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 8px; }
+    .state-text { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Back link ── */
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; margin-bottom: 24px; transition: color .15s; }
+    .back-link:hover { color: var(--text); }
+
+    /* ── Page heading ── */
+    .compare-heading { font-family: var(--font-display); font-size: clamp(22px, 5vw, 34px); line-height: 1.2; color: var(--text); margin-bottom: 20px; animation: fadeUp .3s ease; }
+
+    /* ── Winner banner ── */
+    .winner-banner { background: var(--accent-surf); border: 1px solid var(--accent); border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 20px; font-size: 14px; font-weight: 600; color: var(--accent-text); display: flex; align-items: center; gap: 8px; animation: fadeUp .35s ease; }
+    .winner-banner-icon { font-size: 18px; }
+
+    /* ── Badge ── */
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 5px 12px; border-radius: 100px; }
+    .badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); border: 1px solid var(--success); }
+    .badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; border: 1px solid #3A9E6F; }
+    .badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
+    .badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
+    .badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); border: 1px solid var(--danger); }
+
+    /* ── Two-column compare grid ── */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; animation: fadeUp .4s ease; }
+    @media (max-width: 599px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    /* ── Product column card ── */
+    .product-col { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 22px; box-shadow: var(--shadow-sm); }
+    .product-col-name { font-family: var(--font-display); font-size: 20px; line-height: 1.25; color: var(--text); margin-bottom: 10px; }
+    .product-col-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .product-col-brand { font-size: 12px; color: var(--text-3); font-weight: 500; }
+    .product-col-price { font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .product-col-score-wrap { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+    .product-col-score { font-family: var(--font-display); font-size: 52px; line-height: 1; color: var(--text); }
+    .product-col-score-denom { font-family: var(--font-body); font-size: 16px; color: var(--text-3); }
+    .product-col-score-label { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0; }
+
+    /* ── Section label ── */
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+
+    /* ── Gates comparison ── */
+    .gates-section { margin-bottom: 16px; animation: fadeUp .45s ease; }
+    .gates-section-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 599px) { .gates-section-inner { grid-template-columns: 1fr; } }
+    .gates-col { display: flex; flex-direction: column; gap: 10px; }
+    .gates-col-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .gate-cmp-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-sm); }
+    .gate-cmp-card.passes { border-top: 3px solid var(--success); }
+    .gate-cmp-card.fails  { border-top: 3px solid var(--danger); }
+    .gate-cmp-card.winner { border-color: var(--success); background: var(--success-surf); }
+    .gate-cmp-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+    .gate-cmp-name  { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .gate-cmp-score { font-family: var(--font-display); font-size: 24px; line-height: 1; color: var(--text); margin-bottom: 6px; }
+    .gate-cmp-score span { font-family: var(--font-body); font-size: 11px; color: var(--text-3); }
+    .gate-bar-wrap { height: 4px; background: var(--border); border-radius: 100px; overflow: hidden; margin-bottom: 6px; }
+    .gate-bar-fill { height: 100%; border-radius: 100px; }
+    .gate-pass-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .gate-cmp-card.passes .gate-pass-label { color: var(--success); }
+    .gate-cmp-card.fails  .gate-pass-label { color: var(--danger); }
+    .gate-winner-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--success); background: var(--success-surf); border: 1px solid var(--success); border-radius: 100px; padding: 2px 8px; margin-left: 6px; vertical-align: middle; }
+
+    /* ── Pros / Cons sections ── */
+    .proscons-section { margin-bottom: 16px; animation: fadeUp .5s ease; }
+    .proscons-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 599px) { .proscons-inner { grid-template-columns: 1fr; } }
+    .proscons-col { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-sm); }
+    .proscons-col-name { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .proscons-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .proscons-list.pros li::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
+    .proscons-list.cons li::before { content: '✗'; color: var(--danger);  font-weight: 700; flex-shrink: 0; }
+    .proscons-list li { display: flex; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.45; }
+    .proscons-sub-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+    .proscons-sub-label.pros { color: var(--success); }
+    .proscons-sub-label.cons { color: var(--danger); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
+
+    /* ── Single product state ── */
+    .single-product-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; box-shadow: var(--shadow-md); margin-bottom: 20px; animation: fadeUp .35s ease; }
+    .single-product-name { font-family: var(--font-display); font-size: clamp(20px, 5vw, 28px); line-height: 1.25; color: var(--text); margin-bottom: 10px; }
+    .single-product-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .single-score-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+    .single-score { font-family: var(--font-display); font-size: 56px; line-height: 1; color: var(--text); }
+    .single-score-denom { font-family: var(--font-body); font-size: 18px; color: var(--text-3); }
+    .single-score-label { font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+
+    /* ── Compare search card ── */
+    .compare-search-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; box-shadow: var(--shadow-md); animation: fadeUp .45s ease; }
+    .compare-search-title { font-family: var(--font-display); font-size: 20px; color: var(--text); margin-bottom: 6px; }
+    .compare-search-sub { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+    .compare-search-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .compare-input { flex: 1; min-width: 180px; font-family: var(--font-body); font-size: 15px; padding: 0 16px; height: 48px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-md); background: var(--bg); color: var(--text); outline: none; transition: border-color .15s; }
+    .compare-input:focus { border-color: var(--accent); }
+    .compare-input::placeholder { color: var(--text-3); }
+    .compare-btn { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 0 22px; height: 48px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+    .compare-btn:hover { background: var(--accent-hover); }
+
+    /* ── CTA ── */
+    .cta-section { margin-top: 36px; text-align: center; animation: fadeUp .6s ease; }
+    .cta-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 15px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 0 32px; height: 50px; text-decoration: none; transition: background .15s; }
+    .cta-btn:hover { background: var(--accent-hover); }
+
+    /* ── Footer ── */
+    .footer { text-align: center; margin-top: 64px; font-size: 12px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a class="top-bar-logo" href="/"><span class="top-bar-logo-dot"></span>tellmeitsgood.com</a>
+    <a class="top-bar-cta" href="/">Research a product →</a>
+  </div>
+
+  <div class="page" id="pageContent">
+    <div class="state-center" id="loadingState">
+      <div class="spinner"></div>
+      <p class="state-text">Loading comparison...</p>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+    function slugify(str) {
+      return str.toLowerCase().trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const slugA  = (params.get('a') || '').trim();
+    const slugB  = (params.get('b') || '').trim();
+
+    async function fetchProduct(slug) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=*`,
+        { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+      );
+      const rows = await res.json();
+      return rows?.[0] ?? null;
+    }
+
+    function showError(msg) {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="state-center">
+          <div class="state-title">Hmm.</div>
+          <p class="state-text">${escapeHtml(msg)}</p>
+          <a href="/" style="display:inline-block;margin-top:20px;font-size:14px;font-weight:600;color:var(--accent)">← Research a product</a>
+        </div>`;
+    }
+
+    function badgeClass(badge) {
+      const allowed = ['TELL_ME_ITS_GOOD','CLEAN_PICK','ETHICAL_PICK','QUALITY_PICK','NOT_LISTED'];
+      return allowed.includes(badge) ? badge : 'NOT_LISTED';
+    }
+
+    function badgeLabel(badge) {
+      return (badge || 'NOT_LISTED').replace(/_/g, ' ');
+    }
+
+    function gateColor(i) {
+      return ['var(--accent)', 'var(--success)', '#818CF8'][i] || 'var(--accent)';
+    }
+
+    function renderGateCard(gate, i, isWinner) {
+      if (!gate) return '<div class="gate-cmp-card"><div class="gate-cmp-label">Gate ' + (i+1) + '</div><div class="gate-cmp-score" style="font-size:14px;color:var(--text-3)">No data</div></div>';
+      const name   = gate.name || ['Value & Quality', 'Clean & Safe', 'Ethical Company'][i];
+      const score  = gate.average ?? null;
+      const passes = gate.passes !== false && !gate.disqualified;
+      const disq   = gate.disqualified || false;
+      const pct    = typeof score === 'number' ? score * 10 : 0;
+      const stateClass = disq ? 'fails' : passes ? 'passes' : 'fails';
+      const stateLabel = disq ? 'DISQUALIFIED' : passes ? 'PASSES' : 'FAILS';
+      const winnerTag  = isWinner ? '<span class="gate-winner-tag">Higher</span>' : '';
+      return `
+        <div class="gate-cmp-card ${stateClass}${isWinner ? ' winner' : ''}">
+          <div class="gate-cmp-label">Gate ${i+1}</div>
+          <div class="gate-cmp-name">${escapeHtml(name)}${winnerTag}</div>
+          <div class="gate-cmp-score">${typeof score === 'number' ? score.toFixed(1) : '—'}<span> / 10</span></div>
+          <div class="gate-bar-wrap"><div class="gate-bar-fill" style="width:${pct}%;background:${gateColor(i)}"></div></div>
+          <div class="gate-pass-label">${stateLabel}</div>
+        </div>`;
+    }
+
+    function renderProsList(items, type) {
+      if (!items || !items.length) return '<li style="color:var(--text-3);font-size:13px;">None listed</li>';
+      return items.map(t => `<li>${escapeHtml(t)}</li>`).join('');
+    }
+
+    function renderBothProducts(pA, pB) {
+      const rA = pA.full_result;
+      const rB = pB.full_result;
+      const nameA = escapeHtml(rA.productName || pA.product_name || slugA);
+      const nameB = escapeHtml(rB.productName || pB.product_name || slugB);
+
+      // Update SEO
+      const title = `${nameA} vs ${nameB} — Tell Me It's Good`;
+      const desc  = `Side-by-side Triple Filter comparison: quality, safety, and ethics scores for ${nameA} vs ${nameB}.`;
+      document.title = title;
+      document.querySelector('meta[name="description"]').content = desc;
+      document.querySelector('meta[property="og:title"]').content = title;
+      document.querySelector('meta[property="og:description"]').content = desc;
+
+      const scoreA = rA.overallScore ?? null;
+      const scoreB = rB.overallScore ?? null;
+      const aWins  = scoreA !== null && scoreB !== null && scoreA > scoreB;
+      const bWins  = scoreA !== null && scoreB !== null && scoreB > scoreA;
+      const tie    = scoreA !== null && scoreB !== null && scoreA === scoreB;
+
+      // Winner banner
+      let winnerBanner = '';
+      if (aWins) {
+        winnerBanner = `<div class="winner-banner"><span class="winner-banner-icon">🏆</span>Overall winner: <strong>${nameA}</strong> (${scoreA} vs ${scoreB})</div>`;
+      } else if (bWins) {
+        winnerBanner = `<div class="winner-banner"><span class="winner-banner-icon">🏆</span>Overall winner: <strong>${nameB}</strong> (${scoreB} vs ${scoreA})</div>`;
+      } else if (tie) {
+        winnerBanner = `<div class="winner-banner"><span class="winner-banner-icon">🤝</span>It's a tie! Both score <strong>${scoreA}/10</strong></div>`;
+      }
+
+      // Gates
+      const gates = [0, 1, 2];
+      let gatesColA = '';
+      let gatesColB = '';
+      gates.forEach(i => {
+        const gA = rA['gate' + (i + 1)] || null;
+        const gB = rB['gate' + (i + 1)] || null;
+        const sA = gA?.average ?? null;
+        const sB = gB?.average ?? null;
+        const aGateWins = sA !== null && sB !== null && sA > sB;
+        const bGateWins = sA !== null && sB !== null && sB > sA;
+        gatesColA += renderGateCard(gA, i, aGateWins);
+        gatesColB += renderGateCard(gB, i, bGateWins);
+      });
+
+      // Pros / Cons
+      const prosA = rA.summary?.pros || rA.pros || [];
+      const consA = rA.summary?.cons || rA.cons || [];
+      const prosB = rB.summary?.pros || rB.pros || [];
+      const consB = rB.summary?.cons || rB.cons || [];
+
+      document.getElementById('pageContent').innerHTML = `
+        <a class="back-link" href="/directory">← Back to directory</a>
+
+        <h1 class="compare-heading">${nameA} vs ${nameB}</h1>
+
+        ${winnerBanner}
+
+        <div class="compare-grid">
+          <div class="product-col">
+            <div class="product-col-name">${nameA}</div>
+            <div class="product-col-meta">
+              <span class="badge ${badgeClass(rA.badge)}">${badgeLabel(rA.badge)}</span>
+              ${rA.brand ? `<span class="product-col-brand">${escapeHtml(rA.brand)}</span>` : ''}
+              ${rA.price ? `<span class="product-col-price">${escapeHtml(rA.price)}</span>` : ''}
+            </div>
+            <div class="product-col-score-wrap">
+              <div class="product-col-score">${scoreA ?? '—'}</div>
+              <div class="product-col-score-denom">/ 10</div>
+            </div>
+            <div class="product-col-score-label">Overall Score</div>
+          </div>
+          <div class="product-col">
+            <div class="product-col-name">${nameB}</div>
+            <div class="product-col-meta">
+              <span class="badge ${badgeClass(rB.badge)}">${badgeLabel(rB.badge)}</span>
+              ${rB.brand ? `<span class="product-col-brand">${escapeHtml(rB.brand)}</span>` : ''}
+              ${rB.price ? `<span class="product-col-price">${escapeHtml(rB.price)}</span>` : ''}
+            </div>
+            <div class="product-col-score-wrap">
+              <div class="product-col-score">${scoreB ?? '—'}</div>
+              <div class="product-col-score-denom">/ 10</div>
+            </div>
+            <div class="product-col-score-label">Overall Score</div>
+          </div>
+        </div>
+
+        <div class="gates-section">
+          <div class="section-label" style="margin-bottom:14px;">Triple Filter Scores</div>
+          <div class="gates-section-inner">
+            <div class="gates-col">
+              <div class="gates-col-label">${nameA}</div>
+              ${gatesColA}
+            </div>
+            <div class="gates-col">
+              <div class="gates-col-label">${nameB}</div>
+              ${gatesColB}
+            </div>
+          </div>
+        </div>
+
+        <div class="proscons-section">
+          <div class="section-label" style="margin-bottom:14px;">Pros</div>
+          <div class="proscons-inner">
+            <div class="proscons-col">
+              <div class="proscons-col-name">${nameA}</div>
+              <ul class="proscons-list pros">${renderProsList(prosA, 'pros')}</ul>
+            </div>
+            <div class="proscons-col">
+              <div class="proscons-col-name">${nameB}</div>
+              <ul class="proscons-list pros">${renderProsList(prosB, 'pros')}</ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="proscons-section">
+          <div class="section-label" style="margin-bottom:14px;">Cons</div>
+          <div class="proscons-inner">
+            <div class="proscons-col">
+              <div class="proscons-col-name">${nameA}</div>
+              <ul class="proscons-list cons">${renderProsList(consA, 'cons')}</ul>
+            </div>
+            <div class="proscons-col">
+              <div class="proscons-col-name">${nameB}</div>
+              <ul class="proscons-list cons">${renderProsList(consB, 'cons')}</ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-section">
+          <a class="cta-btn" href="/">Research another product →</a>
+        </div>
+
+        <footer class="footer">
+          <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads</p>
+        </footer>
+      `;
+    }
+
+    function renderSingleProduct(product) {
+      const r = product.full_result;
+      if (!r) { showError('No data found for this product.'); return; }
+
+      const name   = escapeHtml(r.productName || product.product_name || slugA);
+      const score  = r.overallScore ?? null;
+      const badge  = badgeClass(r.badge);
+      const bLabel = badgeLabel(r.badge);
+
+      const title = `${name} — Tell Me It's Good`;
+      document.title = title;
+      document.querySelector('meta[name="description"]').content = `Score: ${score}/10 · ${bLabel} · Compare with another product on Tell Me It's Good.`;
+      document.querySelector('meta[property="og:title"]').content = title;
+
+      document.getElementById('pageContent').innerHTML = `
+        <a class="back-link" href="/directory">← Back to directory</a>
+
+        <div class="single-product-card">
+          <div class="single-product-name">${name}</div>
+          <div class="single-product-meta">
+            <span class="badge ${badge}">${bLabel}</span>
+            ${r.brand ? `<span style="font-size:12px;color:var(--text-3);font-weight:500;">${escapeHtml(r.brand)}</span>` : ''}
+            ${r.price ? `<span style="font-size:14px;font-weight:600;color:var(--text-2);">${escapeHtml(r.price)}</span>` : ''}
+          </div>
+          <div class="single-score-row">
+            <div class="single-score">${score ?? '—'}</div>
+            <div class="single-score-denom">/ 10</div>
+          </div>
+          <div class="single-score-label">Overall TMIG Score</div>
+        </div>
+
+        <div class="compare-search-card">
+          <div class="compare-search-title">Compare with another product</div>
+          <div class="compare-search-sub">Enter a product name to see a full side-by-side comparison.</div>
+          <div class="compare-search-row">
+            <input
+              class="compare-input"
+              id="compareInput"
+              type="text"
+              placeholder="e.g. Patagonia Nano Puff Jacket"
+              autocomplete="off"
+            />
+            <button class="compare-btn" id="compareSubmitBtn">Compare →</button>
+          </div>
+        </div>
+
+        <footer class="footer" style="margin-top:48px;">
+          <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads</p>
+        </footer>
+      `;
+
+      const input = document.getElementById('compareInput');
+      const btn   = document.getElementById('compareSubmitBtn');
+
+      function doCompare() {
+        const val = input.value.trim();
+        if (!val) { input.focus(); return; }
+        const bSlug = slugify(val);
+        if (!bSlug) { input.focus(); return; }
+        window.location.href = '/compare?a=' + encodeURIComponent(slugA) + '&b=' + encodeURIComponent(bSlug);
+      }
+
+      btn.addEventListener('click', doCompare);
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doCompare();
+      });
+    }
+
+    async function init() {
+      if (!slugA) {
+        showError('No product specified. Use /compare?a=product-slug to compare products.');
+        return;
+      }
+
+      try {
+        if (slugB) {
+          // Both products: full comparison
+          const [pA, pB] = await Promise.all([fetchProduct(slugA), fetchProduct(slugB)]);
+
+          if (!pA && !pB) {
+            showError('Neither product was found. They may not have been researched yet.');
+            return;
+          }
+          if (!pA) {
+            showError(`"${slugA}" hasn't been researched yet. Research it first at tellmeitsgood.com.`);
+            return;
+          }
+          if (!pB) {
+            // Fall back to single product with search
+            renderSingleProduct(pA);
+            // Prefill the search box
+            const pageEl = document.getElementById('compareInput');
+            if (pageEl) pageEl.value = slugB.replace(/-/g, ' ');
+            return;
+          }
+
+          renderBothProducts(pA, pB);
+        } else {
+          // Only product A: single state
+          const pA = await fetchProduct(slugA);
+          if (!pA) {
+            showError(`"${slugA}" hasn't been researched yet. <a href="/" style="color:var(--accent)">Research it here →</a>`);
+            return;
+          }
+          renderSingleProduct(pA);
+        }
+      } catch (err) {
+        showError('Could not load product data. Please try again.');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

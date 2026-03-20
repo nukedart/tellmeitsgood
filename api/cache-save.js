@@ -44,6 +44,7 @@ export default async function handler(req, res) {
           product_name:  researchData.productName || query,
           brand:         researchData.brand        || null,
           badge:         researchData.badge        || null,
+          category:      researchData.category     || null,
           overall_score: researchData.overallScore || null,
           full_result:    researchData,
           post_narrative: postData || null,
