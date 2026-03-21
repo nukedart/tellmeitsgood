@@ -5,6 +5,16 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.1.1 — 2026-03-21
+
+### Fixed
+- **Session management** — replaced no-op auth lock with an in-memory mutex. The previous no-op let concurrent token refreshes race, each invalidating the other's refresh token and causing silent logouts. The mutex serialises requests per lock name without touching the browser's Web Locks API (which threw "Lock broken" errors).
+- **`SIGNED_OUT` event not handled** — `onAuthStateChange` now explicitly handles `SIGNED_OUT` to clean up `currentUser` and `currentUserPro` state when Supabase fires it (e.g. after a failed token refresh or server-side revocation).
+- **Double-init race removed** — `initAuth` no longer calls `getSession()` and sets `currentUser` separately from `onAuthStateChange`. The listener's `INITIAL_SESSION` event is now the single source of truth; `initAuth` only renders logged-out defaults instantly and handles the Stripe redirect param.
+- **`console.log` removed** from auth state listener.
+
+---
+
 ## v1.1.0 — 2026-03-21
 
 ### Added

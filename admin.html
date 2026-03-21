@@ -130,8 +130,16 @@
   const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
+  const _lockQueues = {};
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { lock: async (name, acquireTimeout, fn) => fn() },
+    auth: {
+      lock: (name, acquireTimeout, fn) => {
+        const prev = _lockQueues[name] || Promise.resolve();
+        let release;
+        _lockQueues[name] = prev.then(() => new Promise(r => { release = r; }));
+        return prev.then(() => fn()).finally(() => { release(); });
+      },
+    },
   });
 
   function esc(str) {

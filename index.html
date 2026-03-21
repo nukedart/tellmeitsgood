@@ -702,7 +702,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.1.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.1.1</p>
     </footer>
   </div>
 
@@ -716,14 +716,21 @@
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-    // Bypass navigator.locks to prevent "Lock broken by another request with the
-    // 'steal' option" errors. These occur when concurrent requests (multiple tabs,
-    // rapid reloads) race to acquire the same auth lock. A no-op lock lets each
-    // call proceed immediately without serialization — safe because we don't have
-    // concurrent token refresh scenarios in a single-page app.
+    // In-memory mutex to replace navigator.locks.
+    // The browser's Web Locks API throws "Lock broken by another request with the
+    // 'steal' option" on rapid reloads/multiple tabs. A no-op lock (fn()) fixes
+    // that error but creates a worse problem: concurrent token refreshes each
+    // invalidate the other's refresh token, causing silent logouts.
+    // This mutex serialises requests per lock name without touching Web Locks.
+    const _lockQueues = {};
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
-        lock: async (name, acquireTimeout, fn) => fn(),
+        lock: (name, acquireTimeout, fn) => {
+          const prev = _lockQueues[name] || Promise.resolve();
+          let release;
+          _lockQueues[name] = prev.then(() => new Promise(r => { release = r; }));
+          return prev.then(() => fn()).finally(() => { release(); });
+        },
       },
     });
 
@@ -795,14 +802,26 @@
     // AUTH STATE LISTENER
     // ============================================================
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
-      if (event === 'SIGNED_IN') closeModal('authModal');
       if (event === 'PASSWORD_RECOVERY') {
         // User arrived via a password reset link — show the set-new-password form
         openModal('authModal');
         switchAuthView('reset');
         setTimeout(() => document.getElementById('resetPassword')?.focus(), 50);
+        return; // Don't overwrite currentUser state during recovery flow
       }
+
+      if (event === 'SIGNED_IN') closeModal('authModal');
+
+      // SIGNED_OUT fires when: user calls signOut(), token refresh fails, or
+      // session is revoked server-side. Always clean up state.
+      if (event === 'SIGNED_OUT') {
+        currentUser    = null;
+        currentUserPro = false;
+        updateAuthBar();
+        updatePaywall();
+        return;
+      }
+
       currentUser = session?.user || null;
       if (currentUser) await checkProStatus();
       else currentUserPro = false;
@@ -1494,35 +1513,20 @@
     }
 
     // ============================================================
-    // INIT — restore session on page load
+    // INIT — render immediately with defaults; onAuthStateChange fires
+    // INITIAL_SESSION shortly after and updates to the real auth state.
     // ============================================================
-    (async function initAuth() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const justUpgraded = urlParams.get('upgraded') === '1';
-
-      // Render immediately with logged-out defaults so the nav
-      // appears instantly — no waiting for network calls.
-      updateAuthBar();
-      updatePaywall();
-
-      let session = null;
-      try {
-        const { data } = await supabaseClient.auth.getSession();
-        session = data.session;
-      } catch (err) {
-        console.warn('getSession error (ignored):', err.message);
-      }
-      currentUser = session?.user || null;
-      if (currentUser) await checkProStatus();
-
-      // Update nav with real auth state (silently swaps if user is signed in)
+    (function initAuth() {
+      // Render logged-out defaults instantly so the nav appears without delay
       updateAuthBar();
       updatePaywall();
 
       // Coming back from Stripe checkout
-      if (justUpgraded) {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('upgraded') === '1') {
         window.history.replaceState({}, '', '/');
-        showUpgradeBanner(!!currentUser);
+        // Delay slightly to let INITIAL_SESSION fire first so currentUser is set
+        setTimeout(() => showUpgradeBanner(!!currentUser), 800);
       }
     })();
 
