@@ -702,7 +702,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.1.1</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.2.0</p>
     </footer>
   </div>
 
@@ -856,16 +856,16 @@
       if (currentUser) {
         // ── Logged in ──
         left.innerHTML = '';
-        if (currentUserPro) {
-          const histBtn = document.createElement('button');
-          histBtn.className = 'auth-bar-history-btn visible';
-          histBtn.innerHTML = '📋 History';
-          histBtn.onclick = openHistory;
-          left.appendChild(histBtn);
-        } else {
+        // All logged-in users get history access; free users see last 5
+        const histBtn = document.createElement('button');
+        histBtn.className = 'auth-bar-history-btn visible';
+        histBtn.innerHTML = '📋 History';
+        histBtn.onclick = openHistory;
+        left.appendChild(histBtn);
+        if (!currentUserPro) {
           const upgradeBtn = document.createElement('button');
           upgradeBtn.className = 'pro-badge-btn';
-          upgradeBtn.textContent = '⭐ Upgrade for history';
+          upgradeBtn.textContent = '⭐ Go Pro';
           upgradeBtn.onclick = () => openModal('proModal');
           left.appendChild(upgradeBtn);
         }
@@ -952,12 +952,13 @@
       openModal('historyModal');
 
       try {
+        const limit = currentUserPro ? 50 : 5;
         const { data, error } = await supabaseClient
           .from('searches')
           .select('id, product_name, badge, overall_score, created_at, full_result')
           .eq('user_id', currentUser.id)
           .order('created_at', { ascending: false })
-          .limit(50);
+          .limit(limit);
 
         if (error) throw error;
 
@@ -972,6 +973,12 @@
         window._historyCache = {};
         data.forEach(row => { window._historyCache[row.id] = row.full_result; });
 
+        const upgradePrompt = !currentUserPro ? `
+          <div style="text-align:center;padding:16px 20px 4px;border-top:1px solid var(--border);margin-top:8px">
+            <p style="font-size:13px;color:var(--text-2);margin-bottom:10px">Showing your last 5 searches.</p>
+            <button onclick="closeModal('historyModal');openModal('proModal')" style="font-size:13px;font-weight:600;color:#fff;background:var(--pro);border:none;border-radius:var(--radius-md);padding:8px 18px;cursor:pointer;font-family:var(--font-body)">⭐ Go Pro for full history</button>
+          </div>` : '';
+
         list.innerHTML = '<div class="history-list">' +
           data.map(row => {
             const date = new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -985,7 +992,7 @@
               </div>
             `;
           }).join('') +
-        '</div>';
+        '</div>' + upgradePrompt;
 
       } catch (err) {
         document.getElementById('historyList').innerHTML =

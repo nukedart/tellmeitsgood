@@ -8,6 +8,8 @@
   <meta property="og:title" content="Tell Me It's Good" />
   <meta property="og:description" content="AI-researched product verdict." />
   <meta property="og:type" content="article" />
+  <meta property="og:image" content="https://tellmeitsgood.com/api/og" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -199,6 +201,9 @@
       document.querySelector('meta[name="description"]').content = desc;
       document.querySelector('meta[property="og:title"]').content = title;
       document.querySelector('meta[property="og:description"]').content = desc;
+      // Dynamic OG image — set after we know the slug
+      const ogImg = document.querySelector('meta[property="og:image"]');
+      if (ogImg) ogImg.content = `https://tellmeitsgood.com/api/og?slug=${encodeURIComponent(product.slug)}`;
 
       // ── Age ──
       const daysOld = Math.floor((Date.now() - new Date(product.researched_at).getTime()) / 86400000);
@@ -233,7 +238,10 @@
       document.getElementById('pageContent').innerHTML = `
         <div class="researched-strip">
           <span>📂 Researched ${ageText} · AI-sourced, not sponsored</span>
-          <a href="/">Research your own product →</a>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            ${daysOld >= 60 ? `<button onclick="requestRefresh('${escapeHtml(product.slug)}')" id="refreshBtn" style="font-size:12px;font-weight:600;color:var(--warning);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font-body)">↻ Request refresh</button>` : ''}
+            <a href="/">Research your own →</a>
+          </div>
         </div>
 
         <div class="product-header">
@@ -319,6 +327,32 @@
     }
 
     loadProduct();
+
+    async function requestRefresh(slug) {
+      const btn = document.getElementById('refreshBtn');
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Requesting...';
+      try {
+        const res = await fetch('/api/request-refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug }),
+        });
+        if (res.status === 429) {
+          btn.textContent = 'Already requested';
+        } else if (res.ok) {
+          btn.textContent = '✓ Refresh requested';
+          btn.style.color = 'var(--success)';
+        } else {
+          btn.textContent = '↻ Request refresh';
+          btn.disabled = false;
+        }
+      } catch {
+        btn.textContent = '↻ Request refresh';
+        btn.disabled = false;
+      }
+    }
 
     function copyEmbed() {
       const code = document.getElementById('embedCodeBlock').textContent;

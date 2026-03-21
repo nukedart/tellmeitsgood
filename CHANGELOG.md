@@ -5,6 +5,29 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.2.0 — 2026-03-21
+
+### Added
+- **OG social cards** — `/api/og?slug=...` edge function generates 1200×630 PNG preview images for all product verdict pages. Shows product name, badge pill, score, and branded bottom strip. Referenced via `og:image` + `twitter:card` meta tags in `product.html`. Requires `package.json` with `@vercel/og ^0.6.2` (added).
+- **Score filter in directory** — new filter bar with "All scores / 7+ Good / 8+ Great / 9+ Exceptional" buttons. Combines with existing badge and category filters.
+- **Re-research request button** — appears on verdict pages older than 60 days. Calls `/api/request-refresh` which increments `refresh_requests` counter on the product row. Rate-limited to 1 per IP per product per hour.
+  - **Supabase migration required:** see below.
+- **History for all logged-in users** — free users can now see their last 5 searches (previously Pro-only). History button shown to all signed-in users with an upgrade prompt at the bottom for free tier.
+
+### Supabase migrations required
+```sql
+-- Add refresh request tracking to products
+ALTER TABLE products ADD COLUMN IF NOT EXISTS refresh_requests int DEFAULT 0;
+
+-- Optional: atomic increment RPC (more efficient than read-write)
+CREATE OR REPLACE FUNCTION increment_refresh_requests(p_slug text)
+RETURNS void LANGUAGE sql AS $$
+  UPDATE products SET refresh_requests = COALESCE(refresh_requests, 0) + 1 WHERE slug = p_slug;
+$$;
+```
+
+---
+
 ## v1.1.1 — 2026-03-21
 
 ### Fixed

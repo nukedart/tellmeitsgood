@@ -153,6 +153,13 @@
       <button class="filter-btn" data-cat="Electronics" onclick="setCategory('Electronics', this)">Electronics</button>
     </div>
 
+    <div class="filter-bar" id="scoreBar" style="margin-bottom:28px">
+      <button class="filter-btn active" onclick="setScore(0, this)">All scores</button>
+      <button class="filter-btn" onclick="setScore(7, this)">7+ Good</button>
+      <button class="filter-btn" onclick="setScore(8, this)">8+ Great</button>
+      <button class="filter-btn" onclick="setScore(9, this)">9+ Exceptional</button>
+    </div>
+
     <div class="result-count" id="resultCount"></div>
     <div class="product-grid" id="productGrid">
       <div class="state-center" style="grid-column:1/-1">
@@ -177,6 +184,7 @@
 
     let currentFilter   = 'ALL';
     let currentCategory = 'ALL';
+    let currentScore    = 0;     // 0 = all, 7/8/9 = minimum score
     let currentSearch   = '';
     let currentOffset   = 0;
     let totalCount    = 0;
@@ -233,6 +241,9 @@
       }
       if (currentCategory !== 'ALL') {
         url += `&category=eq.${encodeURIComponent(currentCategory)}`;
+      }
+      if (currentScore > 0) {
+        url += `&overall_score=gte.${currentScore}`;
       }
       if (currentSearch) {
         url += `&or=(product_name.ilike.*${encodeURIComponent(currentSearch)}*,brand.ilike.*${encodeURIComponent(currentSearch)}*)`;
@@ -321,7 +332,15 @@
     function setFilter(badge, btn) {
       if (currentFilter === badge) return;
       currentFilter = badge;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#filterBar .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadProducts(true);
+    }
+
+    function setScore(score, btn) {
+      if (currentScore === score) return;
+      currentScore = score;
+      document.querySelectorAll('#scoreBar .filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       loadProducts(true);
     }
