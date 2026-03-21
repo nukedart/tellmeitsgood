@@ -5,6 +5,16 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.1.0 — 2026-03-21
+
+### Added
+- **Admin dashboard** at `/admin` — live stats for total products, users, bookmarks, category/badge breakdown, top bookmarked products, and recent research activity. Protected by `ADMIN_EMAIL` env var; served by `api/admin-stats.js` using service role key.
+  - **Required:** Add `ADMIN_EMAIL` env var in Vercel (your sign-in email).
+- **Buy button on verdict pages** (`/p/[slug]`) — shows product URL with Amazon affiliate tag applied when applicable. Button text adapts to badge (earned badge / had concerns / generic).
+- **Amazon affiliate tag** — applied to Amazon URLs on both the main search result and static verdict pages. Update `AFFILIATE_TAG` constant in `index.html` and `product.html` once you have your real Associates tag.
+
+---
+
 ## v1.0.0 — 2026-03-20
 
 ### Added

@@ -4,6 +4,7 @@
     { "source": "/p/:slug",      "destination": "/product.html" },
     { "source": "/directory",    "destination": "/directory.html" },
     { "source": "/compare",      "destination": "/compare.html" },
+    { "source": "/admin",        "destination": "/admin.html" },
     { "source": "/api/(.*)",     "destination": "/api/$1" }
   ]
 }

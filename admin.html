@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Tell Me It's Good</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAF8F5; --surface: #F3F0EB; --surface-2: #EAE6DF;
+      --border: #DDD9D2; --border-strong: #C8C3BB;
+      --text: #1C1917; --text-2: #6B6560; --text-3: #A09891;
+      --accent: #2F6FED; --accent-hover: #1A57D4; --accent-surf: #EBF1FD; --accent-text: #1A4FB8;
+      --card: #FFFFFF; --success: #3A9E6F; --success-surf: #ECFDF5;
+      --warning: #D4872A; --danger: #D94F4F; --danger-surf: #FEF2F2;
+      --pro: #7C3AED; --pro-surf: #F5F3FF;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #18161A; --surface: #211F24; --surface-2: #2B2830;
+        --border: #38343D; --border-strong: #49444F;
+        --text: #F0EDE8; --text-2: #9B9299; --text-3: #67636B;
+        --accent: #5A8FFF; --accent-surf: #1C2744; --accent-text: #8AB4FF;
+        --card: #211F24; --success: #4CB87F; --success-surf: #0D2B1E;
+        --warning: #E09640; --danger: #E86060; --danger-surf: #2B1212;
+        --pro: #A78BFA; --pro-surf: #1E1533;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); }
+    .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .top-bar-right { display: flex; align-items: center; gap: 12px; }
+    .top-bar-link { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; }
+    .top-bar-link:hover { color: var(--text); }
+
+    .page { max-width: 900px; margin: 0 auto; padding: 40px 16px 80px; }
+    @media (min-width: 520px) { .page { padding: 48px 24px 80px; } }
+
+    .page-title { font-family: var(--font-display); font-size: 28px; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-3); margin-bottom: 32px; }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 36px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; }
+    .stat-value { font-family: var(--font-display); font-size: 36px; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .stat-label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+    .stat-sub { font-size: 12px; color: var(--success); margin-top: 4px; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 36px; }
+    .section-title { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Breakdown list ── */
+    .breakdown-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+    .breakdown-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .breakdown-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .breakdown-row:first-child { padding-top: 0; }
+    .breakdown-key { color: var(--text); font-weight: 500; }
+    .breakdown-val { font-weight: 700; color: var(--accent); }
+    .breakdown-bar-wrap { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin: 0 12px; }
+    .breakdown-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+
+    /* ── Badge pill ── */
+    .badge-pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; }
+    .badge-pill.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); }
+    .badge-pill.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; }
+    .badge-pill.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; }
+    .badge-pill.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); }
+    .badge-pill.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); }
+
+    /* ── Recent table ── */
+    .recent-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .recent-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .recent-row:last-child { border-bottom: none; }
+    .recent-name { flex: 1; font-weight: 500; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-score { font-weight: 700; color: var(--text-2); min-width: 38px; text-align: right; }
+    .recent-age { font-size: 12px; color: var(--text-3); min-width: 80px; text-align: right; }
+
+    /* ── Loading / error ── */
+    .state-center { text-align: center; padding: 80px 24px; }
+    .spinner { width: 32px; height: 32px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .state-title { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 8px; }
+    .state-text { font-size: 14px; color: var(--text-2); }
+
+    .refresh-btn { font-size: 13px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
+    .refresh-btn:hover { text-decoration: underline; }
+  </style>
+  <script defer src="https://cdn.vercel-insights.com/v1/speed-insights/script.js"></script>
+  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="top-bar-logo" href="/">
+    <div class="top-bar-logo-dot"></div>
+    Tell Me It's Good
+  </a>
+  <div class="top-bar-right">
+    <a class="top-bar-link" href="/directory">Directory</a>
+    <a class="top-bar-link" href="/">Home</a>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-title">Admin Dashboard</div>
+  <div class="page-subtitle">tellmeitsgood.com — live stats</div>
+
+  <div id="content">
+    <div class="state-center">
+      <div class="spinner"></div>
+      <div class="state-title">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { lock: async (name, acquireTimeout, fn) => fn() },
+  });
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function timeAgo(iso) {
+    const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (d === 0) return 'Today';
+    if (d === 1) return '1 day ago';
+    return `${d}d ago`;
+  }
+
+  async function load() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      document.getElementById('content').innerHTML = `
+        <div class="state-center">
+          <div class="state-title">Not signed in</div>
+          <p class="state-text">Sign in at <a href="/" style="color:var(--accent)">the home page</a> first.</p>
+        </div>`;
+      return;
+    }
+
+    const res = await fetch('/api/admin-stats', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+
+    if (res.status === 403 || res.status === 401) {
+      document.getElementById('content').innerHTML = `
+        <div class="state-center">
+          <div class="state-title">Access denied</div>
+          <p class="state-text">This page is restricted to admins.</p>
+        </div>`;
+      return;
+    }
+
+    if (!res.ok) {
+      document.getElementById('content').innerHTML = `
+        <div class="state-center">
+          <div class="state-title">Error loading stats</div>
+          <p class="state-text">${esc(await res.text())}</p>
+        </div>`;
+      return;
+    }
+
+    const d = await res.json();
+    render(d);
+  }
+
+  function render(d) {
+    // Category breakdown
+    const catEntries = Object.entries(d.categoryBreakdown || {}).sort((a,b) => b[1]-a[1]);
+    const catMax = catEntries[0]?.[1] || 1;
+    const catRows = catEntries.map(([k,v]) => `
+      <div class="breakdown-row">
+        <span class="breakdown-key">${esc(k)}</span>
+        <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:${Math.round(v/catMax*100)}%"></div></div>
+        <span class="breakdown-val">${v}</span>
+      </div>`).join('') || '<div class="breakdown-row"><span class="breakdown-key" style="color:var(--text-3)">No data yet</span></div>';
+
+    // Badge breakdown
+    const badgeOrder = ['TELL_ME_ITS_GOOD','CLEAN_PICK','ETHICAL_PICK','QUALITY_PICK','NOT_LISTED'];
+    const badgeEntries = Object.entries(d.badgeBreakdown || {}).sort((a,b) => badgeOrder.indexOf(a[0]) - badgeOrder.indexOf(b[0]));
+    const badgeMax = badgeEntries[0]?.[1] || 1;
+    const badgeRows = badgeEntries.map(([k,v]) => `
+      <div class="breakdown-row">
+        <span class="badge-pill ${esc(k)}">${esc(k).replace(/_/g,' ')}</span>
+        <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:${Math.round(v/badgeMax*100)}%"></div></div>
+        <span class="breakdown-val">${v}</span>
+      </div>`).join('') || '<div class="breakdown-row"><span class="breakdown-key" style="color:var(--text-3)">No data yet</span></div>';
+
+    // Top bookmarked
+    const topRows = (d.topBookmarked || []).map(b => `
+      <div class="breakdown-row">
+        <span class="breakdown-key"><a href="/p/${esc(b.slug)}" target="_blank" style="color:var(--accent);text-decoration:none">${esc(b.product_name || b.slug)}</a></span>
+        <span class="breakdown-val">♥ ${b.count}</span>
+      </div>`).join('') || '<div class="breakdown-row"><span class="breakdown-key" style="color:var(--text-3)">No bookmarks yet</span></div>';
+
+    // Recent products
+    const recentRows = (d.recentProducts || []).map(p => `
+      <div class="recent-row">
+        <span class="badge-pill ${esc(p.badge || 'NOT_LISTED')}">${esc(p.badge || '?').replace(/_/g,' ')}</span>
+        <span class="recent-name">${esc(p.product_name)}</span>
+        <span class="recent-score">${p.overall_score ?? '—'}</span>
+        <span class="recent-age">${timeAgo(p.researched_at)}</span>
+      </div>`).join('') || '<div class="recent-row" style="color:var(--text-3)">No products yet</div>';
+
+    document.getElementById('content').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">${d.totalProducts}</div>
+          <div class="stat-label">Products</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${d.totalUsers}</div>
+          <div class="stat-label">Total users</div>
+          <div class="stat-sub">+${d.newUsersCount} this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${d.totalBookmarks}</div>
+          <div class="stat-label">Bookmarks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${Object.keys(d.categoryBreakdown || {}).length}</div>
+          <div class="stat-label">Categories</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Recent products <button class="refresh-btn" onclick="load()">↻ Refresh</button></div>
+        <div class="recent-card">${recentRows}</div>
+      </div>
+
+      <div class="two-col section">
+        <div>
+          <div class="section-title">By category</div>
+          <div class="breakdown-card">${catRows}</div>
+        </div>
+        <div>
+          <div class="section-title">By badge</div>
+          <div class="breakdown-card">${badgeRows}</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Most bookmarked</div>
+        <div class="breakdown-card">${topRows}</div>
+      </div>
+    `;
+  }
+
+  load();
+</script>
+</body>
+</html>
