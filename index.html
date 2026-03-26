@@ -244,6 +244,22 @@
     .fallback-textarea { width: 100%; font-family: var(--font-body); font-size: 15px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; resize: none; outline: none; transition: border-color .15s, box-shadow .15s; line-height: 1.5; }
     .fallback-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); }
 
+    /* ── Autocomplete ── */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list { position: absolute; top: calc(100% - 2px); left: 0; right: 0; z-index: 50; background: var(--card); border: 1.5px solid var(--accent); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); box-shadow: var(--shadow-md); display: none; overflow: hidden; }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .1s; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.ac-selected { background: var(--accent-surf); }
+    .autocomplete-item-name { flex: 1; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .autocomplete-item-badge { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+    .autocomplete-item-badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); }
+    .autocomplete-item-badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; }
+    .autocomplete-item-badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; }
+    .autocomplete-item-badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); }
+    .autocomplete-item-badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); }
+    .autocomplete-item-score { font-size: 12px; color: var(--text-3); flex-shrink: 0; }
+
     /* ── Example chips ── */
     .examples-hint { text-align: center; font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
     .examples { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 48px; }
@@ -535,7 +551,10 @@
         </div>
         <div class="input-panel active" id="panelName">
           <label class="input-label" for="queryInput">Product name or brand</label>
-          <input type="text" id="queryInput" class="query-input" placeholder="e.g. Seventh Generation dish soap" autocomplete="off" spellcheck="false" />
+          <div class="autocomplete-wrap">
+            <input type="text" id="queryInput" class="query-input" placeholder="e.g. Seventh Generation dish soap" autocomplete="off" spellcheck="false" />
+            <div id="autocompleteList" class="autocomplete-list" role="listbox"></div>
+          </div>
         </div>
         <div class="input-panel" id="panelUrl">
           <label class="input-label" for="urlInput">Product URL</label>
@@ -702,7 +721,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.2.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.1</p>
     </footer>
   </div>
 
@@ -725,6 +744,9 @@
     const _lockQueues = {};
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
+        // Prevent a SIGNED_OUT event in one tab from cascading to all other open tabs.
+        // Without this, a failed token refresh in any tab signs the user out everywhere.
+        broadcastAuthEvents: false,
         lock: (name, acquireTimeout, fn) => {
           const prev = _lockQueues[name] || Promise.resolve();
           let release;
@@ -754,6 +776,12 @@
     let currentSearchQuery = null;  // query that produced it (for refresh)
     let currentResearch    = null;  // full research data for the current result
     let currentBookmarked  = false; // whether current user has bookmarked this
+
+    // ── in-memory list caches (avoids re-fetching on every modal open) ──
+    let _hlCache    = null; // { userId, isPro, data } — history metadata list
+    let _savedCache = null; // { userId, data } — bookmarks list
+    // full_result blobs, keyed by search id (lazy-loaded on first click)
+    window._hiItems = {};
 
     // ============================================================
     // USAGE TRACKING (localStorage — free users only)
@@ -812,9 +840,32 @@
 
       if (event === 'SIGNED_IN') closeModal('authModal');
 
-      // SIGNED_OUT fires when: user calls signOut(), token refresh fails, or
-      // session is revoked server-side. Always clean up state.
+      // TOKEN_REFRESHED fires periodically — just sync state, no pro re-check needed.
+      if (event === 'TOKEN_REFRESHED') {
+        currentUser = session?.user || null;
+        if (!currentUser) { currentUserPro = false; }
+        updateAuthBar();
+        updatePaywall();
+        return;
+      }
+
+      // SIGNED_OUT fires when: user calls signOut(), token refresh fails, or session
+      // is revoked server-side. Before clearing state, do a live getSession() check —
+      // SIGNED_OUT can fire spuriously during a token refresh race (e.g. on rapid
+      // page reloads or if the mutex queues backed up). If a valid session still exists,
+      // keep the user signed in.
       if (event === 'SIGNED_OUT') {
+        try {
+          const { data: { session: live } } = await supabaseClient.auth.getSession();
+          if (live?.user) {
+            currentUser = live.user;
+            await checkProStatus();
+            updateAuthBar();
+            updatePaywall();
+            return;
+          }
+        } catch { /* fall through to sign-out */ }
+        _hlCache = null; _savedCache = null; window._hiItems = {};
         currentUser    = null;
         currentUserPro = false;
         updateAuthBar();
@@ -942,57 +993,37 @@
     async function openHistory() {
       if (!currentUser) return;
 
-      // Reset to history tab
+      // Show modal immediately — reset to history tab
       document.getElementById('historyList').style.display = 'block';
       document.getElementById('savedList').style.display   = 'none';
       document.getElementById('histTabHistory').classList.add('active');
       document.getElementById('histTabSaved').classList.remove('active');
+      openModal('historyModal');
+
+      // Serve from in-memory cache if fresh for this user/plan
+      if (_hlCache && _hlCache.userId === currentUser.id && _hlCache.isPro === currentUserPro) {
+        _renderHistoryList(_hlCache.data);
+        return;
+      }
+
       document.getElementById('historyList').innerHTML =
         '<div class="history-empty">Loading...</div>';
-      openModal('historyModal');
 
       try {
         const limit = currentUserPro ? 50 : 5;
+        // Only fetch lightweight metadata — full_result blobs are large and
+        // only needed when the user clicks a specific item (lazy-loaded then).
         const { data, error } = await supabaseClient
           .from('searches')
-          .select('id, product_name, badge, overall_score, created_at, full_result')
+          .select('id, product_name, badge, overall_score, created_at')
           .eq('user_id', currentUser.id)
           .order('created_at', { ascending: false })
           .limit(limit);
 
         if (error) throw error;
 
-        const list = document.getElementById('historyList');
-
-        if (!data || data.length === 0) {
-          list.innerHTML = '<div class="history-empty">No searches yet.<br>Research a product and it will appear here.</div>';
-          return;
-        }
-
-        // Store results in a map so onclick just passes an ID (avoids escaping issues)
-        window._historyCache = {};
-        data.forEach(row => { window._historyCache[row.id] = row.full_result; });
-
-        const upgradePrompt = !currentUserPro ? `
-          <div style="text-align:center;padding:16px 20px 4px;border-top:1px solid var(--border);margin-top:8px">
-            <p style="font-size:13px;color:var(--text-2);margin-bottom:10px">Showing your last 5 searches.</p>
-            <button onclick="closeModal('historyModal');openModal('proModal')" style="font-size:13px;font-weight:600;color:#fff;background:var(--pro);border:none;border-radius:var(--radius-md);padding:8px 18px;cursor:pointer;font-family:var(--font-body)">⭐ Go Pro for full history</button>
-          </div>` : '';
-
-        list.innerHTML = '<div class="history-list">' +
-          data.map(row => {
-            const date = new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const score = row.overall_score ? row.overall_score.toFixed(1) : '—';
-            return `
-              <div class="history-item" onclick="loadHistoryItem('${row.id}')">
-                <div class="history-badge-dot ${row.badge || 'NOT_LISTED'}"></div>
-                <div class="history-item-name">${escapeHtml(row.product_name || 'Unknown')}</div>
-                <div class="history-item-score">${score}/10</div>
-                <div class="history-item-meta">${date}</div>
-              </div>
-            `;
-          }).join('') +
-        '</div>' + upgradePrompt;
+        _hlCache = { userId: currentUser.id, isPro: currentUserPro, data: data || [] };
+        _renderHistoryList(data || []);
 
       } catch (err) {
         document.getElementById('historyList').innerHTML =
@@ -1001,16 +1032,63 @@
       }
     }
 
-    function loadHistoryItem(id) {
+    function _renderHistoryList(data) {
+      const list = document.getElementById('historyList');
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="history-empty">No searches yet.<br>Research a product and it will appear here.</div>';
+        return;
+      }
+      const upgradePrompt = !currentUserPro ? `
+        <div style="text-align:center;padding:16px 20px 4px;border-top:1px solid var(--border);margin-top:8px">
+          <p style="font-size:13px;color:var(--text-2);margin-bottom:10px">Showing your last 5 searches.</p>
+          <button onclick="closeModal('historyModal');openModal('proModal')" style="font-size:13px;font-weight:600;color:#fff;background:var(--pro);border:none;border-radius:var(--radius-md);padding:8px 18px;cursor:pointer;font-family:var(--font-body)">⭐ Go Pro for full history</button>
+        </div>` : '';
+      list.innerHTML = '<div class="history-list">' +
+        data.map(row => {
+          const date  = new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const score = row.overall_score ? Number(row.overall_score).toFixed(1) : '—';
+          return `
+            <div class="history-item" onclick="loadHistoryItem('${row.id}')">
+              <div class="history-badge-dot ${row.badge || 'NOT_LISTED'}"></div>
+              <div class="history-item-name">${escapeHtml(row.product_name || 'Unknown')}</div>
+              <div class="history-item-score">${score}/10</div>
+              <div class="history-item-meta">${date}</div>
+            </div>
+          `;
+        }).join('') +
+      '</div>' + upgradePrompt;
+    }
+
+    async function loadHistoryItem(id) {
       closeModal('historyModal');
-      try {
-        const research = window._historyCache[id];
-        if (!research) { console.error('History item not found in cache:', id); return; }
-        // full_result may be stored as a JSON string or already an object
-        const data = typeof research === 'string' ? JSON.parse(research) : research;
+
+      // Serve from per-item cache if already fetched
+      const cached = window._hiItems[id];
+      if (cached) {
+        const data = typeof cached === 'string' ? JSON.parse(cached) : cached;
         displayResearch(data);
+        return;
+      }
+
+      // full_result not yet loaded — fetch this one item on demand
+      document.getElementById('inputSection').style.display = 'none';
+      showLoading('Loading result...', '');
+      try {
+        const { data: row, error } = await supabaseClient
+          .from('searches')
+          .select('full_result')
+          .eq('id', id)
+          .single();
+        if (error || !row) throw error || new Error('Not found');
+        const research = typeof row.full_result === 'string'
+          ? JSON.parse(row.full_result) : row.full_result;
+        window._hiItems[id] = research;
+        displayResearch(research);
       } catch (err) {
-        console.error('Could not load history item:', err);
+        hideLoading();
+        document.getElementById('inputSection').style.display = 'block';
+        showError('Could not load this result. Please try again.');
+        console.error('loadHistoryItem error:', err);
       }
     }
 
@@ -1019,10 +1097,102 @@
     }
 
     // ============================================================
+    // AUTOCOMPLETE
+    // ============================================================
+    const BADGE_LABELS = {
+      TELL_ME_ITS_GOOD: "It's Good",
+      CLEAN_PICK:       'Clean Pick',
+      ETHICAL_PICK:     'Ethical Pick',
+      QUALITY_PICK:     'Quality Pick',
+      NOT_LISTED:       'Not Listed',
+    };
+
+    let _acTimer   = null;
+    let _acIndex   = -1;
+
+    const _queryInput = document.getElementById('queryInput');
+    const _acList     = document.getElementById('autocompleteList');
+
+    _queryInput.addEventListener('input', () => {
+      clearTimeout(_acTimer);
+      const val = _queryInput.value.trim();
+      if (val.length < 2) { _hideAc(); return; }
+      _acTimer = setTimeout(() => _fetchAc(val), 250);
+    });
+
+    _queryInput.addEventListener('keydown', e => {
+      if (!_acList.classList.contains('open')) return;
+      const items = _acList.querySelectorAll('.autocomplete-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        _acIndex = Math.min(_acIndex + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('ac-selected', i === _acIndex));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        _acIndex = Math.max(_acIndex - 1, -1);
+        items.forEach((el, i) => el.classList.toggle('ac-selected', i === _acIndex));
+      } else if (e.key === 'Enter' && _acIndex >= 0) {
+        e.preventDefault();
+        items[_acIndex]?.click();
+      } else if (e.key === 'Escape') {
+        _hideAc();
+      }
+    });
+
+    // Close when clicking outside the autocomplete area
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.autocomplete-wrap')) _hideAc();
+    });
+
+    async function _fetchAc(q) {
+      try {
+        const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(q)}`);
+        if (!res.ok) return;
+        const items = await res.json();
+        _showAc(items);
+      } catch { _hideAc(); }
+    }
+
+    function _showAc(items) {
+      _acIndex = -1;
+      if (!items || !items.length) { _hideAc(); return; }
+
+      _acList.innerHTML = items.map(item => {
+        const label = BADGE_LABELS[item.badge] || '';
+        const score = item.overall_score != null ? item.overall_score.toFixed(1) : '';
+        return `<div class="autocomplete-item" role="option" onclick="_selectAc(${JSON.stringify(item.query)})">
+          <span class="autocomplete-item-name">${escapeHtml(item.query)}</span>
+          ${label ? `<span class="autocomplete-item-badge ${escapeHtml(item.badge)}">${escapeHtml(label)}</span>` : ''}
+          ${score ? `<span class="autocomplete-item-score">${score}</span>` : ''}
+        </div>`;
+      }).join('');
+
+      _acList.classList.add('open');
+      // Visually connect input to dropdown
+      _queryInput.style.borderBottomLeftRadius  = '0';
+      _queryInput.style.borderBottomRightRadius = '0';
+    }
+
+    function _hideAc() {
+      _acList.classList.remove('open');
+      _acList.innerHTML = '';
+      _acIndex = -1;
+      _queryInput.style.borderBottomLeftRadius  = '';
+      _queryInput.style.borderBottomRightRadius = '';
+    }
+
+    function _selectAc(query) {
+      _queryInput.value = query;
+      _hideAc();
+      handleSubmit();
+    }
+
+    // ============================================================
     // SAVE SEARCH (called after successful research)
     // ============================================================
     async function saveSearch(researchData) {
       if (!currentUser) return; // only save for logged-in users
+      _hlCache = null; // history list is now stale
 
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1174,6 +1344,7 @@
             .eq('user_id', currentUser.id)
             .eq('slug', slug);
         }
+        _savedCache = null; // bookmarks list is now stale
       } catch (err) {
         // Revert on error
         currentBookmarked = !currentBookmarked;
@@ -1239,6 +1410,13 @@
     async function loadSavedItems() {
       if (!currentUser) return;
       const list = document.getElementById('savedList');
+
+      // Serve from in-memory cache if fresh for this user
+      if (_savedCache && _savedCache.userId === currentUser.id) {
+        _renderSavedList(_savedCache.data);
+        return;
+      }
+
       list.innerHTML = '<div class="history-empty">Loading...</div>';
 
       try {
@@ -1251,28 +1429,33 @@
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-          list.innerHTML = '<div class="history-empty">No saved products yet.<br>Hit ♡ on any verdict to save it here.</div>';
-          return;
-        }
-
-        list.innerHTML = '<div class="history-list">' +
-          data.map(row => {
-            const score = row.overall_score ? Number(row.overall_score).toFixed(1) : '—';
-            return `
-              <div class="history-item" onclick="window.location.href='/p/${escapeHtml(row.slug)}'">
-                <div class="history-badge-dot ${row.badge || 'NOT_LISTED'}"></div>
-                <div class="history-item-name">${escapeHtml(row.product_name || 'Unknown')}</div>
-                <div class="history-item-score">${score}/10</div>
-                <span style="font-size:13px;color:var(--danger)">♥</span>
-              </div>`;
-          }).join('') +
-        '</div>';
+        _savedCache = { userId: currentUser.id, data: data || [] };
+        _renderSavedList(data || []);
 
       } catch (err) {
         list.innerHTML = '<div class="history-empty">Couldn\'t load saved products.</div>';
         console.error('Saved load error:', err);
       }
+    }
+
+    function _renderSavedList(data) {
+      const list = document.getElementById('savedList');
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="history-empty">No saved products yet.<br>Hit ♡ on any verdict to save it here.</div>';
+        return;
+      }
+      list.innerHTML = '<div class="history-list">' +
+        data.map(row => {
+          const score = row.overall_score ? Number(row.overall_score).toFixed(1) : '—';
+          return `
+            <div class="history-item" onclick="window.location.href='/p/${escapeHtml(row.slug)}'">
+              <div class="history-badge-dot ${row.badge || 'NOT_LISTED'}"></div>
+              <div class="history-item-name">${escapeHtml(row.product_name || 'Unknown')}</div>
+              <div class="history-item-score">${score}/10</div>
+              <span style="font-size:13px;color:var(--danger)">♥</span>
+            </div>`;
+        }).join('') +
+      '</div>';
     }
 
     // ============================================================
@@ -1366,6 +1549,12 @@
       try {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
         if (error) throw error;
+        // Send welcome email (non-blocking — don't await)
+        fetch('/api/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        }).catch(() => {}); // fire-and-forget, never fails signup
         if (data.session) {
           // Email confirmation disabled — signed in immediately, onAuthStateChange closes modal
         } else {
@@ -1586,21 +1775,16 @@
         return;
       }
 
-      // Server-side check for all non-Pro users — localStorage can't bypass this
-      if (!currentUserPro) {
-        const limit = await checkServerLimit();
-        if (!limit.allowed) {
-          incrementUsage(); // sync local state so UI shows exhausted
-          updatePaywall();
-          return;
-        }
-      }
-
       if (usingFallback) {
         const txt = document.getElementById('fallbackInput').value.trim();
         if (!txt || txt.length < 10) {
           showError('Describe the product a bit more so we can give you a useful verdict.');
           return;
+        }
+        // Fallback path still needs server-side limit check
+        if (!currentUserPro) {
+          const limit = await checkServerLimit();
+          if (!limit.allowed) { incrementUsage(); updatePaywall(); return; }
         }
         await runResearch({ productData: txt });
 
@@ -1609,10 +1793,21 @@
         if (!q || q.length < 3) { showError('Enter a product name or brand to search.'); return; }
 
         currentSearchQuery = q;
-
-        // ── Check cache first ──
         showLoading('Checking our research database...', 'Looking for a recent result');
-        const cached = await checkCache(q);
+
+        // Run limit check and cache lookup in parallel — saves one full round-trip
+        const [limitCheck, cached] = await Promise.all([
+          currentUserPro ? Promise.resolve({ allowed: true }) : checkServerLimit(),
+          checkCache(q),
+        ]);
+
+        if (!limitCheck.allowed) {
+          hideLoading();
+          incrementUsage(); // sync local state so UI shows exhausted
+          updatePaywall();
+          document.getElementById('inputSection').style.display = 'block';
+          return;
+        }
 
         if (cached.hit) {
           // We have a result — use it (fresh or stale)
@@ -1640,6 +1835,11 @@
         if (!url) { showError('Paste a full product link starting with https://'); return; }
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
           showError('Paste a full product link starting with https://'); return;
+        }
+        // URL path: check server limit before burning a scrape
+        if (!currentUserPro) {
+          const limit = await checkServerLimit();
+          if (!limit.allowed) { incrementUsage(); updatePaywall(); return; }
         }
 
         showLoading('Reading the product page...', 'Fetching details from the URL');

@@ -5,6 +5,29 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.1 — 2026-03-25
+
+### Performance
+- **History loads ~10× faster** — removed `full_result` from the initial history list query. The full research JSON (often 30–100 KB per item, up to 50 for Pro) was being fetched for all items just to render a name/score list. Now only lightweight metadata is fetched; the full result is loaded on-demand when you click an item (one `select('full_result').eq('id', ...)` call, cached in memory after first load).
+- **History and saved modals are instant on re-open** — results are now cached in memory. Re-opening the history or saved tab skips the network fetch entirely. Caches are invalidated automatically when a new search is saved or a bookmark is toggled.
+- **Name search is ~200ms faster** — for non-Pro users, the server-side limit check and cache lookup now run in parallel (`Promise.all`) instead of sequentially. Previously two full round-trips happened before any result was shown; now they happen simultaneously.
+
+---
+
+## v1.3.0 — 2026-03-25
+
+### Added
+- **Search autocomplete** — typing 2+ characters in the name search box now shows a typeahead dropdown of matching products already in the database. Results show product name, badge label, and score. Keyboard-navigable (↑↓ arrows, Enter to select, Esc to close). Powered by new `/api/autocomplete.js` endpoint — uses PostgREST `ilike` pattern search on the `products.query` column, ordered by score descending. Selecting a suggestion fills the input and immediately runs `handleSubmit()`.
+- **Welcome email on sign-up** — new users receive a welcome email immediately after account creation. Sent via Resend. New `/api/send-welcome.js` serverless function — fires non-blocking (`fetch` without `await`) from `handleSignUp()` so it never blocks or fails the signup flow. Gracefully skips if `RESEND_API_KEY` env var is not set.
+  - **Required:** Add `RESEND_API_KEY` and `FROM_EMAIL` env vars in Vercel. Verify your sending domain in Resend.
+
+### Fixed
+- **Session management — spurious sign-outs on refresh/reopen** — `SIGNED_OUT` can fire during a token refresh race even when the session is still valid. The handler now calls `getSession()` to verify the session is genuinely gone before clearing state; if a live session is found, it restores auth state instead of signing out.
+- **Cross-tab SIGNED_OUT cascade** — added `broadcastAuthEvents: false` to the Supabase client config. Previously, a failed token refresh in one open tab would broadcast `SIGNED_OUT` to all other tabs, signing the user out everywhere. Now each tab manages its own session independently.
+- **`TOKEN_REFRESHED` event unhandled** — added explicit handler to sync `currentUser` state when Supabase silently refreshes the access token.
+
+---
+
 ## v1.2.0 — 2026-03-21
 
 ### Added
