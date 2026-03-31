@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg:            #FAF8F5;
@@ -722,7 +722,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.3</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.4</p>
     </footer>
   </div>
 
@@ -741,25 +741,12 @@
         persistSession: true,
         autoRefreshToken: true,
         // Prevent a SIGNED_OUT event in one tab from cascading to all other open tabs.
+        // Without this, a failed token refresh in any tab signs the user out everywhere.
         broadcastAuthEvents: false,
-        // Use native Web Locks so the browser manages lock ownership correctly
-        // across page navigations. If a refresh is mid-flight when the user navigates,
-        // the browser releases the lock cleanly on teardown — preventing the stale
-        // refresh-token problem that the old in-memory mutex couldn't handle.
-        lock: (name, _acquireTimeout, fn) => {
-          if (typeof navigator?.locks?.request === 'function') {
-            return navigator.locks.request(name, { mode: 'exclusive' }, fn)
-              .catch(err => {
-                // "Lock broken" errors can occur on rapid reloads. Fall back to
-                // running unlocked — broadcastAuthEvents:false already guards
-                // against the cross-tab cascade this would otherwise risk.
-                console.warn('[auth] lock fallback:', err.message);
-                return fn();
-              });
-          }
-          // Safari <16 / old browsers: no locking, run directly.
-          return fn();
-        },
+        // No custom lock — Supabase's built-in navigator.locks implementation
+        // handles timeouts via AbortController, which our custom mutex didn't.
+        // A stuck ghost lock from a previous page was causing getSession() to
+        // hang indefinitely, making the user appear logged out on every navigation.
       },
     });
 
@@ -882,10 +869,20 @@
         return;
       }
 
-      // SIGNED_OUT: user called signOut(), refresh token expired, or session revoked.
-      // With native navigator.locks + broadcastAuthEvents:false, spurious cross-tab
-      // SIGNED_OUT events are already blocked. A real SIGNED_OUT means actually sign out.
+      // SIGNED_OUT fires on explicit signOut(), refresh token failure, or a spurious
+      // navigator.locks race on rapid page reloads. Verify with getSession() before
+      // clearing state — if a valid session still exists, keep the user signed in.
       if (event === 'SIGNED_OUT') {
+        try {
+          const { data: { session: live } } = await supabaseClient.auth.getSession();
+          if (live?.user) {
+            currentUser = live.user;
+            await checkProStatus();
+            updateAuthBar();
+            updatePaywall();
+            return;
+          }
+        } catch { /* fall through to sign-out */ }
         _hlCache = null; _savedCache = null; window._hiItems = {};
         currentUser    = null;
         currentUserPro = false;

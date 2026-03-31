@@ -5,6 +5,15 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.4 — 2026-03-31
+
+### Fixed
+- **Session lost on navigation (take 2)** — removed the custom lock entirely. The v1.3.3 `navigator.locks` implementation ignored the `acquireTimeout` parameter that Supabase passes. If a ghost lock from a previous page instance was never released, `getSession()` would hang indefinitely — making the user appear logged out on every navigation back to the root URL. Supabase's built-in lock handler uses `AbortController` to respect the timeout and unblock correctly.
+- **Reverted Supabase version pin** — `2.49.4` may have predated the storage key format used to create existing user sessions, causing `getSession()` to find nothing. Back to `@2` (latest stable v2).
+- **Restored SIGNED_OUT guard** — without a custom lock, rapid-reload lock races can still produce spurious `SIGNED_OUT` events; the `getSession()` re-verification prevents those from incorrectly clearing the session.
+
+---
+
 ## v1.3.3 — 2026-03-31
 
 ### Fixed
