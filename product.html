@@ -280,17 +280,27 @@
         ${(() => {
           const AFFILIATE_TAG = 'tellmeitsgood-20';
           const raw = r.productUrl || null;
-          if (!raw || raw === 'null' || !raw.startsWith('http')) return '';
-          let url = raw;
-          if (url.includes('amazon.com') && !url.includes('tag=')) {
-            url += (url.includes('?') ? '&' : '?') + 'tag=' + AFFILIATE_TAG;
+          const hasDirectUrl = raw && raw !== 'null' && raw.startsWith('http');
+          let url;
+          if (hasDirectUrl) {
+            url = raw;
+            if (url.includes('amazon.com') && !url.includes('tag=')) {
+              url += (url.includes('?') ? '&' : '?') + 'tag=' + AFFILIATE_TAG;
+            }
+          } else if (r.productName) {
+            const q = encodeURIComponent(r.productName + (r.brand ? ' ' + r.brand : ''));
+            url = `https://www.amazon.com/s?k=${q}&tag=${AFFILIATE_TAG}`;
           }
+          if (!url) return '';
           const isBad = r.badge === 'NOT_LISTED';
           const label = r.badge === 'TELL_ME_ITS_GOOD'
             ? '✓ Buy this — it earned the badge →'
             : isBad ? 'View product page (we had concerns) →'
-            : 'View product page →';
-          return `<div style="text-align:center;margin-top:24px"><a class="buy-btn${isBad?' muted':''}" href="${url}" target="_blank" rel="noopener sponsored">${label}</a></div>`;
+            : 'Find it on Amazon →';
+          return `<div style="text-align:center;margin-top:24px">
+            <a class="buy-btn${isBad?' muted':''}" href="${url}" target="_blank" rel="noopener sponsored">${label}</a>
+            <p style="font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.4;">As an Amazon Associate I earn from qualifying purchases. This doesn't affect our research or scores.</p>
+          </div>`;
         })()}
 
         <div class="cta-section">

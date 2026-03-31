@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
   <style>
     :root {
       --bg:            #FAF8F5;
@@ -710,6 +710,7 @@
         <a class="btn-buy-now" id="buyNowBtn" href="#" target="_blank" rel="noopener sponsored" style="display:none">
           Buy this product →
         </a>
+        <p id="affiliateDisclosure" style="display:none;font-size:11px;color:var(--text-3);text-align:center;margin-top:6px;line-height:1.4;">As an Amazon Associate I earn from qualifying purchases. This doesn't affect our research or scores.</p>
         <div class="results-signup-nudge" id="resultsSignupNudge" style="display:none">
           <div class="nudge-text">Like this verdict? <strong>Sign up free</strong> to save your searches and get history across every device.</div>
           <button class="nudge-btn" onclick="openModal('authModal')">Save this result</button>
@@ -720,8 +721,8 @@
     </div>
 
     <footer class="footer">
-      <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · No sponsored listings</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.1</p>
+      <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.3</p>
     </footer>
   </div>
 
@@ -735,23 +736,29 @@
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-    // In-memory mutex to replace navigator.locks.
-    // The browser's Web Locks API throws "Lock broken by another request with the
-    // 'steal' option" on rapid reloads/multiple tabs. A no-op lock (fn()) fixes
-    // that error but creates a worse problem: concurrent token refreshes each
-    // invalidate the other's refresh token, causing silent logouts.
-    // This mutex serialises requests per lock name without touching Web Locks.
-    const _lockQueues = {};
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
+        persistSession: true,
+        autoRefreshToken: true,
         // Prevent a SIGNED_OUT event in one tab from cascading to all other open tabs.
-        // Without this, a failed token refresh in any tab signs the user out everywhere.
         broadcastAuthEvents: false,
-        lock: (name, acquireTimeout, fn) => {
-          const prev = _lockQueues[name] || Promise.resolve();
-          let release;
-          _lockQueues[name] = prev.then(() => new Promise(r => { release = r; }));
-          return prev.then(() => fn()).finally(() => { release(); });
+        // Use native Web Locks so the browser manages lock ownership correctly
+        // across page navigations. If a refresh is mid-flight when the user navigates,
+        // the browser releases the lock cleanly on teardown — preventing the stale
+        // refresh-token problem that the old in-memory mutex couldn't handle.
+        lock: (name, _acquireTimeout, fn) => {
+          if (typeof navigator?.locks?.request === 'function') {
+            return navigator.locks.request(name, { mode: 'exclusive' }, fn)
+              .catch(err => {
+                // "Lock broken" errors can occur on rapid reloads. Fall back to
+                // running unlocked — broadcastAuthEvents:false already guards
+                // against the cross-tab cascade this would otherwise risk.
+                console.warn('[auth] lock fallback:', err.message);
+                return fn();
+              });
+          }
+          // Safari <16 / old browsers: no locking, run directly.
+          return fn();
         },
       },
     });
@@ -827,6 +834,25 @@
     }
 
     // ============================================================
+    // INITIAL SESSION LOAD
+    // ============================================================
+    // Explicitly read the session from storage on page load.
+    // This fires immediately and doesn't depend on the INITIAL_SESSION
+    // event timing — which can lag behind the first render and produce
+    // a "logged out flash" or miss entirely if the event loop is busy.
+    (async () => {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.user) {
+          currentUser = session.user;
+          await checkProStatus();
+        }
+      } catch { /* onAuthStateChange will handle any error state */ }
+      updateAuthBar();
+      updatePaywall();
+    })();
+
+    // ============================================================
     // AUTH STATE LISTENER
     // ============================================================
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
@@ -838,33 +864,28 @@
         return; // Don't overwrite currentUser state during recovery flow
       }
 
-      if (event === 'SIGNED_IN') closeModal('authModal');
-
-      // TOKEN_REFRESHED fires periodically — just sync state, no pro re-check needed.
-      if (event === 'TOKEN_REFRESHED') {
-        currentUser = session?.user || null;
-        if (!currentUser) { currentUserPro = false; }
+      if (event === 'SIGNED_IN') {
+        closeModal('authModal');
+        currentUser = session.user;
+        await checkProStatus();
         updateAuthBar();
         updatePaywall();
         return;
       }
 
-      // SIGNED_OUT fires when: user calls signOut(), token refresh fails, or session
-      // is revoked server-side. Before clearing state, do a live getSession() check —
-      // SIGNED_OUT can fire spuriously during a token refresh race (e.g. on rapid
-      // page reloads or if the mutex queues backed up). If a valid session still exists,
-      // keep the user signed in.
+      // TOKEN_REFRESHED fires periodically — sync the user object, no pro re-check needed.
+      if (event === 'TOKEN_REFRESHED') {
+        currentUser = session?.user || null;
+        if (!currentUser) currentUserPro = false;
+        updateAuthBar();
+        updatePaywall();
+        return;
+      }
+
+      // SIGNED_OUT: user called signOut(), refresh token expired, or session revoked.
+      // With native navigator.locks + broadcastAuthEvents:false, spurious cross-tab
+      // SIGNED_OUT events are already blocked. A real SIGNED_OUT means actually sign out.
       if (event === 'SIGNED_OUT') {
-        try {
-          const { data: { session: live } } = await supabaseClient.auth.getSession();
-          if (live?.user) {
-            currentUser = live.user;
-            await checkProStatus();
-            updateAuthBar();
-            updatePaywall();
-            return;
-          }
-        } catch { /* fall through to sign-out */ }
         _hlCache = null; _savedCache = null; window._hiItems = {};
         currentUser    = null;
         currentUserPro = false;
@@ -873,11 +894,17 @@
         return;
       }
 
-      currentUser = session?.user || null;
-      if (currentUser) await checkProStatus();
-      else currentUserPro = false;
-      updateAuthBar();
-      updatePaywall();
+      // INITIAL_SESSION: handled by the explicit getSession() call above.
+      // Sync here too as a safety net in case the explicit call loses the race.
+      if (event === 'INITIAL_SESSION') {
+        if (!currentUser && session?.user) {
+          currentUser = session.user;
+          await checkProStatus();
+          updateAuthBar();
+          updatePaywall();
+        }
+        return;
+      }
     });
 
     // ============================================================
@@ -2199,33 +2226,45 @@
     // ============================================================
     function updateResultsCta(data) {
       const buyBtn   = document.getElementById('buyNowBtn');
+      const disclosure = document.getElementById('affiliateDisclosure');
       const nudge    = document.getElementById('resultsSignupNudge');
 
-      // Buy Now — show if we have a product URL
-      // Using Amazon affiliate tag as placeholder — replace with your tag
+      // Buy Now — show if we have a product URL, fall back to Amazon search
+      const AFFILIATE_TAG = 'tellmeitsgood-20';
       const productUrl = data.productUrl || null;
-      if (productUrl && productUrl !== 'null' && productUrl.startsWith('http')) {
-        // Append affiliate tag if it's an Amazon URL
-        let finalUrl = productUrl;
+      const hasDirectUrl = productUrl && productUrl !== 'null' && productUrl.startsWith('http');
+
+      let finalUrl;
+      if (hasDirectUrl) {
+        finalUrl = productUrl;
         if (productUrl.includes('amazon.com') && !productUrl.includes('tag=')) {
-          finalUrl = productUrl + (productUrl.includes('?') ? '&' : '?') + 'tag=tellmeitsgood-20';
+          finalUrl = productUrl + (productUrl.includes('?') ? '&' : '?') + 'tag=' + AFFILIATE_TAG;
         }
+      } else if (data.productName) {
+        // Fallback: Amazon search for the product name
+        const q = encodeURIComponent(data.productName + (data.brand ? ' ' + data.brand : ''));
+        finalUrl = `https://www.amazon.com/s?k=${q}&tag=${AFFILIATE_TAG}`;
+      }
+
+      if (finalUrl) {
         buyBtn.href = finalUrl;
         buyBtn.style.display = 'flex';
+        disclosure.style.display = 'block';
 
-        // Personalise the button text based on verdict
         const verdict = data.badge || '';
         if (verdict === 'TELL_ME_ITS_GOOD') {
           buyBtn.textContent = '✓ Buy this — it earned the badge →';
+          buyBtn.style.background = '';
         } else if (verdict === 'NOT_LISTED') {
           buyBtn.textContent = 'View product page (we had concerns) →';
           buyBtn.style.background = 'var(--text-2)';
         } else {
-          buyBtn.textContent = 'View product page →';
-          buyBtn.style.background = 'var(--text-2)';
+          buyBtn.textContent = 'Find it on Amazon →';
+          buyBtn.style.background = '';
         }
       } else {
         buyBtn.style.display = 'none';
+        disclosure.style.display = 'none';
       }
 
       // Signup nudge — show only for logged-out users

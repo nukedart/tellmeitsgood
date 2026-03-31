@@ -2,3 +2,5 @@
 .DS_Store
 node_modules/
 *.zip
+CLAUDE.md
+cost-breakdown.csv

@@ -5,6 +5,25 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.3 — 2026-03-31
+
+### Fixed
+- **Session lost on navigation** — replaced the in-memory custom lock with native `navigator.locks`. The old mutex couldn't survive a mid-refresh page navigation: if the user navigated away while a token refresh was in-flight, the new tokens were never stored and the refresh token was left invalid. The browser's Web Locks API releases locks correctly on page teardown, preventing the stale-token SIGNED_OUT cycle.
+- **Login flash on page load** — added an explicit `supabaseClient.auth.getSession()` call that fires immediately on page load, independent of the `INITIAL_SESSION` event. This eliminates the brief "logged out" state that could appear while waiting for the auth event loop.
+- **Pinned Supabase CDN** — locked to `@supabase/supabase-js@2.49.4` (was `@2` — unversioned). Auto-updates to new minor versions were silently changing internal auth behaviour.
+- **Simplified SIGNED_OUT handler** — removed the `getSession()` re-verification guard (which existed to catch spurious events from the old mutex). Native locks + `broadcastAuthEvents: false` make this unnecessary.
+
+---
+
+## v1.3.2 — 2026-03-31
+
+### Affiliate
+- **Amazon search fallback** — buy button now appears on every researched product, not just those where Claude returns a direct product URL. For name-only searches, falls back to an Amazon search link with affiliate tag (`productName + brand`). Previously the button was hidden for ~60–70% of results.
+- **FTC disclosure** — added required "As an Amazon Associate I earn from qualifying purchases" disclosure beneath the buy button on both `index.html` and `product.html`.
+- **Footer copy fix** — removed "No sponsored listings" (contradicted affiliate links). Now reads "Affiliate links help fund our research."
+
+---
+
 ## v1.3.1 — 2026-03-25
 
 ### Performance
