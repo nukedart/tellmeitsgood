@@ -5,6 +5,17 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.6 — 2026-04-01
+
+### Infrastructure
+- **Consolidated serverless functions from 15 → 12** to stay within Vercel Hobby plan limit. No functionality removed, no frontend or Stripe dashboard changes required.
+  - `stripe-webhook.js` + `stripe-portal.js` → `api/stripe.js` (routes by `stripe-signature` header)
+  - `admin-stats.js` + `request-refresh.js` → `api/admin.js` (routes by HTTP method)
+  - `send-welcome.js` absorbed into `api/save-search.js` (detects by request body shape)
+  - Old URLs (`/api/stripe-webhook`, `/api/stripe-portal`, `/api/admin-stats`, `/api/request-refresh`, `/api/send-welcome`) preserved via `vercel.json` rewrites
+
+---
+
 ## v1.3.5 — 2026-03-31
 
 ### Performance

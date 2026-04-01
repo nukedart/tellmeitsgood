@@ -1,10 +1,15 @@
 {
   "rewrites": [
-    { "source": "/sitemap.xml",  "destination": "/api/sitemap" },
-    { "source": "/p/:slug",      "destination": "/product.html" },
-    { "source": "/directory",    "destination": "/directory.html" },
-    { "source": "/compare",      "destination": "/compare.html" },
-    { "source": "/admin",        "destination": "/admin.html" },
-    { "source": "/api/(.*)",     "destination": "/api/$1" }
+    { "source": "/sitemap.xml",         "destination": "/api/sitemap" },
+    { "source": "/p/:slug",             "destination": "/product.html" },
+    { "source": "/directory",           "destination": "/directory.html" },
+    { "source": "/compare",             "destination": "/compare.html" },
+    { "source": "/admin",               "destination": "/admin.html" },
+    { "source": "/api/stripe-webhook",  "destination": "/api/stripe" },
+    { "source": "/api/stripe-portal",   "destination": "/api/stripe" },
+    { "source": "/api/admin-stats",     "destination": "/api/admin" },
+    { "source": "/api/request-refresh", "destination": "/api/admin" },
+    { "source": "/api/send-welcome",    "destination": "/api/save-search" },
+    { "source": "/api/(.*)",            "destination": "/api/$1" }
   ]
 }
