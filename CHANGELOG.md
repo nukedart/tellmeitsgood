@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.9 — 2026-04-01
+
+### Legal
+- **Privacy policy page** — added `/privacy` route (`privacy.html`) covering: data collected (email, search history, hashed IP for rate limiting), third-party services (Supabase, Stripe, Anthropic, Amazon Associates, Vercel), cookie/localStorage usage, data deletion process, and contact info. Linked from footer on `index.html`. Matches full Calm Design OS with dark mode support.
+
+---
+
 ## v1.3.8 — 2026-04-01
 
 ### Cost
