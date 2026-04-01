@@ -38,6 +38,19 @@ export default async function handler(req, res) {
   }
 
   // ── 3. Call Claude to write the listing post ───────────────
+  // Strip source_url and label from all criteria — those are UI fields, not
+  // needed for narrative writing. Compact JSON (no indentation) saves ~30% tokens.
+  const slimCriteria = obj =>
+    Object.fromEntries(Object.entries(obj || {}).map(([k, v]) => [k, { score: v.score, evidence: v.evidence }]));
+  const slim = {
+    productName: research.productName, brand: research.brand, price: research.price,
+    badge: research.badge, overallScore: research.overallScore,
+    gate1: { name: research.gate1?.name, average: research.gate1?.average, passes: research.gate1?.passes, criteria: slimCriteria(research.gate1?.criteria) },
+    gate2: { name: research.gate2?.name, average: research.gate2?.average, passes: research.gate2?.passes, disqualified: research.gate2?.disqualified, disqualifier_reason: research.gate2?.disqualifier_reason, criteria: slimCriteria(research.gate2?.criteria) },
+    gate3: { name: research.gate3?.name, average: research.gate3?.average, passes: research.gate3?.passes, disqualified: research.gate3?.disqualified, disqualifier_reason: research.gate3?.disqualifier_reason, criteria: slimCriteria(research.gate3?.criteria) },
+    summary: research.summary,
+  };
+
   try {
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -86,7 +99,7 @@ Return this exact JSON structure:
         messages: [
           {
             role: 'user',
-            content: `Write a product listing post for this research report:\n\n${JSON.stringify(research, null, 2)}`,
+            content: `Write a product listing post for this research report:\n\n${JSON.stringify(slim)}`,
           },
         ],
       }),

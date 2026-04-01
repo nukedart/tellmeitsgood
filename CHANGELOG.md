@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.8 — 2026-04-01
+
+### Cost
+- **post.js: slim research input to Claude** — was passing the full research JSON (15 criteria × `{label, score, evidence, source_url}`) pretty-printed with 2-space indentation. `label` and `source_url` are UI-only fields Claude doesn't use for narrative writing. Now strips those fields and uses compact JSON before serializing for the Claude call. Saves ~30–40% of input tokens on every post generation call.
+
+---
+
 ## v1.3.7 — 2026-03-31
 
 ### Bug Fix
