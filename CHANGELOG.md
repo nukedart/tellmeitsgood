@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.7 — 2026-03-31
+
+### Bug Fix
+- **Fix session loss on return to root URL** — removed the explicit `getSession()` IIFE that ran concurrently with Supabase's internal `initialize()`. When the access token was expired, both called refresh simultaneously; the second "already used" refresh token response triggered a `SIGNED_OUT` event and logged the user out. Now `INITIAL_SESSION` from `onAuthStateChange` is the sole init path — no concurrent refresh, no race.
+
+---
+
 ## v1.3.6 — 2026-04-01
 
 ### Infrastructure

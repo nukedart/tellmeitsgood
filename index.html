@@ -722,7 +722,7 @@
 
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.6</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.3.7</p>
     </footer>
   </div>
 
@@ -821,25 +821,6 @@
     }
 
     // ============================================================
-    // INITIAL SESSION LOAD
-    // ============================================================
-    // Explicitly read the session from storage on page load.
-    // This fires immediately and doesn't depend on the INITIAL_SESSION
-    // event timing — which can lag behind the first render and produce
-    // a "logged out flash" or miss entirely if the event loop is busy.
-    (async () => {
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.user) {
-          currentUser = session.user;
-          await checkProStatus();
-        }
-      } catch { /* onAuthStateChange will handle any error state */ }
-      updateAuthBar();
-      updatePaywall();
-    })();
-
-    // ============================================================
     // AUTH STATE LISTENER
     // ============================================================
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
@@ -891,15 +872,14 @@
         return;
       }
 
-      // INITIAL_SESSION: handled by the explicit getSession() call above.
-      // Sync here too as a safety net in case the explicit call loses the race.
+      // INITIAL_SESSION fires once on startup — this is the sole init path.
       if (event === 'INITIAL_SESSION') {
-        if (!currentUser && session?.user) {
+        if (session?.user) {
           currentUser = session.user;
           await checkProStatus();
-          updateAuthBar();
-          updatePaywall();
         }
+        updateAuthBar();
+        updatePaywall();
         return;
       }
     });
