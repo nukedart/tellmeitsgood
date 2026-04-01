@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.3.5 — 2026-03-31
+
+### Performance
+- **cache-lookup: skip full_result on stale cache hits** — `select=*` was fetching the full research JSON blob (30–100 KB) on every cache check, even for stale records that get thrown away. Now uses a two-phase fetch: phase 1 fetches only `slug, researched_at, post_narrative` (tiny); phase 2 fetches `full_result` only when the record is confirmed fresh. Stale checks now transfer ~100 bytes instead of up to 100 KB.
+
+---
+
 ## v1.3.4 — 2026-03-31
 
 ### Fixed

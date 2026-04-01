@@ -32,36 +32,43 @@ export default async function handler(req, res) {
   const slug          = slugify(query);
   const normalizedQuery = query.toLowerCase().trim();
 
+  const headers = {
+    'apikey':        SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  };
+  const base = `${SUPABASE_URL}/rest/v1/products` +
+    `?or=(slug.eq.${encodeURIComponent(slug)},query.eq.${encodeURIComponent(normalizedQuery)})` +
+    `&is_public=eq.true&limit=1`;
+
   try {
-    // Check by slug OR exact query match so minor name variations still hit cache
-    const url = `${SUPABASE_URL}/rest/v1/products` +
-      `?or=(slug.eq.${encodeURIComponent(slug)},query.eq.${encodeURIComponent(normalizedQuery)})` +
-      `&is_public=eq.true&select=*&limit=1`;
+    // Phase 1: fetch only metadata — skip full_result (30–100 KB) until we know it's fresh
+    const metaRes = await fetch(base + `&select=slug,researched_at,post_narrative`, { headers });
+    if (!metaRes.ok) throw new Error(`Supabase ${metaRes.status}`);
 
-    const response = await fetch(url, {
-      headers: {
-        'apikey':        SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
-
-    if (!response.ok) throw new Error(`Supabase ${response.status}`);
-
-    const rows    = await response.json();
+    const rows    = await metaRes.json();
     const product = rows?.[0];
-
     if (!product) return res.json({ hit: false });
 
     const ageMs   = Date.now() - new Date(product.researched_at).getTime();
     const daysOld = Math.floor(ageMs / (1000 * 60 * 60 * 24));
     const fresh   = daysOld < CACHE_DAYS;
 
+    // Phase 2: only fetch the heavy blob when the cache is actually fresh
+    let full_result = null;
+    if (fresh) {
+      const dataRes = await fetch(base + `&select=full_result`, { headers });
+      if (dataRes.ok) {
+        const dataRows = await dataRes.json();
+        full_result = dataRows?.[0]?.full_result ?? null;
+      }
+    }
+
     return res.json({
       hit:            true,
       fresh,
       daysOld,
       slug:           product.slug,
-      data:           product.full_result,
+      data:           full_result,
       post_narrative: product.post_narrative || null,
     });
 
