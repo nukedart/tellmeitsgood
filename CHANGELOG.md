@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.4.0 — 2026-04-03
+
+### Cost
+- **Prompt caching on research.js system prompt** — the ~1,500-token Triple Filter system prompt (scoring rules, badge logic, full JSON schema) is now cached with `cache_control: {type:"ephemeral"}`. Added `prompt-caching-2024-07-31` to the `anthropic-beta` header alongside the existing web-search beta. Cache hits save ~90% of system prompt input tokens (~$0.00045/hit at Haiku pricing). The cache is shared across all requests within a 5-minute window, so concurrent users benefit too.
+
+---
+
 ## v1.3.9 — 2026-04-01
 
 ### Legal

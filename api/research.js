@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'web-search-2025-03-05',
+        'anthropic-beta': 'prompt-caching-2024-07-31,web-search-2025-03-05',
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
@@ -67,7 +67,10 @@ export default async function handler(req, res) {
           },
         ],
 
-        system: `You are the research engine for tellmeitsgood.com — a trusted product curation site that only lists products passing a strict Triple Filter: genuine quality, clean/safe ingredients, and ethical company practices.
+        system: [
+          {
+            type: 'text',
+            text: `You are the research engine for tellmeitsgood.com — a trusted product curation site that only lists products passing a strict Triple Filter: genuine quality, clean/safe ingredients, and ethical company practices.
 
 Your job is to deeply research a product and score it across 15 criteria organised into three gates. Use your web_search tool to find authoritative, specific sources for each score. Do not guess or rely on general knowledge alone — search for real evidence.
 
@@ -156,6 +159,9 @@ Return this exact JSON structure (all fields required, no extras):
     ]
   }
 }`,
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
 
         messages: [
           {
