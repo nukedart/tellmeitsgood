@@ -5,6 +5,20 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.5.0 — 2026-04-06
+
+### Feature: Admin Portal
+- **Full tab-based admin dashboard** at `/admin` — Overview, Products, Users, Searches, Cost
+- **Overview tab** — stat cards now include Pro user count, conversion rate, searches 7d/30d alongside existing product/user/bookmark counts; category and badge breakdowns unchanged
+- **Products tab** — browse and search all products in the DB (50/page, paginated); live search with debounce; "Refresh" button per product flags it for re-research
+- **Users tab** — full user list with email, join date, last active, Free/Pro status; Pro conversion rate card
+- **Searches tab** — 14-day search volume sparkline chart, top searched products with badge labels; note: tracks logged-in searches only
+- **Cost tab** — token cost breakdown per call (research + post), monthly cost estimates at scale, break-even calculation for Pro plan
+- **api/admin.js** — added `?view=products`, `?view=users`, `?view=searches` endpoints; overview now returns `proUsers`, `searches7d`, `searches30d`
+- **Bug fix** — removed stale custom lock from admin.html (was the broken v1.3.3 lock, already fixed in index.html at v1.3.4)
+
+---
+
 ## v1.4.0 — 2026-04-03
 
 ### Cost

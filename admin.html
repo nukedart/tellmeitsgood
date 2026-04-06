@@ -15,7 +15,8 @@
       --text: #1C1917; --text-2: #6B6560; --text-3: #A09891;
       --accent: #2F6FED; --accent-hover: #1A57D4; --accent-surf: #EBF1FD; --accent-text: #1A4FB8;
       --card: #FFFFFF; --success: #3A9E6F; --success-surf: #ECFDF5;
-      --warning: #D4872A; --danger: #D94F4F; --danger-surf: #FEF2F2;
+      --warning: #D4872A; --warning-surf: #FFF7ED;
+      --danger: #D94F4F; --danger-surf: #FEF2F2;
       --pro: #7C3AED; --pro-surf: #F5F3FF;
       --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px;
       --font-display: 'DM Serif Display', Georgia, serif;
@@ -29,77 +30,133 @@
         --text: #F0EDE8; --text-2: #9B9299; --text-3: #67636B;
         --accent: #5A8FFF; --accent-surf: #1C2744; --accent-text: #8AB4FF;
         --card: #211F24; --success: #4CB87F; --success-surf: #0D2B1E;
-        --warning: #E09640; --danger: #E86060; --danger-surf: #2B1212;
+        --warning: #E09640; --warning-surf: #2B1E0D;
+        --danger: #E86060; --danger-surf: #2B1212;
         --pro: #A78BFA; --pro-surf: #1E1533;
       }
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 
-    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); }
+    /* ── Top bar ── */
+    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); position: sticky; top: 0; z-index: 20; }
     .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
     .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-    .top-bar-right { display: flex; align-items: center; gap: 12px; }
+    .top-bar-right { display: flex; align-items: center; gap: 16px; }
     .top-bar-link { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; }
     .top-bar-link:hover { color: var(--text); }
+    .top-bar-badge { font-size: 11px; font-weight: 700; letter-spacing: .05em; background: var(--danger-surf); color: var(--danger); padding: 3px 8px; border-radius: 100px; text-transform: uppercase; }
 
-    .page { max-width: 900px; margin: 0 auto; padding: 40px 16px 80px; }
-    @media (min-width: 520px) { .page { padding: 48px 24px 80px; } }
+    /* ── Tab nav ── */
+    .tab-nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
+    .tab-btn { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-3); background: none; border: none; border-bottom: 2px solid transparent; padding: 12px 16px; cursor: pointer; white-space: nowrap; transition: color .15s, border-color .15s; margin-bottom: -1px; }
+    .tab-btn:hover { color: var(--text-2); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-    .page-title { font-family: var(--font-display); font-size: 28px; color: var(--text); margin-bottom: 4px; }
-    .page-subtitle { font-size: 13px; color: var(--text-3); margin-bottom: 32px; }
+    /* ── Page ── */
+    .page { max-width: 1040px; margin: 0 auto; padding: 36px 20px 80px; }
 
-    /* ── Stat cards ── */
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 36px; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; }
-    .stat-value { font-family: var(--font-display); font-size: 36px; color: var(--text); line-height: 1; margin-bottom: 6px; }
-    .stat-label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+    /* ── Stat grid ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
+    .stat-value { font-family: var(--font-display); font-size: 34px; color: var(--text); line-height: 1; margin-bottom: 5px; }
+    .stat-label { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
     .stat-sub { font-size: 12px; color: var(--success); margin-top: 4px; }
+    .stat-sub.warn { color: var(--warning); }
+    .stat-sub.pro { color: var(--pro); }
 
     /* ── Section ── */
-    .section { margin-bottom: 36px; }
-    .section-title { font-size: 13px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+    .section { margin-bottom: 32px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .section-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
 
-    /* ── Breakdown list ── */
-    .breakdown-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
-    .breakdown-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    /* ── Breakdown card ── */
+    .breakdown-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
+    .breakdown-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
     .breakdown-row:last-child { border-bottom: none; padding-bottom: 0; }
     .breakdown-row:first-child { padding-top: 0; }
-    .breakdown-key { color: var(--text); font-weight: 500; }
-    .breakdown-val { font-weight: 700; color: var(--accent); }
-    .breakdown-bar-wrap { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin: 0 12px; }
+    .breakdown-key { color: var(--text); font-weight: 500; min-width: 0; flex-shrink: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .breakdown-val { font-weight: 700; color: var(--accent); flex-shrink: 0; }
+    .breakdown-bar-wrap { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
     .breakdown-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
 
     /* ── Badge pill ── */
-    .badge-pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; }
+    .badge-pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; flex-shrink: 0; }
     .badge-pill.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); }
     .badge-pill.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; }
     .badge-pill.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; }
     .badge-pill.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); }
     .badge-pill.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); }
 
-    /* ── Recent table ── */
-    .recent-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-    .recent-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: 13px; }
-    .recent-row:last-child { border-bottom: none; }
-    .recent-name { flex: 1; font-weight: 500; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .recent-score { font-weight: 700; color: var(--text-2); min-width: 38px; text-align: right; }
-    .recent-age { font-size: 12px; color: var(--text-3); min-width: 80px; text-align: right; }
+    /* ── Table ── */
+    .table-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .table-row { display: grid; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .table-row:last-child { border-bottom: none; }
+    .table-row.header { background: var(--surface); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 9px 18px; }
+    .cell-name { font-weight: 500; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cell-name a { color: var(--accent); text-decoration: none; }
+    .cell-name a:hover { text-decoration: underline; }
+    .cell-score { font-weight: 700; color: var(--text-2); text-align: right; }
+    .cell-muted { color: var(--text-3); font-size: 12px; }
+    .cell-pro { font-size: 11px; font-weight: 700; color: var(--pro); background: var(--pro-surf); padding: 2px 8px; border-radius: 100px; display: inline-block; }
+    .cell-free { font-size: 11px; color: var(--text-3); }
 
-    /* ── Loading / error ── */
-    .state-center { text-align: center; padding: 80px 24px; }
-    .spinner { width: 32px; height: 32px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+    /* products: badge | name | score | cat | age | action */
+    .row-product { grid-template-columns: 100px minmax(0,1fr) 48px 120px 80px 80px; }
+    /* users: email | joined | last active | plan */
+    .row-user { grid-template-columns: minmax(0,1fr) 100px 100px 70px; }
+    /* searches: badge | name | count */
+    .row-search { grid-template-columns: 100px minmax(0,1fr) 60px; }
+    @media (max-width: 640px) {
+      .row-product { grid-template-columns: 80px minmax(0,1fr) 40px 60px; }
+      .row-product .col-cat, .row-product .col-action { display: none; }
+      .row-user { grid-template-columns: minmax(0,1fr) 80px 60px; }
+      .row-user .col-last { display: none; }
+    }
+
+    /* ── Search bar ── */
+    .search-wrap { margin-bottom: 14px; display: flex; gap: 10px; }
+    .search-input { flex: 1; font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 9px 14px; outline: none; transition: border-color .15s; }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-3); }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-size: 13px; color: var(--text-3); }
+    .pag-btn { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--accent); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 14px; cursor: pointer; transition: background .15s; }
+    .pag-btn:hover { background: var(--accent-surf); }
+    .pag-btn:disabled { color: var(--text-3); cursor: default; background: none; }
+
+    /* ── Sparkline bars (searches per day) ── */
+    .spark-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+    .spark-chart { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-bottom: 8px; }
+    .spark-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
+    .spark-bar { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; transition: height .3s; }
+    .spark-label { font-size: 9px; color: var(--text-3); text-align: center; }
+    .spark-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-3); margin-top: 4px; }
+
+    /* ── Cost cards ── */
+    .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .cost-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
+    .cost-card .cost-val { font-family: var(--font-display); font-size: 28px; color: var(--text); margin-bottom: 4px; }
+    .cost-card .cost-label { font-size: 12px; color: var(--text-3); }
+    .cost-card .cost-note { font-size: 11px; color: var(--success); margin-top: 4px; }
+
+    /* ── Action button ── */
+    .action-btn { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--accent); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 10px; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .action-btn:hover { background: var(--accent-surf); }
+    .action-btn.sent { color: var(--success); border-color: var(--success); pointer-events: none; }
+
+    /* ── Loading / state ── */
+    .state-center { text-align: center; padding: 64px 24px; }
+    .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 14px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .state-title { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 8px; }
+    .state-title { font-family: var(--font-display); font-size: 20px; color: var(--text); margin-bottom: 6px; }
     .state-text { font-size: 14px; color: var(--text-2); }
-
-    .refresh-btn { font-size: 13px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
+    .refresh-btn { font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
     .refresh-btn:hover { text-decoration: underline; }
   </style>
-  <script defer src="https://cdn.vercel-insights.com/v1/speed-insights/script.js"></script>
-  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 </head>
 <body>
 
@@ -109,15 +166,21 @@
     Tell Me It's Good
   </a>
   <div class="top-bar-right">
+    <span class="top-bar-badge">Admin</span>
     <a class="top-bar-link" href="/directory">Directory</a>
     <a class="top-bar-link" href="/">Home</a>
   </div>
 </div>
 
-<div class="page">
-  <div class="page-title">Admin Dashboard</div>
-  <div class="page-subtitle">tellmeitsgood.com — live stats</div>
+<div class="tab-nav">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="products">Products</button>
+  <button class="tab-btn" data-tab="users">Users</button>
+  <button class="tab-btn" data-tab="searches">Searches</button>
+  <button class="tab-btn" data-tab="cost">Cost</button>
+</div>
 
+<div class="page">
   <div id="content">
     <div class="state-center">
       <div class="spinner"></div>
@@ -130,106 +193,140 @@
   const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-  const _lockQueues = {};
+  // Use default Supabase client — no custom lock (was buggy, removed in v1.3.4)
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      lock: (name, acquireTimeout, fn) => {
-        const prev = _lockQueues[name] || Promise.resolve();
-        let release;
-        _lockQueues[name] = prev.then(() => new Promise(r => { release = r; }));
-        return prev.then(() => fn()).finally(() => { release(); });
-      },
-    },
+    auth: { persistSession: true, autoRefreshToken: true, broadcastAuthEvents: false },
   });
 
-  function esc(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  let _session  = null;
+  let _tab      = 'overview';
+  let _cache    = {};
+  let _prodPage = 0;
+  let _prodQ    = '';
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function timeAgo(iso) {
-    const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-    if (d === 0) return 'Today';
-    if (d === 1) return '1 day ago';
-    return `${d}d ago`;
+    const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+    if (m < 60)   return m < 2 ? 'just now' : `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24)   return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return d === 1 ? '1d ago' : `${d}d ago`;
   }
 
-  async function load() {
+  function shortDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+  }
+
+  function badgePill(b) {
+    return b ? `<span class="badge-pill ${esc(b)}">${esc(b).replace(/_/g,' ')}</span>` : '<span class="cell-muted">—</span>';
+  }
+
+  function loading() {
+    document.getElementById('content').innerHTML = `<div class="state-center"><div class="spinner"></div></div>`;
+  }
+
+  async function api(path) {
+    const r = await fetch(path, { headers: { 'Authorization': `Bearer ${_session.access_token}` } });
+    if (r.status === 401 || r.status === 403) throw new Error('unauthorized');
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  // ── Auth ────────────────────────────────────────────────────────
+  async function init() {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      document.getElementById('content').innerHTML = `
-        <div class="state-center">
-          <div class="state-title">Not signed in</div>
-          <p class="state-text">Sign in at <a href="/" style="color:var(--accent)">the home page</a> first.</p>
-        </div>`;
-      return;
-    }
-
-    const res = await fetch('/api/admin-stats', {
-      headers: { 'Authorization': `Bearer ${session.access_token}` },
-    });
-
-    if (res.status === 403 || res.status === 401) {
-      document.getElementById('content').innerHTML = `
-        <div class="state-center">
-          <div class="state-title">Access denied</div>
-          <p class="state-text">This page is restricted to admins.</p>
-        </div>`;
-      return;
-    }
-
-    if (!res.ok) {
-      document.getElementById('content').innerHTML = `
-        <div class="state-center">
-          <div class="state-title">Error loading stats</div>
-          <p class="state-text">${esc(await res.text())}</p>
-        </div>`;
-      return;
-    }
-
-    const d = await res.json();
-    render(d);
+    if (!session) { showGate('not-signed-in'); return; }
+    _session = session;
+    supabaseClient.auth.onAuthStateChange((ev, s) => { if (s) _session = s; });
+    setupTabs();
+    loadTab('overview');
   }
 
-  function render(d) {
-    // Category breakdown
+  function showGate(type) {
+    document.getElementById('content').innerHTML = type === 'not-signed-in'
+      ? `<div class="state-center"><div class="state-title">Not signed in</div><p class="state-text">Sign in at <a href="/" style="color:var(--accent)">the home page</a> first.</p></div>`
+      : `<div class="state-center"><div class="state-title">Access denied</div><p class="state-text">This page is restricted to admins.</p></div>`;
+  }
+
+  // ── Tabs ────────────────────────────────────────────────────────
+  function setupTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _tab = btn.dataset.tab;
+        loadTab(_tab);
+      });
+    });
+  }
+
+  async function loadTab(tab, force) {
+    if (_cache[tab] && !force) { renderTab(tab, _cache[tab]); return; }
+    loading();
+    try {
+      let data;
+      if (tab === 'overview') data = await api('/api/admin-stats');
+      else if (tab === 'products') data = await api(`/api/admin-stats?view=products&page=${_prodPage}&q=${encodeURIComponent(_prodQ)}`);
+      else if (tab === 'users')    data = await api('/api/admin-stats?view=users');
+      else if (tab === 'searches') data = await api('/api/admin-stats?view=searches');
+      else if (tab === 'cost')     data = _cache['overview'] || await api('/api/admin-stats');
+
+      if (tab !== 'products') _cache[tab] = data; // don't cache paginated products
+      renderTab(tab, data);
+    } catch (err) {
+      if (err.message === 'unauthorized') { showGate('forbidden'); return; }
+      document.getElementById('content').innerHTML = `<div class="state-center"><div class="state-title">Error</div><p class="state-text">${esc(err.message)}</p></div>`;
+    }
+  }
+
+  function renderTab(tab, d) {
+    const el = document.getElementById('content');
+    if (tab === 'overview')  el.innerHTML = renderOverview(d);
+    if (tab === 'products')  el.innerHTML = renderProducts(d);
+    if (tab === 'users')     el.innerHTML = renderUsers(d);
+    if (tab === 'searches')  el.innerHTML = renderSearches(d);
+    if (tab === 'cost')      el.innerHTML = renderCost(d);
+    attachHandlers(tab, d);
+  }
+
+  // ── Overview ────────────────────────────────────────────────────
+  function renderOverview(d) {
+    const convRate = d.totalUsers > 0 ? ((d.proUsers / d.totalUsers) * 100).toFixed(1) : '0';
+
     const catEntries = Object.entries(d.categoryBreakdown || {}).sort((a,b) => b[1]-a[1]);
-    const catMax = catEntries[0]?.[1] || 1;
-    const catRows = catEntries.map(([k,v]) => `
+    const catMax     = catEntries[0]?.[1] || 1;
+    const catRows    = catEntries.map(([k,v]) => `
       <div class="breakdown-row">
         <span class="breakdown-key">${esc(k)}</span>
         <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:${Math.round(v/catMax*100)}%"></div></div>
         <span class="breakdown-val">${v}</span>
-      </div>`).join('') || '<div class="breakdown-row"><span class="breakdown-key" style="color:var(--text-3)">No data yet</span></div>';
+      </div>`).join('') || '<div class="breakdown-row"><span class="cell-muted">No data</span></div>';
 
-    // Badge breakdown
-    const badgeOrder = ['TELL_ME_ITS_GOOD','CLEAN_PICK','ETHICAL_PICK','QUALITY_PICK','NOT_LISTED'];
+    const badgeOrder  = ['TELL_ME_ITS_GOOD','CLEAN_PICK','ETHICAL_PICK','QUALITY_PICK','NOT_LISTED'];
     const badgeEntries = Object.entries(d.badgeBreakdown || {}).sort((a,b) => badgeOrder.indexOf(a[0]) - badgeOrder.indexOf(b[0]));
-    const badgeMax = badgeEntries[0]?.[1] || 1;
-    const badgeRows = badgeEntries.map(([k,v]) => `
+    const badgeMax    = badgeEntries[0]?.[1] || 1;
+    const badgeRows   = badgeEntries.map(([k,v]) => `
       <div class="breakdown-row">
-        <span class="badge-pill ${esc(k)}">${esc(k).replace(/_/g,' ')}</span>
+        ${badgePill(k)}
         <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill" style="width:${Math.round(v/badgeMax*100)}%"></div></div>
         <span class="breakdown-val">${v}</span>
-      </div>`).join('') || '<div class="breakdown-row"><span class="breakdown-key" style="color:var(--text-3)">No data yet</span></div>';
+      </div>`).join('') || '<div class="breakdown-row"><span class="cell-muted">No data</span></div>';
 
-    // Top bookmarked
-    const topRows = (d.topBookmarked || []).map(b => `
-      <div class="breakdown-row">
-        <span class="breakdown-key"><a href="/p/${esc(b.slug)}" target="_blank" style="color:var(--accent);text-decoration:none">${esc(b.product_name || b.slug)}</a></span>
-        <span class="breakdown-val">♥ ${b.count}</span>
-      </div>`).join('') || '<div class="breakdown-row"><span class="breakdown-key" style="color:var(--text-3)">No bookmarks yet</span></div>';
-
-    // Recent products
     const recentRows = (d.recentProducts || []).map(p => `
-      <div class="recent-row">
-        <span class="badge-pill ${esc(p.badge || 'NOT_LISTED')}">${esc(p.badge || '?').replace(/_/g,' ')}</span>
-        <span class="recent-name">${esc(p.product_name)}</span>
-        <span class="recent-score">${p.overall_score ?? '—'}</span>
-        <span class="recent-age">${timeAgo(p.researched_at)}</span>
-      </div>`).join('') || '<div class="recent-row" style="color:var(--text-3)">No products yet</div>';
+      <div class="table-row row-product">
+        ${badgePill(p.badge)}
+        <span class="cell-name"><a href="/p/${esc(p.slug)}" target="_blank">${esc(p.product_name)}</a></span>
+        <span class="cell-score">${p.overall_score ?? '—'}</span>
+        <span class="cell-muted col-cat">${esc(p.category || '—')}</span>
+        <span class="cell-muted">${timeAgo(p.researched_at)}</span>
+        <span></span>
+      </div>`).join('') || '<div class="table-row"><span class="cell-muted">No products yet</span></div>';
 
-    document.getElementById('content').innerHTML = `
+    return `
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-value">${d.totalProducts}</div>
@@ -237,43 +334,283 @@
         </div>
         <div class="stat-card">
           <div class="stat-value">${d.totalUsers}</div>
-          <div class="stat-label">Total users</div>
+          <div class="stat-label">Users</div>
           <div class="stat-sub">+${d.newUsersCount} this week</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">${d.totalBookmarks}</div>
-          <div class="stat-label">Bookmarks</div>
+          <div class="stat-value">${d.proUsers ?? '—'}</div>
+          <div class="stat-label">Pro users</div>
+          <div class="stat-sub pro">${convRate}% conversion</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">${Object.keys(d.categoryBreakdown || {}).length}</div>
-          <div class="stat-label">Categories</div>
+          <div class="stat-value">${d.searches7d ?? '—'}</div>
+          <div class="stat-label">Searches 7d</div>
+          <div class="stat-sub">${d.searches30d ?? '—'} last 30d</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${d.totalBookmarks ?? '—'}</div>
+          <div class="stat-label">Bookmarks</div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">Recent products <button class="refresh-btn" onclick="load()">↻ Refresh</button></div>
-        <div class="recent-card">${recentRows}</div>
+        <div class="section-header">
+          <span class="section-title">Recent products</span>
+          <button class="refresh-btn" onclick="loadTab('overview',true)">↻ Refresh</button>
+        </div>
+        <div class="table-card">${recentRows}</div>
       </div>
 
       <div class="two-col section">
         <div>
-          <div class="section-title">By category</div>
+          <div class="section-title" style="margin-bottom:12px">By category</div>
           <div class="breakdown-card">${catRows}</div>
         </div>
         <div>
-          <div class="section-title">By badge</div>
+          <div class="section-title" style="margin-bottom:12px">By badge</div>
           <div class="breakdown-card">${badgeRows}</div>
+        </div>
+      </div>`;
+  }
+
+  // ── Products ────────────────────────────────────────────────────
+  function renderProducts(d) {
+    const totalPages = Math.ceil((d.total || 0) / (d.limit || 50));
+    const rows = (d.products || []).map(p => `
+      <div class="table-row row-product">
+        ${badgePill(p.badge)}
+        <span class="cell-name"><a href="/p/${esc(p.slug)}" target="_blank">${esc(p.product_name || p.slug)}</a></span>
+        <span class="cell-score">${p.overall_score ?? '—'}</span>
+        <span class="cell-muted col-cat">${esc(p.category || '—')}</span>
+        <span class="cell-muted">${timeAgo(p.researched_at)}</span>
+        <button class="action-btn col-action" data-slug="${esc(p.slug)}" onclick="requestRefresh(this)">Refresh</button>
+      </div>`).join('') || '<div class="table-row" style="padding:20px 18px"><span class="cell-muted">No products found</span></div>';
+
+    return `
+      <div class="search-wrap">
+        <input class="search-input" id="prodSearch" placeholder="Search products…" value="${esc(_prodQ)}" />
+      </div>
+      <div class="table-card">
+        <div class="table-row header row-product">
+          <span>Badge</span><span>Product</span><span>Score</span>
+          <span class="col-cat">Category</span><span>Age</span><span class="col-action"></span>
+        </div>
+        ${rows}
+      </div>
+      <div class="pagination">
+        <span>${d.total ?? 0} products · page ${(d.page || 0) + 1} of ${totalPages || 1}</span>
+        <div style="display:flex;gap:8px">
+          <button class="pag-btn" id="prevBtn" ${_prodPage === 0 ? 'disabled' : ''} onclick="changePage(-1)">← Prev</button>
+          <button class="pag-btn" id="nextBtn" ${_prodPage >= totalPages - 1 ? 'disabled' : ''} onclick="changePage(1)">Next →</button>
+        </div>
+      </div>`;
+  }
+
+  function attachHandlers(tab) {
+    if (tab === 'products') {
+      const inp = document.getElementById('prodSearch');
+      if (inp) {
+        let t;
+        inp.addEventListener('input', e => {
+          clearTimeout(t);
+          t = setTimeout(() => { _prodQ = e.target.value; _prodPage = 0; loadTab('products', true); }, 350);
+        });
+      }
+    }
+  }
+
+  function changePage(delta) {
+    _prodPage = Math.max(0, _prodPage + delta);
+    loadTab('products', true);
+  }
+
+  async function requestRefresh(btn) {
+    const slug = btn.dataset.slug;
+    btn.textContent = '…';
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/admin-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_session.access_token}` },
+        body: JSON.stringify({ slug }),
+      });
+      btn.textContent = r.ok ? '✓ Sent' : 'Error';
+      btn.classList.toggle('sent', r.ok);
+    } catch { btn.textContent = 'Error'; }
+  }
+
+  // ── Users ────────────────────────────────────────────────────────
+  function renderUsers(d) {
+    const rows = (d.users || []).map(u => `
+      <div class="table-row row-user">
+        <span class="cell-name">${esc(u.email)}</span>
+        <span class="cell-muted">${shortDate(u.created_at)}</span>
+        <span class="cell-muted col-last">${u.last_sign_in_at ? timeAgo(u.last_sign_in_at) : '—'}</span>
+        <span>${u.is_pro ? '<span class="cell-pro">Pro</span>' : '<span class="cell-free">Free</span>'}</span>
+      </div>`).join('') || '<div class="table-row"><span class="cell-muted">No users yet</span></div>';
+
+    return `
+      <div class="stat-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-value">${d.total ?? 0}</div>
+          <div class="stat-label">Total users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${d.pro ?? 0}</div>
+          <div class="stat-label">Pro users</div>
+          <div class="stat-sub pro">${d.total > 0 ? ((d.pro/d.total)*100).toFixed(1) : 0}% conversion</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${(d.total||0) - (d.pro||0)}</div>
+          <div class="stat-label">Free users</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-row header row-user">
+          <span>Email</span><span>Joined</span><span class="col-last">Last active</span><span>Plan</span>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  // ── Searches ────────────────────────────────────────────────────
+  function renderSearches(d) {
+    const days    = Object.entries(d.byDay || {});
+    const maxVal  = Math.max(...days.map(([,v]) => v), 1);
+    const bars    = days.map(([date, count]) => {
+      const pct   = Math.round((count / maxVal) * 100);
+      const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `<div class="spark-bar-wrap" title="${label}: ${count}">
+        <div class="spark-bar" style="height:${Math.max(pct,2)}%"></div>
+        <div class="spark-label">${label.split(' ')[1]}</div>
+      </div>`;
+    }).join('');
+
+    const topRows = (d.topProducts || []).map(p => `
+      <div class="table-row row-search">
+        ${badgePill(p.badge)}
+        <span class="cell-name">${esc(p.name)}</span>
+        <span class="breakdown-val">${p.count}</span>
+      </div>`).join('') || '<div class="table-row"><span class="cell-muted">No data yet</span></div>';
+
+    const total7d  = days.slice(-7).reduce((s,[,v]) => s+v, 0);
+    const total14d = days.reduce((s,[,v]) => s+v, 0);
+
+    return `
+      <div class="stat-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-value">${d.total ?? 0}</div>
+          <div class="stat-label">Tracked searches</div>
+          <div class="stat-sub" style="color:var(--text-3)">logged-in users only</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${total7d}</div>
+          <div class="stat-label">Last 7 days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${total14d}</div>
+          <div class="stat-label">Last 14 days</div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">Most bookmarked</div>
-        <div class="breakdown-card">${topRows}</div>
+        <div class="section-title" style="margin-bottom:12px">Daily search volume (14 days)</div>
+        <div class="spark-wrap">
+          <div class="spark-chart">${bars}</div>
+          <div class="spark-meta">
+            <span>${days[0]?.[0] ? new Date(days[0][0]+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</span>
+            <span>Today</span>
+          </div>
+        </div>
       </div>
-    `;
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:12px">Top searched products</div>
+        <div class="table-card">
+          <div class="table-row header row-search"><span>Badge</span><span>Product</span><span>#</span></div>
+          ${topRows}
+        </div>
+      </div>`;
   }
 
-  load();
+  // ── Cost ────────────────────────────────────────────────────────
+  function renderCost(d) {
+    const totalProducts = d.totalProducts || 0;
+    // Approximate cost: research ~$0.006 + post ~$0.003 per new product (Haiku pricing with caching)
+    const costPerSearch = 0.009;
+    const estTotal = (totalProducts * costPerSearch).toFixed(2);
+    const est30d    = ((d.searches30d || 0) * costPerSearch * 0.3).toFixed(2); // ~30% are cache misses
+
+    return `
+      <div class="cost-grid">
+        <div class="cost-card">
+          <div class="cost-val">$${estTotal}</div>
+          <div class="cost-label">Est. total API spend</div>
+          <div class="cost-note">Based on ${totalProducts} products × ~$0.009</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-val">~$0.009</div>
+          <div class="cost-label">Per new search (cache miss)</div>
+          <div class="cost-note">Research + post, Haiku pricing</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-val">~$0.002</div>
+          <div class="cost-label">Per cached search</div>
+          <div class="cost-note">Prompt cache hit on research</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-val">$${est30d}</div>
+          <div class="cost-label">Est. last 30d spend</div>
+          <div class="cost-note">${d.searches30d || 0} searches, ~30% misses</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:12px">Token breakdown per call</div>
+        <div class="breakdown-card">
+          <div class="breakdown-row">
+            <span class="breakdown-key">research.js — input</span>
+            <span class="cell-muted" style="margin-left:auto;font-size:12px">~1,500 tokens system (cached) + ~500 user</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-key">research.js — output</span>
+            <span class="cell-muted" style="margin-left:auto;font-size:12px">~1,200 tokens JSON</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-key">post.js — input</span>
+            <span class="cell-muted" style="margin-left:auto;font-size:12px">~900 tokens (slimmed in v1.3.8)</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-key">post.js — output</span>
+            <span class="cell-muted" style="margin-left:auto;font-size:12px">~400 tokens JSON</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-key">Haiku pricing</span>
+            <span class="cell-muted" style="margin-left:auto;font-size:12px">$0.80/M input · $4.00/M output · $0.08/M cache read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:12px">Monthly cost at scale</div>
+        <div class="breakdown-card">
+          ${[
+            ['100 searches/mo', '$0.27'],
+            ['500 searches/mo', '$1.35'],
+            ['1,000 searches/mo', '$2.70'],
+            ['5,000 searches/mo', '$13.50'],
+            ['10,000 searches/mo', '$27.00'],
+          ].map(([label, cost]) => `
+            <div class="breakdown-row">
+              <span class="breakdown-key">${label}</span>
+              <span class="breakdown-val">${cost}</span>
+            </div>`).join('')}
+        </div>
+        <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Assumes 30% cache miss rate. Pro plan at $9/mo breaks even at ~33 paying users.</p>
+      </div>`;
+  }
+
+  init();
 </script>
 </body>
 </html>

@@ -100,19 +100,92 @@ export default async function handler(req, res) {
       'Content-Type':  'application/json',
     };
 
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const view = req.query?.view;
+
+    // ── PRODUCTS view ──────────────────────────────────────────
+    if (view === 'products') {
+      const page   = Math.max(0, parseInt(req.query?.page || '0'));
+      const q      = (req.query?.q || '').trim();
+      const limit  = 50;
+      const offset = page * limit;
+      const filter = q ? `&product_name=ilike.*${encodeURIComponent(q)}*` : '';
+
+      const [listRes, countRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/products?select=slug,product_name,badge,overall_score,category,researched_at,refresh_requests&order=researched_at.desc&limit=${limit}&offset=${offset}${filter}`, { headers: h }),
+        fetch(`${SUPABASE_URL}/rest/v1/products?select=count${filter}`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      ]);
+      const products = await listRes.json();
+      const total    = parseInt(countRes.headers.get('content-range')?.split('/')[1] || '0');
+      return res.json({ products: Array.isArray(products) ? products : [], total, page, limit });
+    }
+
+    // ── USERS view ─────────────────────────────────────────────
+    if (view === 'users') {
+      const [usersRes, profilesRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=1000`, {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}` },
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,is_pro`, { headers: h }),
+      ]);
+      const usersData  = usersRes.ok ? await usersRes.json() : { users: [] };
+      const profiles   = profilesRes.ok ? await profilesRes.json() : [];
+      const profileMap = {};
+      (Array.isArray(profiles) ? profiles : []).forEach(p => { profileMap[p.id] = p; });
+
+      const users = (usersData.users || [])
+        .map(u => ({ id: u.id, email: u.email, created_at: u.created_at, last_sign_in_at: u.last_sign_in_at, is_pro: profileMap[u.id]?.is_pro || false }))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      return res.json({ users, total: users.length, pro: users.filter(u => u.is_pro).length });
+    }
+
+    // ── SEARCHES view ──────────────────────────────────────────
+    if (view === 'searches') {
+      const searchesRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/searches?select=product_name,badge,created_at&order=created_at.desc&limit=500`,
+        { headers: h }
+      );
+      const searches = searchesRes.ok ? (await searchesRes.json()) : [];
+      const rows     = Array.isArray(searches) ? searches : [];
+
+      const byDay = {};
+      for (let i = 13; i >= 0; i--) {
+        byDay[new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)] = 0;
+      }
+      rows.forEach(s => { const d = s.created_at?.slice(0, 10); if (d && byDay[d] !== undefined) byDay[d]++; });
+
+      const productCount = {};
+      rows.forEach(s => {
+        if (!s.product_name) return;
+        if (!productCount[s.product_name]) productCount[s.product_name] = { count: 0, badge: s.badge };
+        productCount[s.product_name].count++;
+      });
+      const topProducts = Object.entries(productCount)
+        .sort((a, b) => b[1].count - a[1].count).slice(0, 15)
+        .map(([name, v]) => ({ name, count: v.count, badge: v.badge }));
+
+      return res.json({ total: rows.length, byDay, topProducts });
+    }
+
+    // ── OVERVIEW (default) ─────────────────────────────────────
+    const sevenDaysAgo  = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const [
       totalProductsRes, recentProductsRes, categoryRes, badgeRes,
-      bookmarkCountRes, topBookmarkedRes, newUsersRes,
+      bookmarkCountRes, topBookmarkedRes, newUsersRes, proCountRes,
+      searches7dRes, searches30dRes,
     ] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/products?select=count`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
-      fetch(`${SUPABASE_URL}/rest/v1/products?select=product_name,badge,overall_score,category,researched_at&order=researched_at.desc&limit=10`, { headers: h }),
+      fetch(`${SUPABASE_URL}/rest/v1/products?select=slug,product_name,badge,overall_score,category,researched_at&order=researched_at.desc&limit=10`, { headers: h }),
       fetch(`${SUPABASE_URL}/rest/v1/products?select=category&category=not.is.null`, { headers: h }),
       fetch(`${SUPABASE_URL}/rest/v1/products?select=badge&badge=not.is.null`, { headers: h }),
       fetch(`${SUPABASE_URL}/rest/v1/bookmarks?select=count`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
       fetch(`${SUPABASE_URL}/rest/v1/bookmarks?select=slug,product_name&order=slug`, { headers: h }),
       fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=1000`, { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}` } }),
+      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=count&is_pro=eq.true`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      fetch(`${SUPABASE_URL}/rest/v1/searches?select=count&created_at=gte.${sevenDaysAgo}`,  { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      fetch(`${SUPABASE_URL}/rest/v1/searches?select=count&created_at=gte.${thirtyDaysAgo}`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
     ]);
 
     const totalProducts  = parseInt(totalProductsRes.headers.get('content-range')?.split('/')[1] || '0');
@@ -121,21 +194,18 @@ export default async function handler(req, res) {
     const categoryRows      = await categoryRes.json();
     const categoryBreakdown = {};
     (Array.isArray(categoryRows) ? categoryRows : []).forEach(r => {
-      const cat = r.category || 'Other';
-      categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + 1;
+      categoryBreakdown[r.category || 'Other'] = (categoryBreakdown[r.category || 'Other'] || 0) + 1;
     });
 
     const badgeRows      = await badgeRes.json();
     const badgeBreakdown = {};
     (Array.isArray(badgeRows) ? badgeRows : []).forEach(r => {
-      const b = r.badge || 'UNKNOWN';
-      badgeBreakdown[b] = (badgeBreakdown[b] || 0) + 1;
+      badgeBreakdown[r.badge || 'UNKNOWN'] = (badgeBreakdown[r.badge || 'UNKNOWN'] || 0) + 1;
     });
 
     const totalBookmarks = parseInt(bookmarkCountRes.headers.get('content-range')?.split('/')[1] || '0');
-
-    const bookmarkRows = await topBookmarkedRes.json();
-    const bookmarkMap  = {};
+    const bookmarkRows   = await topBookmarkedRes.json();
+    const bookmarkMap    = {};
     (Array.isArray(bookmarkRows) ? bookmarkRows : []).forEach(r => {
       if (!bookmarkMap[r.slug]) bookmarkMap[r.slug] = { slug: r.slug, product_name: r.product_name, count: 0 };
       bookmarkMap[r.slug].count++;
@@ -150,8 +220,17 @@ export default async function handler(req, res) {
       newUsersCount   = users.filter(u => u.created_at >= sevenDaysAgo).length;
     }
 
+    const proUsers    = parseInt(proCountRes.headers.get('content-range')?.split('/')[1] || '0');
+    const searches7d  = parseInt(searches7dRes.headers.get('content-range')?.split('/')[1]  || '0');
+    const searches30d = parseInt(searches30dRes.headers.get('content-range')?.split('/')[1] || '0');
+
     res.setHeader('Cache-Control', 'no-store');
-    return res.json({ totalProducts, totalUsers, newUsersCount, totalBookmarks, recentProducts: Array.isArray(recentProducts) ? recentProducts : [], categoryBreakdown, badgeBreakdown, topBookmarked });
+    return res.json({
+      totalProducts, totalUsers, newUsersCount, proUsers, totalBookmarks,
+      searches7d, searches30d,
+      recentProducts: Array.isArray(recentProducts) ? recentProducts : [],
+      categoryBreakdown, badgeBreakdown, topBookmarked,
+    });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
