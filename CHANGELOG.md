@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.5.2 — 2026-04-06
+
+### Fix
+- **Brave browser session loss** — Supabase defaulted to `localStorage` with no fallback. Brave's "Aggressive" shields and "Block cross-site cookies" modes throw `SecurityError` on `localStorage` access, silently preventing session persistence. Added a three-tier storage adapter: probes `localStorage` first → falls back to `sessionStorage` (survives refresh, lost on tab close) → falls back to in-memory Map (survives page load only). Passed as `storage:` option to `createClient`.
+
+---
+
 ## v1.5.1 — 2026-04-06
 
 ### Security

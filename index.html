@@ -723,7 +723,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.5.1</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.5.2</p>
     </footer>
   </div>
 
@@ -737,10 +737,21 @@
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
+    // Storage adapter: probe localStorage (blocked by Brave Shields in aggressive mode),
+    // fall back to sessionStorage (survives refresh, lost on tab close), then in-memory.
+    const _authStorage = (() => {
+      const k = '_sb_probe_';
+      try { localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch {}
+      try { sessionStorage.setItem(k, '1'); sessionStorage.removeItem(k); return sessionStorage; } catch {}
+      const _m = new Map();
+      return { getItem: k => _m.get(k) ?? null, setItem: (k,v) => _m.set(k,v), removeItem: k => _m.delete(k) };
+    })();
+
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
+        storage: _authStorage,
         // Prevent a SIGNED_OUT event in one tab from cascading to all other open tabs.
         // Without this, a failed token refresh in any tab signs the user out everywhere.
         broadcastAuthEvents: false,
