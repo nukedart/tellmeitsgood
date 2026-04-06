@@ -231,6 +231,10 @@
 
   async function api(path) {
     const r = await fetch(path, { headers: { 'Authorization': `Bearer ${_session.access_token}` } });
+    if (r.status === 500) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error('misconfigured:' + (d.missing || []).join(','));
+    }
     if (r.status === 401 || r.status === 403) throw new Error('unauthorized');
     if (!r.ok) throw new Error(await r.text());
     return r.json();
@@ -279,6 +283,17 @@
       renderTab(tab, data);
     } catch (err) {
       if (err.message === 'unauthorized') { showGate('forbidden'); return; }
+      if (err.message.startsWith('misconfigured:')) {
+        const vars = err.message.slice(14).split(',').filter(Boolean);
+        const rows = vars.map(v => `<code style="display:block;margin:6px 0;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;color:var(--danger)">${esc(v)}</code>`).join('');
+        document.getElementById('content').innerHTML = `<div class="state-center">
+          <div class="state-title">Setup required</div>
+          <p class="state-text" style="margin-bottom:16px">Add the following to <strong>Vercel → Project → Settings → Environment Variables</strong>, then redeploy:</p>
+          ${rows}
+          <p class="state-text" style="margin-top:16px;font-size:12px">After saving, Vercel will redeploy automatically. Refresh this page once it's live.</p>
+        </div>`;
+        return;
+      }
       document.getElementById('content').innerHTML = `<div class="state-center"><div class="state-title">Error</div><p class="state-text">${esc(err.message)}</p></div>`;
     }
   }

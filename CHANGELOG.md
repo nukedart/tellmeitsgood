@@ -5,6 +5,13 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.5.3 — 2026-04-06
+
+### Fix
+- **Admin "Server misconfigured" error** — `api/admin.js` now returns the specific missing env var names (e.g. `["ADMIN_EMAIL"]`) instead of a generic message. `admin.html` detects the 500 and renders a setup guide listing exactly which Vercel env vars need to be added, instead of showing raw JSON.
+
+---
+
 ## v1.5.2 — 2026-04-06
 
 ### Fix

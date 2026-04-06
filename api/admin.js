@@ -91,8 +91,9 @@ export default async function handler(req, res) {
     const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const ADMIN_EMAIL          = process.env.ADMIN_EMAIL;
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !ADMIN_EMAIL) {
-      return res.status(500).json({ error: 'Server misconfigured' });
+    const missing = [!SUPABASE_URL && 'SUPABASE_URL', !SUPABASE_SERVICE_KEY && 'SUPABASE_SERVICE_ROLE_KEY', !ADMIN_EMAIL && 'ADMIN_EMAIL'].filter(Boolean);
+    if (missing.length) {
+      return res.status(500).json({ error: 'Server misconfigured', missing });
     }
 
     const auth  = req.headers.authorization || '';
