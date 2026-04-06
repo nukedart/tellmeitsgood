@@ -5,6 +5,14 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.5.1 — 2026-04-06
+
+### Security
+- **Lock down admin POST endpoint** — `/api/admin` POST (product refresh) previously had no auth — only IP-based rate limiting. Now requires a valid Supabase session matching `ADMIN_EMAIL`, same as the GET endpoints. Any unauthenticated or non-admin POST now returns 401/403.
+- **Document `ADMIN_EMAIL` env var** — added to `CLAUDE.md` required env vars list.
+
+---
+
 ## v1.5.0 — 2026-04-06
 
 ### Feature: Admin Portal

@@ -12,8 +12,24 @@ const refreshRequested = new Map();
 
 export default async function handler(req, res) {
 
-  // ── POST: request product refresh ────────────────────────────
+  // ── POST: request product refresh (admin only) ───────────────
   if (req.method === 'POST') {
+    const SUPABASE_URL         = process.env.SUPABASE_URL;
+    const SERVICE_KEY          = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const ADMIN_EMAIL          = process.env.ADMIN_EMAIL;
+
+    // Require admin session — same check as GET
+    const postAuth  = req.headers.authorization || '';
+    const postToken = postAuth.startsWith('Bearer ') ? postAuth.slice(7) : null;
+    if (!postToken) return res.status(401).json({ error: 'Unauthorized' });
+
+    const postUserRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${postToken}` },
+    });
+    if (!postUserRes.ok) return res.status(401).json({ error: 'Invalid session' });
+    const postUser = await postUserRes.json();
+    if (postUser.email !== ADMIN_EMAIL) return res.status(403).json({ error: 'Forbidden' });
+
     const { slug } = req.body || {};
     if (!slug || typeof slug !== 'string') {
       return res.status(400).json({ error: 'slug required' });
@@ -33,9 +49,6 @@ export default async function handler(req, res) {
         if (v < cutoff) refreshRequested.delete(k);
       }
     }
-
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     try {
       const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_refresh_requests`, {
