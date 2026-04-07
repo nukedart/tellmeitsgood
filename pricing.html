@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing — Tell Me It's Good</title>
+  <meta name="description" content="Simple, honest pricing. Free to browse. Pro for deep research. Power for teams and brands." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAF8F5; --surface: #F3F0EB; --surface-2: #EAE6DF;
+      --border: #DDD9D2; --text: #1C1917; --text-2: #6B6560; --text-3: #A09891;
+      --accent: #2F6FED; --accent-hover: #1A57D4; --accent-surf: #EBF1FD;
+      --card: #FFFFFF; --success: #3A9E6F; --success-surf: #ECFDF5;
+      --pro: #7C3AED; --pro-surf: #F5F3FF;
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #18161A; --surface: #211F24; --surface-2: #2B2830;
+        --border: #38343D; --text: #F0EDE8; --text-2: #9B9299; --text-3: #67636B;
+        --accent: #5A8FFF; --accent-surf: #1C2744;
+        --card: #211F24; --success: #4CB87F; --success-surf: #0D2B1E;
+        --pro: #A78BFA; --pro-surf: #1E1533;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); position: sticky; top: 0; z-index: 10; }
+    .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .top-bar-cta { font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 8px 18px; cursor: pointer; text-decoration: none; font-family: var(--font-body); transition: background .15s; }
+    .top-bar-cta:hover { background: var(--accent-hover); }
+
+    .page { max-width: 1040px; margin: 0 auto; padding: 64px 20px 100px; }
+
+    /* ── Hero ── */
+    .hero { text-align: center; margin-bottom: 56px; }
+    .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 48px); color: var(--text); margin-bottom: 14px; }
+    .hero p { font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 480px; margin: 0 auto 28px; }
+    .billing-toggle { display: inline-flex; background: var(--surface); border-radius: var(--radius-xl); padding: 4px; gap: 4px; }
+    .bill-btn { font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--text-2); background: none; border: none; border-radius: calc(var(--radius-xl) - 2px); padding: 8px 20px; cursor: pointer; transition: all .15s; }
+    .bill-btn.active { background: var(--card); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }
+    .bill-badge { background: var(--success-surf); color: var(--success); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 100px; margin-left: 6px; }
+
+    /* ── Plan cards ── */
+    .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 64px; }
+    @media (max-width: 760px) { .plans { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; } }
+    .plan-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; display: flex; flex-direction: column; }
+    .plan-card.featured { border-color: var(--pro); box-shadow: 0 0 0 4px var(--pro-surf); position: relative; }
+    .featured-label { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--pro); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 4px 14px; border-radius: 100px; white-space: nowrap; }
+    .plan-name { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .plan-name.pro-color { color: var(--pro); }
+    .plan-price { font-family: var(--font-display); font-size: 42px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+    .plan-price span { font-family: var(--font-body); font-size: 16px; font-weight: 400; color: var(--text-3); }
+    .plan-sub { font-size: 12px; color: var(--text-3); margin-bottom: 20px; min-height: 18px; }
+    .plan-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 24px; }
+    .plan-cta { display: block; text-align: center; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px 20px; border-radius: var(--radius-md); cursor: pointer; border: none; transition: all .15s; text-decoration: none; margin-bottom: 24px; }
+    .plan-cta.free { background: var(--surface); color: var(--text); }
+    .plan-cta.free:hover { background: var(--surface-2); }
+    .plan-cta.pro { background: var(--pro); color: #fff; }
+    .plan-cta.pro:hover { background: #6D28D9; box-shadow: 0 4px 14px rgba(124,58,237,.3); }
+    .plan-cta.power { background: var(--surface); color: var(--text-2); cursor: default; }
+    .plan-features { list-style: none; flex: 1; }
+    .plan-features li { font-size: 13px; color: var(--text-2); padding: 7px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+    .plan-features li:last-child { border-bottom: none; }
+    .feat-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+    .feat-icon.check { color: var(--success); }
+    .feat-icon.lock { color: var(--text-3); }
+    .feat-icon.star { color: var(--pro); }
+    .soon { font-size: 10px; font-weight: 700; letter-spacing: .05em; background: var(--surface-2); color: var(--text-3); padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
+
+    /* ── Comparison table ── */
+    .compare-section { margin-bottom: 64px; }
+    .compare-title { font-family: var(--font-display); font-size: 26px; color: var(--text); text-align: center; margin-bottom: 28px; }
+    .compare-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+    .compare-table th { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 14px 20px; background: var(--surface); text-align: center; border-bottom: 1px solid var(--border); }
+    .compare-table th:first-child { text-align: left; }
+    .compare-table td { font-size: 13px; color: var(--text-2); padding: 12px 20px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+    .compare-table td:first-child { text-align: left; font-weight: 500; color: var(--text); }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:hover td { background: var(--surface); }
+    .check-yes { color: var(--success); font-size: 16px; }
+    .check-no  { color: var(--text-3); font-size: 16px; }
+    .col-pro { background: rgba(124,58,237,.04); }
+
+    /* ── FAQ ── */
+    .faq { max-width: 640px; margin: 0 auto 64px; }
+    .faq-title { font-family: var(--font-display); font-size: 26px; color: var(--text); text-align: center; margin-bottom: 28px; }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 18px 0; }
+    .faq-q { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .faq-a { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+    .faq-a a { color: var(--accent); text-decoration: none; }
+
+    /* ── Footer ── */
+    .footer { text-align: center; font-size: 12px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+<nav class="top-bar">
+  <a href="/" class="top-bar-logo">
+    <span class="top-bar-logo-dot"></span>
+    Tell Me It's Good
+  </a>
+  <a href="/" class="top-bar-cta">Search products</a>
+</nav>
+
+<main class="page">
+
+  <div class="hero">
+    <h1>Simple, honest pricing</h1>
+    <p>Browse verdicts free. Go Pro to see the full evidence — every score, source, and criterion — behind each verdict.</p>
+    <div class="billing-toggle">
+      <button class="bill-btn active" id="billMonthly" onclick="setBilling('monthly')">Monthly</button>
+      <button class="bill-btn" id="billYearly" onclick="setBilling('yearly')">Yearly <span class="bill-badge">Save 28%</span></button>
+    </div>
+  </div>
+
+  <div class="plans">
+
+    <!-- Free -->
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">$0</div>
+      <div class="plan-sub">&nbsp;</div>
+      <div class="plan-desc">Search our database of researched products and get instant verdicts.</div>
+      <a href="/" class="plan-cta free">Start searching →</a>
+      <ul class="plan-features">
+        <li><span class="feat-icon check">✓</span> Search existing product database</li>
+        <li><span class="feat-icon check">✓</span> Badge + overall score on every result</li>
+        <li><span class="feat-icon check">✓</span> 2 new researches per day</li>
+        <li><span class="feat-icon check">✓</span> Buy links on every verdict</li>
+        <li><span class="feat-icon check">✓</span> Gate 1/2/3 pass/fail summary</li>
+        <li><span class="feat-icon lock">–</span> 15-criterion breakdown with evidence</li>
+        <li><span class="feat-icon lock">–</span> Source links for every score</li>
+        <li><span class="feat-icon lock">–</span> Fresh research requests</li>
+        <li><span class="feat-icon lock">–</span> Email notifications</li>
+      </ul>
+    </div>
+
+    <!-- Pro (featured) -->
+    <div class="plan-card featured">
+      <div class="featured-label">Most popular</div>
+      <div class="plan-name pro-color">Pro</div>
+      <div class="plan-price" id="proCardPrice">$14 <span>/ month</span></div>
+      <div class="plan-sub" id="proCardSub">&nbsp;</div>
+      <div class="plan-desc">The full picture — every score, every source, every reason behind the verdict.</div>
+      <button class="plan-cta pro" onclick="handleCheckout('pro')">Get Pro →</button>
+      <ul class="plan-features">
+        <li><span class="feat-icon check">✓</span> Everything in Free</li>
+        <li><span class="feat-icon star">★</span> <strong>15-criterion breakdown</strong> with scores, evidence &amp; sources</li>
+        <li><span class="feat-icon star">★</span> 25 deep researches per day</li>
+        <li><span class="feat-icon star">★</span> Full search history — every verdict saved</li>
+        <li><span class="feat-icon star">★</span> Fresh research — re-run any cached product</li>
+        <li><span class="feat-icon star">★</span> Email notifications when research is ready</li>
+        <li><span class="feat-icon star">★</span> Watch list with re-research alerts</li>
+      </ul>
+    </div>
+
+    <!-- Power -->
+    <div class="plan-card">
+      <div class="plan-name">Power</div>
+      <div class="plan-price">$149 <span>/ month</span></div>
+      <div class="plan-sub">&nbsp;</div>
+      <div class="plan-desc">For brands, agencies, and procurement teams who need competitive intelligence.</div>
+      <button class="plan-cta power" disabled>Coming soon</button>
+      <ul class="plan-features">
+        <li><span class="feat-icon check">✓</span> Everything in Pro</li>
+        <li><span class="feat-icon star">★</span> Competitor intelligence reports <span class="soon">Soon</span></li>
+        <li><span class="feat-icon star">★</span> Category ranking generator <span class="soon">Soon</span></li>
+        <li><span class="feat-icon star">★</span> Bulk research via CSV upload <span class="soon">Soon</span></li>
+        <li><span class="feat-icon star">★</span> PDF export &amp; shareable links <span class="soon">Soon</span></li>
+        <li><span class="feat-icon star">★</span> API access <span class="soon">Soon</span></li>
+        <li><span class="feat-icon star">★</span> Priority research queue <span class="soon">Soon</span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Comparison table -->
+  <div class="compare-section">
+    <div class="compare-title">Full comparison</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Free</th>
+          <th class="col-pro">Pro</th>
+          <th>Power</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Product database search</td><td><span class="check-yes">✓</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Badge + overall score</td><td><span class="check-yes">✓</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Gate pass/fail summary</td><td><span class="check-yes">✓</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>New researches per day</td><td>2</td><td class="col-pro"><strong>25</strong></td><td><strong>Unlimited</strong></td></tr>
+        <tr><td>15-criterion breakdown + sources</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Full search history</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Fresh research requests</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Email notifications</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-yes">✓</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Competitor intelligence reports</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-no">–</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Category ranking generator</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-no">–</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>Bulk CSV research</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-no">–</span></td><td><span class="check-yes">✓</span></td></tr>
+        <tr><td>API access</td><td><span class="check-no">–</span></td><td class="col-pro"><span class="check-no">–</span></td><td><span class="check-yes">✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <div class="faq-title">Common questions</div>
+
+    <div class="faq-item">
+      <div class="faq-q">What's the Triple Filter?</div>
+      <div class="faq-a">Every product is scored across 15 criteria in three gates: Gate 1 — Quality &amp; Value, Gate 2 — Clean &amp; Safe (ingredients, certifications), Gate 3 — Ethical Company (labor, sourcing, review practices). A product needs all three to earn the TELL ME IT'S GOOD badge.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What does the full breakdown actually show?</div>
+      <div class="faq-a">Each of the 15 criteria gets an individual score (1–10) with a specific evidence sentence and a source link — an actual URL to the review, study, or database we pulled from. It's the difference between a verdict and a receipt.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I cancel anytime?</div>
+      <div class="faq-a">Yes. Cancel from your account settings — no questions, no friction. Your Pro access stays active until the end of the billing period.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What if a product I care about isn't in the database?</div>
+      <div class="faq-a">Free users can submit up to 2 new researches per day. Pro users get 25 — and can request "fresh research" on any existing product to get an updated verdict.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Is the Power tier available now?</div>
+      <div class="faq-a">Not yet — it's coming soon. If you're a brand or agency interested in competitor intelligence, <a href="mailto:hello@tellmeitsgood.com">email us</a> and we'll let you know when it launches.</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>tellmeitsgood.com · <a href="/privacy" style="color:var(--text-3);text-decoration:none">Privacy</a> · <a href="/" style="color:var(--text-3);text-decoration:none">Home</a></p>
+  </div>
+
+</main>
+
+<script>
+  // TODO: Replace with your actual Stripe payment links after creating $14/mo and $120/yr prices
+  const STRIPE_PRO_MONTHLY = 'https://buy.stripe.com/aFa9AUgcVgP4cWmcNIgMw00';
+  const STRIPE_PRO_YEARLY  = 'https://buy.stripe.com/aFa9AUgcVgP4cWmcNIgMw00';
+
+  let _billing = 'monthly';
+
+  function setBilling(cycle) {
+    _billing = cycle;
+    document.getElementById('billMonthly').classList.toggle('active', cycle === 'monthly');
+    document.getElementById('billYearly').classList.toggle('active', cycle === 'yearly');
+    document.getElementById('proCardPrice').innerHTML = cycle === 'yearly'
+      ? '$10 <span>/ month</span>'
+      : '$14 <span>/ month</span>';
+    document.getElementById('proCardSub').textContent = cycle === 'yearly' ? '$120 billed annually — 2 months free' : '\u00a0';
+  }
+
+  function handleCheckout(plan) {
+    if (plan === 'pro') {
+      const url = _billing === 'yearly' ? STRIPE_PRO_YEARLY : STRIPE_PRO_MONTHLY;
+      window.location.href = url;
+    }
+  }
+</script>
+
+</body>
+</html>

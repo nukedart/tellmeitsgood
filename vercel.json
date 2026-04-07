@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/sitemap.xml",         "destination": "/api/sitemap" },
     { "source": "/privacy",             "destination": "/privacy.html" },
+    { "source": "/pricing",             "destination": "/pricing.html" },
     { "source": "/p/:slug",             "destination": "/product.html" },
     { "source": "/directory",           "destination": "/directory.html" },
     { "source": "/compare",             "destination": "/compare.html" },

@@ -5,6 +5,20 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.6.0 — 2026-04-07
+
+### Phase 1: Monetization Foundation
+- **Gate criteria breakdown behind Pro** — free users see badge, scores, gate pass/fail, verdict narrative, and buy button. The 15-criterion accordion (individual scores + evidence + sources) is now Pro-only, replaced by a blurred teaser with "Unlock with Pro" CTA. Zero extra API calls — data is fetched, display is gated client-side.
+- **Pricing updated to $14/month** — all UI references updated (pro modal, paywall banner, settings upgrade button). Yearly plan added at $120/year ($10/mo effective, "2 months free"). Monthly/yearly toggle added to pro modal.
+- **Stripe constants refactored** — `STRIPE_MONTHLY` and `STRIPE_YEARLY` constants in `handleProCheckout()`. `switchBilling()` function toggles price display and checkout destination.
+- **Notify-me toggle** — "Email me when research is ready" checkbox added below submit button, visible to logged-in users only. Wired to `_notifyMe` flag for Phase 2 async queue.
+- **Pricing page** — new `/pricing` route (`pricing.html`) with 3-tier comparison (Free / Pro / Power), full feature table, billing toggle, and FAQ section. Power tier shown as "Coming soon".
+
+### Stripe action required
+After updating Stripe: replace `STRIPE_MONTHLY` and `STRIPE_YEARLY` constants in `index.html` (~line 1752) and `pricing.html` with your new $14/mo and $120/yr payment link URLs.
+
+---
+
 ## v1.5.3 — 2026-04-06
 
 ### Fix
