@@ -46,6 +46,37 @@ async function handleWelcomeEmail(email, res) {
   }
 }
 
+// Research-complete notification email
+async function handleResearchNotify(email, productName, badge, overallScore, slug, res) {
+  if (!RESEND_API_KEY) return res.json({ ok: true, skipped: true });
+
+  const BADGE_LABELS = {
+    TELL_ME_ITS_GOOD: { label: "Tell Me It's Good ✓", color: '#3A9E6F' },
+    CLEAN_PICK:       { label: 'Clean Pick',           color: '#2F6FED' },
+    ETHICAL_PICK:     { label: 'Ethical Pick',         color: '#2F6FED' },
+    QUALITY_PICK:     { label: 'Quality Pick',         color: '#2F6FED' },
+    NOT_LISTED:       { label: 'Not Listed',           color: '#D94F4F' },
+  };
+  const b = BADGE_LABELS[badge] || { label: badge || 'Verdict in', color: '#2F6FED' };
+  const productLink = slug ? `https://tellmeitsgood.com/p/${slug}` : 'https://tellmeitsgood.com';
+  const scoreStr = overallScore ? ` (${overallScore}/10)` : '';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="margin:0;padding:0;background:#FAF8F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF8F5;padding:40px 0;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:14px;border:1px solid #DDD9D2;overflow:hidden;"><tr><td style="background:${b.color};padding:28px 36px;"><p style="margin:0;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.06em;text-transform:uppercase;">tellmeitsgood.com</p><h1 style="margin:8px 0 0;font-family:Georgia,serif;font-size:26px;color:#ffffff;line-height:1.2;">Your research is ready.</h1></td></tr><tr><td style="padding:32px 36px;"><p style="margin:0 0 8px;font-size:14px;color:#6B6560;">You asked us to research:</p><p style="margin:0 0 24px;font-size:18px;font-weight:700;color:#1C1917;">${productName}</p><table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;"><tr><td style="padding:16px 20px;background:#F3F0EB;border-radius:10px;border-left:4px solid ${b.color};"><p style="margin:0;font-size:12px;font-weight:700;color:#A09891;letter-spacing:.06em;text-transform:uppercase;">Verdict${scoreStr}</p><p style="margin:6px 0 0;font-size:20px;font-weight:700;color:${b.color};">${b.label}</p></td></tr></table><table cellpadding="0" cellspacing="0" style="margin-bottom:28px;"><tr><td style="background:#2F6FED;border-radius:10px;padding:14px 28px;"><a href="${productLink}" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">See the full breakdown →</a></td></tr></table><hr style="border:none;border-top:1px solid #EAE6DF;margin:0 0 24px;"/><p style="margin:0;font-size:13px;color:#A09891;">You checked "email me when done" on your last search.<br/>Questions? <a href="mailto:hello@tellmeitsgood.com" style="color:#6B6560;">hello@tellmeitsgood.com</a></p></td></tr></table></td></tr></table></body></html>`;
+
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: FROM_EMAIL, to: [email], subject: `Your research on ${productName} is ready`, html }),
+    });
+    if (!r.ok) console.error('Resend notify error:', r.status, await r.text());
+    return res.json({ ok: r.ok });
+  } catch (err) {
+    console.error('notify error:', err.message);
+    return res.json({ ok: false, error: err.message });
+  }
+}
+
 export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
@@ -55,6 +86,18 @@ export default async function handler(req, res) {
   // Welcome email route (absorbed from /api/send-welcome via vercel.json rewrite)
   if (req.body?.email && !req.body?.researchJson) {
     return handleWelcomeEmail(req.body.email, res);
+  }
+
+  // Research-complete notify email
+  if (req.body?.notifyEmail && !req.body?.researchJson) {
+    // Verify auth token before sending to prevent abuse
+    const { notifyEmail, productName, badge, overallScore, slug, accessToken } = req.body;
+    if (!accessToken) return res.status(401).json({ error: 'Unauthorized' });
+    const userRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'apikey': process.env.SUPABASE_ANON_KEY },
+    });
+    if (!userRes.ok) return res.status(401).json({ error: 'Invalid session' });
+    return handleResearchNotify(notifyEmail, productName, badge, overallScore, slug, res);
   }
 
   const { researchJson, accessToken } = req.body;

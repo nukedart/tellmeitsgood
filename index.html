@@ -273,6 +273,18 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
     .loading-subtext { font-size: 13px; color: var(--text-3); }
+    /* ── Research step progress ── */
+    .research-steps { display: flex; flex-direction: column; gap: 8px; max-width: 260px; margin: 24px auto 0; text-align: left; }
+    .research-step { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--card); transition: border-color .3s, background .3s; }
+    .research-step.active { border-color: var(--accent); background: var(--accent-surf); }
+    .research-step.done { border-color: var(--success); background: var(--success-surf); }
+    .step-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-strong); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: transparent; transition: all .3s; }
+    .research-step.active .step-dot { border-color: var(--accent); background: var(--accent); color: #fff; animation: stepPulse .9s ease-in-out infinite alternate; }
+    .research-step.done .step-dot { border-color: var(--success); background: var(--success); color: #fff; }
+    @keyframes stepPulse { from { box-shadow: 0 0 0 0 rgba(47,111,237,.35); } to { box-shadow: 0 0 0 5px rgba(47,111,237,0); } }
+    .step-label { font-size: 13px; font-weight: 500; color: var(--text-3); transition: color .3s; }
+    .research-step.active .step-label { color: var(--accent-text); font-weight: 600; }
+    .research-step.done .step-label { color: var(--success); }
 
     /* ── Results ── */
     .results { display: none; animation: fadeUp .35s ease; }
@@ -629,6 +641,20 @@
       <div class="spinner"></div>
       <p class="loading-text" id="loadingText">Researching...</p>
       <p class="loading-subtext" id="loadingSubtext"></p>
+      <div class="research-steps" id="researchSteps">
+        <div class="research-step" id="step1">
+          <div class="step-dot">✓</div>
+          <span class="step-label">Searching the web</span>
+        </div>
+        <div class="research-step" id="step2">
+          <div class="step-dot">✓</div>
+          <span class="step-label">Scoring 15 criteria</span>
+        </div>
+        <div class="research-step" id="step3">
+          <div class="step-dot">✓</div>
+          <span class="step-label">Writing your verdict</span>
+        </div>
+      </div>
     </div>
 
     <!-- ── Results ── -->
@@ -755,7 +781,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.6.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.7.0</p>
     </footer>
   </div>
 
@@ -814,6 +840,7 @@
     let currentSearchQuery = null;  // query that produced it (for refresh)
     let currentResearch    = null;  // full research data for the current result
     let currentBookmarked  = false; // whether current user has bookmarked this
+    let _notifyEmail       = null;  // email to notify when research completes (captured at submit)
 
     // ── in-memory list caches (avoids re-fetching on every modal open) ──
     let _hlCache    = null; // { userId, isPro, data } — history metadata list
@@ -1971,7 +1998,10 @@
               currentSlug = saved.slug;
               showCacheStrip(0, saved.slug, false);
             }
+            sendNotifyEmail(research, saved?.slug);
           });
+        } else {
+          sendNotifyEmail(research, null);
         }
 
       } catch (err) {
@@ -2186,8 +2216,42 @@
       document.getElementById('submitBtn').disabled = true;
     }
     function hideLoading() { document.getElementById('loadingState').classList.remove('visible'); document.getElementById('submitBtn').disabled = false; }
-    function showPostLoading() { document.getElementById('postLoading').classList.add('visible'); }
+    function showPostLoading() { document.getElementById('postLoading').classList.add('visible'); setResearchStep(3); }
     function hidePostLoading() { document.getElementById('postLoading').classList.remove('visible'); }
+
+    function setResearchStep(n) {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById('step' + i);
+        if (!el) return;
+        el.classList.remove('active', 'done');
+        if (n > 0) {
+          if (i < n) el.classList.add('done');
+          else if (i === n) el.classList.add('active');
+        }
+      }
+    }
+
+    async function sendNotifyEmail(research, slug) {
+      if (!_notifyEmail) return;
+      const email = _notifyEmail;
+      _notifyEmail = null;
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+        fetch('/api/save-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notifyEmail: email,
+            productName: research.productName,
+            badge: research.badge,
+            overallScore: research.overallScore,
+            slug: slug || null,
+            accessToken: session.access_token,
+          }),
+        }).catch(() => {});
+      } catch {}
+    }
 
     function showError(msg) { const el = document.getElementById('errorMsg'); el.textContent = msg; el.classList.add('visible'); document.getElementById('inputSection').style.display = 'block'; }
     function hideError() { document.getElementById('errorMsg').classList.remove('visible'); }
@@ -2219,10 +2283,11 @@
 
     let _loadingInterval = null;
 
-    function startLoadingMessages(phase) {
+    function startLoadingMessages(phase, startStep) {
       clearInterval(_loadingInterval);
       const msgs = LOADING_MESSAGES[phase] || LOADING_MESSAGES.research;
       let i = 0;
+      setResearchStep(startStep || 1);
 
       function update() {
         const entry = msgs[i % msgs.length];
@@ -2233,6 +2298,8 @@
           document.getElementById('loadingText').textContent    = entry;
           document.getElementById('loadingSubtext').textContent = '';
         }
+        // Advance to step 2 (Scoring) after 3 research messages (~10.5s in)
+        if (phase === 'research' && i === 3) setResearchStep(2);
         i++;
       }
 
@@ -2260,25 +2327,26 @@
       document.getElementById('loadingState').classList.remove('visible');
       document.getElementById('submitBtn').disabled = false;
       stopLoadingMessages();
+      setResearchStep(0);
     }
 
-    // Patch handleSubmit to use animated messages
-    // We do this by monkey-patching scrapeUrl and runResearch calls
-    // via overriding the loading call points in the flow.
-    // Simpler: we override showLoading calls at call sites.
-    // Actually — we add a startup hook on the submit button directly.
+    // Patch handleSubmit to use animated messages + capture notify intent
     document.getElementById('submitBtn').addEventListener('click', function() {
+      // Capture notify-me intent before research starts
+      _notifyEmail = (document.getElementById('notifyMeCheck')?.checked && currentUser?.email)
+        ? currentUser.email : null;
+
       // Give the normal handler a tick, then start animation
       setTimeout(() => {
         if (document.getElementById('loadingState').classList.contains('visible')) {
           // If we're in URL mode, start with scrape messages
           const isUrlMode = document.getElementById('tabUrl').classList.contains('active');
           startLoadingMessages(isUrlMode ? 'scrape' : 'research');
-          // Switch to research messages after ~5s (after scraping completes)
+          // Switch to research messages after ~6s (scraping completes), advance to step 2
           if (isUrlMode) {
             setTimeout(() => {
               if (document.getElementById('loadingState').classList.contains('visible')) {
-                startLoadingMessages('research');
+                startLoadingMessages('research', 2);
               }
             }, 6000);
           }

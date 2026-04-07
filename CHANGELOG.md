@@ -5,6 +5,15 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.7.0 — 2026-04-03
+
+### Phase 2: Animated Progress + Notify-Me Email
+- **Animated step progress indicator** — loading state now shows three steps (Searching the web → Scoring 15 criteria → Writing your verdict) with active/done states. Steps advance on timing (step 2 after ~10.5s of research messages) and on real events (step 3 when post generation starts). URL mode advances to step 2 immediately after scraping completes.
+- **Notify-me email on research completion** — "Email me when research is ready" checkbox now sends a research-complete email via Resend. Email shows badge, overall score, product name, and a deep link to the product page. Auth-verified (requires valid Supabase session token) before sending.
+- **`sendNotifyEmail` helper** — captured at submit time, fires after `saveToCache` resolves (so the slug is available for the product page link). Handles both name-search (has slug) and URL/paste paths (no slug, links to home).
+
+---
+
 ## v1.6.0 — 2026-04-07
 
 ### Phase 1: Monetization Foundation
