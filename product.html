@@ -152,9 +152,14 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true },
+    });
 
     // Extract slug from URL: /p/allbirds-tree-runners → allbirds-tree-runners
     const slug = window.location.pathname.replace(/^\/p\//, '').split('?')[0];
@@ -239,7 +244,7 @@
         <div class="researched-strip">
           <span>📂 Researched ${ageText} · AI-sourced, not sponsored</span>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            ${daysOld >= 60 ? `<button onclick="requestRefresh('${escapeHtml(product.slug)}')" id="refreshBtn" style="font-size:12px;font-weight:600;color:var(--warning);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font-body)">↻ Request refresh</button>` : ''}
+            ${daysOld >= 30 ? `<button onclick="requestRefresh('${escapeHtml(product.slug)}','${escapeHtml(product.query || product.product_name)}')" id="refreshBtn" style="font-size:12px;font-weight:600;color:var(--warning);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font-body)">↻ Request fresh research</button>` : ''}
             <a href="/">Research your own →</a>
           </div>
         </div>
@@ -338,28 +343,47 @@
 
     loadProduct();
 
-    async function requestRefresh(slug) {
+    async function requestRefresh(slug, query) {
       const btn = document.getElementById('refreshBtn');
       if (!btn) return;
+
+      // Require auth
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        btn.textContent = 'Sign in to request refresh';
+        btn.style.color = 'var(--text-3)';
+        setTimeout(() => {
+          btn.textContent = '↻ Request fresh research';
+          btn.style.color = 'var(--warning)';
+        }, 3000);
+        return;
+      }
+
       btn.disabled = true;
-      btn.textContent = 'Requesting...';
+      btn.textContent = 'Adding to queue...';
+
       try {
-        const res = await fetch('/api/request-refresh', {
+        const res = await fetch('/api/save-search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug }),
+          body: JSON.stringify({ queueRequest: true, query: query || slug, accessToken: session.access_token }),
         });
-        if (res.status === 429) {
-          btn.textContent = 'Already requested';
-        } else if (res.ok) {
-          btn.textContent = '✓ Refresh requested';
+        const data = await res.json().catch(() => ({}));
+
+        if (data.queued === false && data.reason === 'already_queued') {
+          btn.textContent = '✓ Already in queue';
+          btn.style.color = 'var(--text-3)';
+        } else if (res.ok && data.ok) {
+          btn.textContent = '✓ Queued — we\'ll email you when ready';
           btn.style.color = 'var(--success)';
         } else {
-          btn.textContent = '↻ Request refresh';
+          btn.textContent = '↻ Request fresh research';
+          btn.style.color = 'var(--warning)';
           btn.disabled = false;
         }
       } catch {
-        btn.textContent = '↻ Request refresh';
+        btn.textContent = '↻ Request fresh research';
+        btn.style.color = 'var(--warning)';
         btn.disabled = false;
       }
     }

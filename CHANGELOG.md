@@ -5,6 +5,19 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.0 — 2026-04-07
+
+### Phase 2: True Async Research Queue
+- **Vercel Cron processor** — every 5 minutes, `GET /api/research` picks up one `pending` queue item, runs full Claude research, saves to products cache, emails the user, marks `done`. `maxDuration: 60s` set on research.js so cron calls don't timeout.
+- **Queue write via save-search.js** — `{ queueRequest, query, accessToken }` route writes to `research_queue`, deduplicates pending/processing items for same user+query.
+- **product.html "Request fresh research"** — button appears at 30 days (was 60). Requires auth (prompts sign-in if logged out). Calls queue write → shows "Queued — we'll email you when ready". Added Supabase client to product.html for session access.
+- **CRON_SECRET env var required** — add to Vercel dashboard to authenticate cron invocations.
+
+### Manual action required
+Add `CRON_SECRET` to Vercel environment variables (any long random string). The cron won't fire without it.
+
+---
+
 ## v1.7.0 — 2026-04-03
 
 ### Phase 2: Animated Progress + Notify-Me Email

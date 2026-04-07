@@ -88,6 +88,39 @@ export default async function handler(req, res) {
     return handleWelcomeEmail(req.body.email, res);
   }
 
+  // Queue a research request (from product.html "Request fresh research")
+  if (req.body?.queueRequest) {
+    const { query, accessToken } = req.body;
+    if (!query || !accessToken) return res.status(400).json({ error: 'Missing query or accessToken' });
+    const userRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'apikey': process.env.SUPABASE_ANON_KEY },
+    });
+    if (!userRes.ok) return res.status(401).json({ error: 'Invalid session' });
+    const user = await userRes.json();
+
+    // Check for duplicate pending/processing items for this user+query
+    const dupRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/research_queue?user_id=eq.${user.id}&query=eq.${encodeURIComponent(query.toLowerCase().trim())}&status=in.(pending,processing)&select=id`,
+      { headers: { 'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } }
+    );
+    const dups = await dupRes.json().catch(() => []);
+    if (dups?.length) return res.json({ ok: true, queued: false, reason: 'already_queued' });
+
+    const insertRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/research_queue`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Prefer': 'return=representation',
+      },
+      body: JSON.stringify({ user_id: user.id, query: query.toLowerCase().trim(), status: 'pending' }),
+    });
+    if (!insertRes.ok) return res.status(502).json({ error: 'Failed to queue research' });
+    const inserted = await insertRes.json();
+    return res.json({ ok: true, queued: true, id: Array.isArray(inserted) ? inserted[0]?.id : inserted?.id });
+  }
+
   // Research-complete notify email
   if (req.body?.notifyEmail && !req.body?.researchJson) {
     // Verify auth token before sending to prevent abuse
