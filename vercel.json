@@ -2,9 +2,6 @@
   "functions": {
     "api/research.js": { "maxDuration": 60 }
   },
-  "crons": [
-    { "path": "/api/research", "schedule": "*/5 * * * *" }
-  ],
   "rewrites": [
     { "source": "/sitemap.xml",         "destination": "/api/sitemap" },
     { "source": "/privacy",             "destination": "/privacy.html" },
