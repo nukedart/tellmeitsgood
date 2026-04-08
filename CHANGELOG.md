@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.2 — 2026-04-08
+
+### Claude optimization + Perplexity admin import
+
+- Merged research + post into a single Claude call — `post_narrative` now embedded in `research.js` JSON output, eliminating the separate `/api/post` call entirely (~40% API cost reduction)
+- Extracted `RESEARCH_SYSTEM_PROMPT` constant shared by POST handler and cron processQueue
+- Admin Import tab: paste Perplexity deep research → Claude formats to Triple Filter schema → saves to products DB; no web search cost
+- New `/api/admin-import.js` serverless endpoint (admin-gated)
+- Perplexity prompt template built into the Import tab (copy button included)
+
+---
+
 ## v1.8.1 — 2026-04-08
 
 ### UI cleanup: remove URL tab, dynamic recent chips

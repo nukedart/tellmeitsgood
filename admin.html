@@ -178,6 +178,7 @@
   <button class="tab-btn" data-tab="users">Users</button>
   <button class="tab-btn" data-tab="searches">Searches</button>
   <button class="tab-btn" data-tab="cost">Cost</button>
+  <button class="tab-btn" data-tab="import">Import</button>
 </div>
 
 <div class="page">
@@ -273,6 +274,7 @@
     loading();
     try {
       let data;
+      if (tab === 'import') { renderTab('import', null); return; }
       if (tab === 'overview') data = await api('/api/admin-stats');
       else if (tab === 'products') data = await api(`/api/admin-stats?view=products&page=${_prodPage}&q=${encodeURIComponent(_prodQ)}`);
       else if (tab === 'users')    data = await api('/api/admin-stats?view=users');
@@ -280,6 +282,7 @@
       else if (tab === 'cost')     data = _cache['overview'] || await api('/api/admin-stats');
 
       if (tab !== 'products') _cache[tab] = data; // don't cache paginated products
+      if (tab === 'import') { renderTab(tab, null); return; }
       renderTab(tab, data);
     } catch (err) {
       if (err.message === 'unauthorized') { showGate('forbidden'); return; }
@@ -305,6 +308,7 @@
     if (tab === 'users')     el.innerHTML = renderUsers(d);
     if (tab === 'searches')  el.innerHTML = renderSearches(d);
     if (tab === 'cost')      el.innerHTML = renderCost(d);
+    if (tab === 'import')    el.innerHTML = renderImport();
     attachHandlers(tab, d);
   }
 
@@ -623,6 +627,119 @@
         </div>
         <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Assumes 30% cache miss rate. Pro plan at $9/mo breaks even at ~33 paying users.</p>
       </div>`;
+  }
+
+  // ── Import tab (Perplexity → JSON → save) ───────────────────────
+  function renderImport() {
+    return `
+      <div class="section">
+        <div class="section-title" style="margin-bottom:4px">Import from Perplexity Deep Research</div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6;">
+          Run a Perplexity deep research, paste the output below. Claude will format it into the
+          Triple Filter schema and save it to the products database — no web search API cost.
+        </p>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Perplexity prompt to use</div>
+          <pre id="perplexityPrompt" style="font-family:monospace;font-size:12px;color:var(--text-2);white-space:pre-wrap;line-height:1.6;margin:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;overflow-x:auto;">Research: [PRODUCT NAME]
+
+I need detailed findings for a product quality and ethics audit. Search thoroughly and provide specific evidence with source URLs.
+
+GATE 1 — VALUE & QUALITY
+1. Core performance: How well does it actually work? Professional reviews, owner reports, lab tests.
+2. Build quality & longevity: Durability over time, common failure points, warranty claims.
+3. Price-to-quality ratio: Cost vs comparable alternatives — name specific competitors and price gaps.
+4. Honest product claims: Do marketing claims match real-world performance? Any misleading claims?
+5. Usability & experience: Day-to-day ease of use, learning curve, maintenance burden.
+
+GATE 2 — CLEAN & SAFE
+6. Ingredient safety: Full ingredient list. Flag any EWG Skin Deep scores 7–10. Restricted substances?
+7. Full ingredient disclosure: Are all ingredients disclosed? Any vague terms like "fragrance"?
+8. No greenwashing: Are "natural," "clean," "eco" claims accurate? Any FTC actions?
+9. Safe around kids & pets: Known hazards for sensitive populations.
+10. Packaging honesty: Recycling claims accurate? Misleading sustainability marketing?
+
+GATE 3 — ETHICAL COMPANY
+11. Supply chain transparency: Where is it made? Is the supply chain disclosed?
+12. No major labor violations: Documented worker rights issues, factory audits, living wage.
+13. Honest review practices: Amazon review manipulation, paid reviews, FTC complaints.
+14. No manipulative marketing: Fear-based or misleading tactics, false comparison claims.
+15. Accountability track record: How does the company respond to complaints? BBB rating.
+
+For each criterion provide: your finding, a suggested score (1–10), and the source URL.</pre>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('perplexityPrompt').textContent)" style="margin-top:10px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:6px 14px;cursor:pointer;">Copy prompt</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;">Product name</label>
+            <input id="importProductName" type="text" placeholder="e.g. Blueland dish soap tablets" style="width:100%;font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;outline:none;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;">Perplexity research output</label>
+            <textarea id="importResearchText" rows="14" placeholder="Paste the full Perplexity deep research output here..." style="width:100%;font-family:var(--font-body);font-size:13px;color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;outline:none;resize:vertical;line-height:1.6;"></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button id="importBtn" onclick="runImport()" style="font-family:var(--font-body);font-size:14px;font-weight:600;color:#fff;background:var(--accent);border:none;border-radius:var(--radius-md);padding:12px 28px;cursor:pointer;">Format &amp; Import →</button>
+            <span id="importStatus" style="font-size:13px;color:var(--text-2);"></span>
+          </div>
+        </div>
+
+        <div id="importResult" style="display:none;margin-top:24px;background:var(--success-surf);border:1px solid var(--success);border-radius:var(--radius-lg);padding:20px;">
+          <div style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:10px;">Imported successfully</div>
+          <div id="importResultBody" style="font-size:13px;color:var(--text);line-height:1.6;"></div>
+        </div>
+        <div id="importError" style="display:none;margin-top:24px;background:var(--danger-surf);border:1px solid var(--danger);border-radius:var(--radius-lg);padding:16px;font-size:13px;color:var(--danger);"></div>
+      </div>`;
+  }
+
+  async function runImport() {
+    const productName  = document.getElementById('importProductName')?.value.trim();
+    const researchText = document.getElementById('importResearchText')?.value.trim();
+    const btn          = document.getElementById('importBtn');
+    const status       = document.getElementById('importStatus');
+    const resultBox    = document.getElementById('importResult');
+    const resultBody   = document.getElementById('importResultBody');
+    const errorBox     = document.getElementById('importError');
+
+    if (!productName) { errorBox.style.display='block'; errorBox.textContent='Enter a product name.'; return; }
+    if (!researchText || researchText.length < 100) { errorBox.style.display='block'; errorBox.textContent='Paste the Perplexity research output (needs at least 100 characters).'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Formatting…';
+    status.textContent = 'Claude is converting the research into the Triple Filter schema…';
+    resultBox.style.display = 'none';
+    errorBox.style.display  = 'none';
+
+    try {
+      const r = await fetch('/api/admin-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_session.access_token}` },
+        body: JSON.stringify({ productName, researchText, accessToken: _session.access_token }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || `Server ${r.status}`);
+
+      status.textContent = '';
+      resultBox.style.display = 'block';
+      resultBody.innerHTML = `
+        <div style="margin-bottom:8px;"><strong>Product:</strong> ${esc(data.research?.productName || productName)}</div>
+        <div style="margin-bottom:8px;"><strong>Badge:</strong> ${esc(data.badge || '—')}</div>
+        <div style="margin-bottom:8px;"><strong>Score:</strong> ${data.overallScore ?? '—'}/10</div>
+        <div style="margin-bottom:12px;"><strong>Slug:</strong> <a href="/p/${esc(data.slug)}" target="_blank" style="color:var(--accent)">/p/${esc(data.slug)}</a></div>
+        <div><strong>TL;DR:</strong> ${esc(data.research?.summary?.tldr || '—')}</div>`;
+
+      // Clear the form
+      document.getElementById('importProductName').value = '';
+      document.getElementById('importResearchText').value = '';
+    } catch (err) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = err.message;
+      status.textContent = '';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Format & Import →';
+    }
   }
 
   init();

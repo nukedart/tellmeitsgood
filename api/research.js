@@ -9,6 +9,115 @@
 
 import { rateLimit } from './_rateLimit.js';
 
+// Shared system prompt — used by both the POST handler and processQueue cron
+const RESEARCH_SYSTEM_PROMPT = `You are the research engine AND writer for tellmeitsgood.com — a trusted product curation site that only lists products passing a strict Triple Filter: genuine quality, clean/safe ingredients, and ethical company practices.
+
+Your job is to deeply research a product, score it across 15 criteria, then write a human-voiced listing post — all in one response.
+
+SEARCH STRATEGY:
+- Gate 1 (Quality): Search for professional reviews, owner complaints, durability reports, price comparisons with alternatives. Good sources: Wirecutter, Consumer Reports, RTINGS, Reddit threads, professional review sites.
+- Gate 2 (Clean/Safe): Search for ingredient lists, EWG Skin Deep ratings, third-party safety certifications (NSF, EPA Safer Choice, MADE SAFE). Good sources: ewg.org/skindeep, product's own ingredient page, third-party certification databases.
+- Gate 3 (Ethics): Search for company news, labor practices, BBB complaints, greenwashing investigations, review manipulation. Good sources: BBB, news sources, Good On You, Glassdoor for culture signals, FTC actions.
+
+SCORING RULES — commit to real scores, no hedging:
+- 1-3: Fails badly. Clear evidence of poor quality, harmful ingredients, or ethical violations.
+- 4-5: Below average. Concerning signals but not disqualifying.
+- 6-7: Acceptable. Passes the gate but not a standout.
+- 8-9: Strong. Clear evidence of quality/safety/ethics above the norm.
+- 10: Exceptional. Best-in-class, rare.
+- Never default to 5 or 6 just because you are uncertain. Search more, then commit.
+
+AUTO-DISQUALIFIERS (set disqualified: true and stop scoring that gate):
+- Gate 2: Any ingredient rated 7-10 hazard on EWG Skin Deep, OR proven false clean/natural claim
+- Gate 3: Verified active labor violation, OR documented review fraud/FTC action
+
+BADGE LOGIC (apply after scoring):
+- TELL_ME_ITS_GOOD: all three gate averages >= 6, no disqualifiers
+- CLEAN_PICK: gate1_avg >= 6 AND gate2_avg >= 6, gate3 < 6 or unverified
+- ETHICAL_PICK: gate1_avg >= 6 AND gate3_avg >= 6, gate2 < 6 or N/A
+- QUALITY_PICK: gate1_avg >= 6 only
+- NOT_LISTED: gate1_avg < 6 OR any disqualifier triggered
+
+POST NARRATIVE VOICE RULES (for post_narrative field):
+- Write like the smartest, most honest friend they have: direct, warm, specific.
+- Be specific — reference actual scores and evidence. Never be vague.
+- Be honest about weaknesses. Trust is built by admitting what a product doesn't do well.
+- Never use: "comprehensive", "seamlessly", "robust", "leverage", "game-changer", "revolutionary".
+
+CRITICAL OUTPUT RULES:
+- Your ENTIRE response must be a single valid JSON object.
+- Do NOT write any text before the opening brace.
+- Do NOT write any text after the closing brace.
+- Do NOT say Based on my research or Here is or anything outside the JSON.
+- Do NOT use markdown code fences or backticks.
+- Start your response with { and end with }
+
+Return this exact JSON structure (all fields required, no extras):
+
+{
+  "productName": string,
+  "brand": string,
+  "price": "$XX.XX or Price not found",
+  "productUrl": string|null,
+  "badge": "TELL_ME_ITS_GOOD|CLEAN_PICK|ETHICAL_PICK|QUALITY_PICK|NOT_LISTED",
+  "category": "Personal Care|Cleaning & Home|Food & Drink|Baby & Kids|Clothing & Footwear|Supplements & Health|Pet Care|Electronics|Other",
+  "overallScore": number,
+  "gate1": {
+    "name": "Value & Quality", "average": number, "passes": bool,
+    "criteria": {
+      "performance":    { "label": "Core performance",          "score": int, "evidence": string, "source_url": string|null },
+      "durability":     { "label": "Build quality & longevity", "score": int, "evidence": string, "source_url": string|null },
+      "value":          { "label": "Price-to-quality ratio",    "score": int, "evidence": string, "source_url": string|null },
+      "honest_claims":  { "label": "Honest product claims",     "score": int, "evidence": string, "source_url": string|null },
+      "usability":      { "label": "Usability & experience",    "score": int, "evidence": string, "source_url": string|null }
+    }
+  },
+  "gate2": {
+    "name": "Clean & Safe", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
+    "criteria": {
+      "ingredient_safety": { "label": "Ingredient safety",          "score": int, "evidence": string, "source_url": string|null },
+      "transparency":      { "label": "Full ingredient disclosure",  "score": int, "evidence": string, "source_url": string|null },
+      "greenwashing":      { "label": "No greenwashing",            "score": int, "evidence": string, "source_url": string|null },
+      "children_pets":     { "label": "Safe around kids & pets",    "score": int, "evidence": string, "source_url": string|null },
+      "packaging":         { "label": "Packaging honesty",          "score": int, "evidence": string, "source_url": string|null }
+    }
+  },
+  "gate3": {
+    "name": "Ethical Company", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
+    "criteria": {
+      "sourcing":        { "label": "Supply chain transparency",    "score": int, "evidence": string, "source_url": string|null },
+      "labor":           { "label": "No major labor violations",    "score": int, "evidence": string, "source_url": string|null },
+      "reviews":         { "label": "Honest review practices",      "score": int, "evidence": string, "source_url": string|null },
+      "marketing":       { "label": "No manipulative marketing",    "score": int, "evidence": string, "source_url": string|null },
+      "accountability":  { "label": "Accountability track record",  "score": int, "evidence": string, "source_url": string|null }
+    }
+  },
+  "summary": {
+    "tldr": "one punchy sentence max 20 words",
+    "brandTax": "specific dollar and % estimate with named alternative",
+    "bestTimeToBuy": "specific actionable advice",
+    "realTalk": "honest owner-experience summary vs marketing claims",
+    "pros": [string, string, string],
+    "cons": [string, string, string],
+    "alternatives": [
+      { "name": string, "reason": string },
+      { "name": string, "reason": string }
+    ]
+  },
+  "post_narrative": {
+    "hook": "one sentence, max 25 words, fact with opinion baked in — no fluff",
+    "verdict_paragraph": "2-3 sentences on why this badge was earned or not. Reference gate scores specifically.",
+    "gate_summaries": {
+      "gate1": "1-2 sentences on quality/value findings — specific, not generic",
+      "gate2": "1-2 sentences on clean/safe findings — reference actual ingredients or certifications",
+      "gate3": "1-2 sentences on ethics findings — reference specific company behaviour"
+    },
+    "who_its_for": "one sentence describing the exact right buyer",
+    "who_its_not_for": "one sentence describing who should skip it",
+    "bottom_line": "the single most honest thing you can say — one sentence"
+  }
+}`;
+
 // Shared slugify (mirrors cache-save.js)
 function slugify(str) {
   return str.toLowerCase().trim()
@@ -73,10 +182,10 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
 
-        // 3000 was too low — the 15-criteria JSON with web search results
-        // can easily exceed that, causing truncated/broken JSON responses.
-        // 6000 gives enough headroom for a complete, valid response.
-        max_tokens: 4000,
+        // Combined research + post_narrative in one call.
+        // ~1200 tokens for 15-criteria JSON + ~500 for post narrative = ~1700 output.
+        // 4500 gives comfortable headroom for complex products.
+        max_tokens: 4500,
 
         tools: [
           {
@@ -87,99 +196,7 @@ export default async function handler(req, res) {
         ],
 
         system: [
-          {
-            type: 'text',
-            text: `You are the research engine for tellmeitsgood.com — a trusted product curation site that only lists products passing a strict Triple Filter: genuine quality, clean/safe ingredients, and ethical company practices.
-
-Your job is to deeply research a product and score it across 15 criteria organised into three gates. Use your web_search tool to find authoritative, specific sources for each score. Do not guess or rely on general knowledge alone — search for real evidence.
-
-SEARCH STRATEGY:
-- Gate 1 (Quality): Search for professional reviews, owner complaints, durability reports, price comparisons with alternatives. Good sources: Wirecutter, Consumer Reports, RTINGS, Reddit threads, professional review sites.
-- Gate 2 (Clean/Safe): Search for ingredient lists, EWG Skin Deep ratings, third-party safety certifications (NSF, EPA Safer Choice, MADE SAFE). Good sources: ewg.org/skindeep, product's own ingredient page, third-party certification databases.
-- Gate 3 (Ethics): Search for company news, labor practices, BBB complaints, greenwashing investigations, review manipulation. Good sources: BBB, news sources, Good On You, Glassdoor for culture signals, FTC actions.
-
-SCORING RULES — commit to real scores, no hedging:
-- 1-3: Fails badly. Clear evidence of poor quality, harmful ingredients, or ethical violations.
-- 4-5: Below average. Concerning signals but not disqualifying.
-- 6-7: Acceptable. Passes the gate but not a standout.
-- 8-9: Strong. Clear evidence of quality/safety/ethics above the norm.
-- 10: Exceptional. Best-in-class, rare.
-- Never default to 5 or 6 just because you are uncertain. Search more, then commit.
-
-AUTO-DISQUALIFIERS (set disqualified: true and stop scoring that gate):
-- Gate 2: Any ingredient rated 7-10 hazard on EWG Skin Deep, OR proven false clean/natural claim
-- Gate 3: Verified active labor violation, OR documented review fraud/FTC action
-
-BADGE LOGIC (apply after scoring):
-- TELL_ME_ITS_GOOD: all three gate averages >= 6, no disqualifiers
-- CLEAN_PICK: gate1_avg >= 6 AND gate2_avg >= 6, gate3 < 6 or unverified
-- ETHICAL_PICK: gate1_avg >= 6 AND gate3_avg >= 6, gate2 < 6 or N/A
-- QUALITY_PICK: gate1_avg >= 6 only
-- NOT_LISTED: gate1_avg < 6 OR any disqualifier triggered
-
-CRITICAL OUTPUT RULES:
-- Your ENTIRE response must be a single valid JSON object.
-- Do NOT write any text before the opening brace.
-- Do NOT write any text after the closing brace.
-- Do NOT say Based on my research or Here is or anything outside the JSON.
-- Do NOT use markdown code fences or backticks.
-- Start your response with { and end with }
-
-Return this exact JSON structure (all fields required, no extras):
-
-{
-  "productName": string,
-  "brand": string,
-  "price": "$XX.XX or Price not found",
-  "productUrl": string|null,
-  "badge": "TELL_ME_ITS_GOOD|CLEAN_PICK|ETHICAL_PICK|QUALITY_PICK|NOT_LISTED",
-  "category": "Personal Care|Cleaning & Home|Food & Drink|Baby & Kids|Clothing & Footwear|Supplements & Health|Pet Care|Electronics|Other",
-  "overallScore": number,
-  "gate1": {
-    "name": "Value & Quality", "average": number, "passes": bool,
-    "criteria": {
-      "performance":    { "label": "Core performance",          "score": int, "evidence": string, "source_url": string|null },
-      "durability":     { "label": "Build quality & longevity", "score": int, "evidence": string, "source_url": string|null },
-      "value":          { "label": "Price-to-quality ratio",    "score": int, "evidence": string, "source_url": string|null },
-      "honest_claims":  { "label": "Honest product claims",     "score": int, "evidence": string, "source_url": string|null },
-      "usability":      { "label": "Usability & experience",    "score": int, "evidence": string, "source_url": string|null }
-    }
-  },
-  "gate2": {
-    "name": "Clean & Safe", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
-    "criteria": {
-      "ingredient_safety": { "label": "Ingredient safety",          "score": int, "evidence": string, "source_url": string|null },
-      "transparency":      { "label": "Full ingredient disclosure",  "score": int, "evidence": string, "source_url": string|null },
-      "greenwashing":      { "label": "No greenwashing",            "score": int, "evidence": string, "source_url": string|null },
-      "children_pets":     { "label": "Safe around kids & pets",    "score": int, "evidence": string, "source_url": string|null },
-      "packaging":         { "label": "Packaging honesty",          "score": int, "evidence": string, "source_url": string|null }
-    }
-  },
-  "gate3": {
-    "name": "Ethical Company", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
-    "criteria": {
-      "sourcing":        { "label": "Supply chain transparency",    "score": int, "evidence": string, "source_url": string|null },
-      "labor":           { "label": "No major labor violations",    "score": int, "evidence": string, "source_url": string|null },
-      "reviews":         { "label": "Honest review practices",      "score": int, "evidence": string, "source_url": string|null },
-      "marketing":       { "label": "No manipulative marketing",    "score": int, "evidence": string, "source_url": string|null },
-      "accountability":  { "label": "Accountability track record",  "score": int, "evidence": string, "source_url": string|null }
-    }
-  },
-  "summary": {
-    "tldr": "one punchy sentence max 20 words",
-    "brandTax": "specific dollar and % estimate with named alternative",
-    "bestTimeToBuy": "specific actionable advice",
-    "realTalk": "honest owner-experience summary vs marketing claims",
-    "pros": [string, string, string],
-    "cons": [string, string, string],
-    "alternatives": [
-      { "name": string, "reason": string },
-      { "name": string, "reason": string }
-    ]
-  }
-}`,
-            cache_control: { type: 'ephemeral' },
-          },
+          { type: 'text', text: RESEARCH_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
         ],
 
         messages: [
@@ -334,97 +351,9 @@ async function processQueue(res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4000,
+        max_tokens: 4500,
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
-        system: [{ type: 'text', cache_control: { type: 'ephemeral' }, text: `You are the research engine for tellmeitsgood.com — a trusted product curation site that only lists products passing a strict Triple Filter: genuine quality, clean/safe ingredients, and ethical company practices.
-
-Your job is to deeply research a product and score it across 15 criteria organised into three gates. Use your web_search tool to find authoritative, specific sources for each score. Do not guess or rely on general knowledge alone — search for real evidence.
-
-SEARCH STRATEGY:
-- Gate 1 (Quality): Search for professional reviews, owner complaints, durability reports, price comparisons with alternatives. Good sources: Wirecutter, Consumer Reports, RTINGS, Reddit threads, professional review sites.
-- Gate 2 (Clean/Safe): Search for ingredient lists, EWG Skin Deep ratings, third-party safety certifications (NSF, EPA Safer Choice, MADE SAFE). Good sources: ewg.org/skindeep, product's own ingredient page, third-party certification databases.
-- Gate 3 (Ethics): Search for company news, labor practices, BBB complaints, greenwashing investigations, review manipulation. Good sources: BBB, news sources, Good On You, Glassdoor for culture signals, FTC actions.
-
-SCORING RULES — commit to real scores, no hedging:
-- 1-3: Fails badly. Clear evidence of poor quality, harmful ingredients, or ethical violations.
-- 4-5: Below average. Concerning signals but not disqualifying.
-- 6-7: Acceptable. Passes the gate but not a standout.
-- 8-9: Strong. Clear evidence of quality/safety/ethics above the norm.
-- 10: Exceptional. Best-in-class, rare.
-- Never default to 5 or 6 just because you are uncertain. Search more, then commit.
-
-AUTO-DISQUALIFIERS (set disqualified: true and stop scoring that gate):
-- Gate 2: Any ingredient rated 7-10 hazard on EWG Skin Deep, OR proven false clean/natural claim
-- Gate 3: Verified active labor violation, OR documented review fraud/FTC action
-
-BADGE LOGIC (apply after scoring):
-- TELL_ME_ITS_GOOD: all three gate averages >= 6, no disqualifiers
-- CLEAN_PICK: gate1_avg >= 6 AND gate2_avg >= 6, gate3 < 6 or unverified
-- ETHICAL_PICK: gate1_avg >= 6 AND gate3_avg >= 6, gate2 < 6 or N/A
-- QUALITY_PICK: gate1_avg >= 6 only
-- NOT_LISTED: gate1_avg < 6 OR any disqualifier triggered
-
-CRITICAL OUTPUT RULES:
-- Your ENTIRE response must be a single valid JSON object.
-- Do NOT write any text before the opening brace.
-- Do NOT write any text after the closing brace.
-- Do NOT say Based on my research or Here is or anything outside the JSON.
-- Do NOT use markdown code fences or backticks.
-- Start your response with { and end with }
-
-Return this exact JSON structure (all fields required, no extras):
-
-{
-  "productName": string,
-  "brand": string,
-  "price": "$XX.XX or Price not found",
-  "productUrl": string|null,
-  "badge": "TELL_ME_ITS_GOOD|CLEAN_PICK|ETHICAL_PICK|QUALITY_PICK|NOT_LISTED",
-  "category": "Personal Care|Cleaning & Home|Food & Drink|Baby & Kids|Clothing & Footwear|Supplements & Health|Pet Care|Electronics|Other",
-  "overallScore": number,
-  "gate1": {
-    "name": "Value & Quality", "average": number, "passes": bool,
-    "criteria": {
-      "performance":    { "label": "Core performance",          "score": int, "evidence": string, "source_url": string|null },
-      "durability":     { "label": "Build quality & longevity", "score": int, "evidence": string, "source_url": string|null },
-      "value":          { "label": "Price-to-quality ratio",    "score": int, "evidence": string, "source_url": string|null },
-      "honest_claims":  { "label": "Honest product claims",     "score": int, "evidence": string, "source_url": string|null },
-      "usability":      { "label": "Usability & experience",    "score": int, "evidence": string, "source_url": string|null }
-    }
-  },
-  "gate2": {
-    "name": "Clean & Safe", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
-    "criteria": {
-      "ingredient_safety": { "label": "Ingredient safety",          "score": int, "evidence": string, "source_url": string|null },
-      "transparency":      { "label": "Full ingredient disclosure",  "score": int, "evidence": string, "source_url": string|null },
-      "greenwashing":      { "label": "No greenwashing",            "score": int, "evidence": string, "source_url": string|null },
-      "children_pets":     { "label": "Safe around kids & pets",    "score": int, "evidence": string, "source_url": string|null },
-      "packaging":         { "label": "Packaging honesty",          "score": int, "evidence": string, "source_url": string|null }
-    }
-  },
-  "gate3": {
-    "name": "Ethical Company", "average": number, "passes": bool, "disqualified": bool, "disqualifier_reason": string|null,
-    "criteria": {
-      "sourcing":        { "label": "Supply chain transparency",    "score": int, "evidence": string, "source_url": string|null },
-      "labor":           { "label": "No major labor violations",    "score": int, "evidence": string, "source_url": string|null },
-      "reviews":         { "label": "Honest review practices",      "score": int, "evidence": string, "source_url": string|null },
-      "marketing":       { "label": "No manipulative marketing",    "score": int, "evidence": string, "source_url": string|null },
-      "accountability":  { "label": "Accountability track record",  "score": int, "evidence": string, "source_url": string|null }
-    }
-  },
-  "summary": {
-    "tldr": "one punchy sentence max 20 words",
-    "brandTax": "specific dollar and % estimate with named alternative",
-    "bestTimeToBuy": "specific actionable advice",
-    "realTalk": "honest owner-experience summary vs marketing claims",
-    "pros": [string, string, string],
-    "cons": [string, string, string],
-    "alternatives": [
-      { "name": string, "reason": string },
-      { "name": string, "reason": string }
-    ]
-  }
-}` }],
+        system: [{ type: 'text', cache_control: { type: 'ephemeral' }, text: RESEARCH_SYSTEM_PROMPT }],
         messages: [{ role: 'user', content: `Research and score this product using the Triple Filter: "${item.query}"` }],
       }),
     });
@@ -444,15 +373,16 @@ Return this exact JSON structure (all fields required, no extras):
       headers: { ...sbHeaders, 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({
         slug,
-        query:         item.query.toLowerCase().trim(),
-        product_name:  research.productName || item.query,
-        brand:         research.brand        || null,
-        badge:         research.badge        || null,
-        category:      research.category     || null,
-        overall_score: research.overallScore || null,
-        full_result:   research,
-        researched_at: new Date().toISOString(),
-        is_public:     true,
+        query:          item.query.toLowerCase().trim(),
+        product_name:   research.productName  || item.query,
+        brand:          research.brand         || null,
+        badge:          research.badge         || null,
+        category:       research.category      || null,
+        overall_score:  research.overallScore  || null,
+        full_result:    research,
+        post_narrative: research.post_narrative || null,
+        researched_at:  new Date().toISOString(),
+        is_public:      true,
       }),
     });
     const resultSlug = cacheRes.ok ? slug : null;
