@@ -204,16 +204,11 @@
     /* ── Input card ── */
     .input-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px 16px; box-shadow: var(--shadow-md); margin-bottom: 20px; }
     @media (min-width: 520px) { .input-card { padding: 28px; } }
-    .input-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius-md); padding: 4px; margin-bottom: 20px; }
-    .input-tab { flex: 1; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent; border: none; border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; transition: all .15s; text-align: center; }
-    .input-tab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
     .input-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; letter-spacing: .02em; }
-    .url-input, .query-input { width: 100%; font-family: var(--font-body); font-size: 15px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; outline: none; transition: border-color .15s, box-shadow .15s, background .25s; line-height: 1.5; }
-    @media (max-width: 480px) { .url-input, .query-input { font-size: 16px; } }
-    .url-input::placeholder, .query-input::placeholder { color: var(--text-3); }
-    .url-input:focus, .query-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); background: var(--card); }
-    .input-panel { display: none; }
-    .input-panel.active { display: block; }
+    .query-input { width: 100%; font-family: var(--font-body); font-size: 15px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; outline: none; transition: border-color .15s, box-shadow .15s, background .25s; line-height: 1.5; }
+    @media (max-width: 480px) { .query-input { font-size: 16px; } }
+    .query-input::placeholder { color: var(--text-3); }
+    .query-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); background: var(--card); }
     .input-actions { display: flex; align-items: center; justify-content: center; margin-top: 18px; }
 
     /* ── Buttons ── */
@@ -237,12 +232,6 @@
     .error-msg { display: none; background: var(--danger-surf); border: 1px solid var(--danger); border-radius: var(--radius-md); padding: 14px 16px; font-size: 13px; color: var(--danger); margin-top: 12px; line-height: 1.5; }
     .error-msg.visible { display: block; }
 
-    /* ── Fallback ── */
-    .fallback-section { display: none; margin-top: 16px; }
-    .fallback-section.visible { display: block; }
-    .fallback-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; display: block; }
-    .fallback-textarea { width: 100%; font-family: var(--font-body); font-size: 15px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; resize: none; outline: none; transition: border-color .15s, box-shadow .15s; line-height: 1.5; }
-    .fallback-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-surf); }
 
     /* ── Autocomplete ── */
     .autocomplete-wrap { position: relative; }
@@ -583,24 +572,12 @@
     <div id="inputSection">
 
       <div class="input-card" id="inputCard">
-        <div class="input-tabs">
-          <button class="input-tab active" id="tabName" onclick="switchTab('name')">Search by name</button>
-          <button class="input-tab" id="tabUrl" onclick="switchTab('url')">Paste a link</button>
-        </div>
-        <div class="input-panel active" id="panelName">
+        <div id="panelName">
           <label class="input-label" for="queryInput">Product name or brand</label>
           <div class="autocomplete-wrap">
             <input type="text" id="queryInput" class="query-input" placeholder="e.g. Seventh Generation dish soap" autocomplete="off" spellcheck="false" />
             <div id="autocompleteList" class="autocomplete-list" role="listbox"></div>
           </div>
-        </div>
-        <div class="input-panel" id="panelUrl">
-          <label class="input-label" for="urlInput">Product URL</label>
-          <input type="url" id="urlInput" class="url-input" placeholder="https://www.bestbuy.com/..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-        </div>
-        <div class="fallback-section" id="fallbackSection">
-          <label class="fallback-label" for="fallbackInput">Or paste the product name and price manually:</label>
-          <textarea id="fallbackInput" class="fallback-textarea" rows="3" maxlength="800" placeholder="e.g. Blueland dish soap tablets, $14, plant-based..."></textarea>
         </div>
         <div class="error-msg" id="errorMsg"></div>
         <div class="input-actions">
@@ -614,15 +591,8 @@
         </div>
       </div>
 
-      <p class="examples-hint">People are researching right now:</p>
-      <div class="examples" id="exampleChips">
-        <span class="example-chip" onclick="fillExample('name', 'Allbirds Tree Runners')">Allbirds shoes</span>
-        <span class="example-chip" onclick="fillExample('name', 'Blueland dish soap tablets')">Blueland dish soap</span>
-        <span class="example-chip" onclick="fillExample('name', 'Patagonia Better Sweater fleece')">Patagonia fleece</span>
-        <span class="example-chip" onclick="fillExample('name', 'Pela iPhone case')">Pela phone case</span>
-        <span class="example-chip" onclick="fillExample('name', 'Seventh Generation laundry detergent')">Seventh Generation</span>
-        <span class="example-chip" onclick="fillExample('name', 'Dr. Bronners castile soap')">Dr. Bronner's soap</span>
-      </div>
+      <p class="examples-hint" id="examplesHint">People are researching right now:</p>
+      <div class="examples" id="exampleChips"></div>
 
       <!-- Paywall banner — shown below input when free limit reached -->
       <div class="paywall-banner" id="paywallBanner">
@@ -781,7 +751,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.1</p>
     </footer>
   </div>
 
@@ -832,8 +802,6 @@
     // ── current session state ──
     let currentUser    = null;  // Supabase user object or null
     let currentUserPro = false; // whether they're a Pro subscriber
-    let activeTab      = 'name';
-    let usingFallback  = false;
 
     // ── cache state ──
     let currentSlug        = null;  // slug of the currently displayed result
@@ -1040,6 +1008,9 @@
         right.appendChild(dirLink);
         right.appendChild(signInBtn);
       }
+
+      // Refresh chips whenever auth state changes (sign-in, sign-out)
+      renderExampleChips();
     }
 
     // ============================================================
@@ -1290,6 +1261,8 @@
           const confirm = document.getElementById('saveConfirm');
           confirm.classList.add('visible');
           setTimeout(() => confirm.classList.remove('visible'), 3000);
+          // Refresh chips so the new search appears
+          renderExampleChips();
         }
       } catch (err) {
         console.error('Save search error:', err); // non-fatal
@@ -1839,22 +1812,9 @@
     // APP LOGIC (input, search, display)
     // ============================================================
 
-    function switchTab(tab) {
-      activeTab = tab;
-      document.getElementById('tabName').classList.toggle('active', tab === 'name');
-      document.getElementById('tabUrl').classList.toggle('active', tab === 'url');
-      document.getElementById('panelName').classList.toggle('active', tab === 'name');
-      document.getElementById('panelUrl').classList.toggle('active', tab === 'url');
-      hideError();
-      hideFallback();
-      usingFallback = false;
-    }
-
     function fillExample(type, value) {
-      switchTab(type);
-      const el = type === 'url' ? 'urlInput' : 'queryInput';
-      document.getElementById(el).value = value;
-      document.getElementById(el).focus();
+      document.getElementById('queryInput').value = value;
+      document.getElementById('queryInput').focus();
     }
 
     async function handleSubmit() {
@@ -1866,94 +1826,46 @@
         return;
       }
 
-      if (usingFallback) {
-        const txt = document.getElementById('fallbackInput').value.trim();
-        if (!txt || txt.length < 10) {
-          showError('Describe the product a bit more so we can give you a useful verdict.');
-          return;
-        }
-        // Fallback path still needs server-side limit check
-        if (!currentUserPro) {
-          const limit = await checkServerLimit();
-          if (!limit.allowed) { incrementUsage(); updatePaywall(); return; }
-        }
-        await runResearch({ productData: txt });
+      const q = document.getElementById('queryInput').value.trim();
+      if (!q || q.length < 3) { showError('Enter a product name or brand to search.'); return; }
 
-      } else if (activeTab === 'name') {
-        const q = document.getElementById('queryInput').value.trim();
-        if (!q || q.length < 3) { showError('Enter a product name or brand to search.'); return; }
+      currentSearchQuery = q;
+      showLoading('Checking our research database...', 'Looking for a recent result');
 
-        currentSearchQuery = q;
-        showLoading('Checking our research database...', 'Looking for a recent result');
+      // Run limit check and cache lookup in parallel — saves one full round-trip
+      const [limitCheck, cached] = await Promise.all([
+        currentUserPro ? Promise.resolve({ allowed: true }) : checkServerLimit(),
+        checkCache(q),
+      ]);
 
-        // Run limit check and cache lookup in parallel — saves one full round-trip
-        const [limitCheck, cached] = await Promise.all([
-          currentUserPro ? Promise.resolve({ allowed: true }) : checkServerLimit(),
-          checkCache(q),
-        ]);
-
-        if (!limitCheck.allowed) {
-          hideLoading();
-          incrementUsage(); // sync local state so UI shows exhausted
-          updatePaywall();
-          document.getElementById('inputSection').style.display = 'block';
-          return;
-        }
-
-        if (cached.hit) {
-          // We have a result — use it (fresh or stale)
-          if (!currentUser) { incrementUsage(); updateAuthBar(); updatePaywall(); }
-          currentSlug = cached.slug;
-          displayResearch(cached.data);
-          showCacheStrip(cached.daysOld, cached.slug, !cached.fresh);
-          saveSearch(cached.data);
-          if (cached.post_narrative) {
-            // Cached post — display instantly, no API call needed
-            displayPost(cached.post_narrative);
-          } else {
-            showPostLoading();
-            await runPost(cached.data);
-          }
-          return;
-        }
-
-        // ── No cache — run fresh research ──
-        showLoading('Researching ' + q + '...', 'Claude is searching reviews, ingredients, and company records');
-        await runResearch({ query: q });
-
-      } else {
-        const url = document.getElementById('urlInput').value.trim();
-        if (!url) { showError('Paste a full product link starting with https://'); return; }
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          showError('Paste a full product link starting with https://'); return;
-        }
-        // URL path: check server limit before burning a scrape
-        if (!currentUserPro) {
-          const limit = await checkServerLimit();
-          if (!limit.allowed) { incrementUsage(); updatePaywall(); return; }
-        }
-
-        showLoading('Reading the product page...', 'Fetching details from the URL');
-        let scraped;
-        try {
-          scraped = await scrapeUrl(url);
-        } catch (err) {
-          hideLoading();
-          showError('This site blocked us. Try the "Search by name" tab instead.');
-          showFallback();
-          return;
-        }
-
-        showLoading('Running the Triple Filter...', 'Claude is searching reviews, ingredients, and company records — this takes ~30 seconds');
-        await runResearch({ productData: scraped.productData, sourceUrl: scraped.sourceUrl });
+      if (!limitCheck.allowed) {
+        hideLoading();
+        incrementUsage(); // sync local state so UI shows exhausted
+        updatePaywall();
+        document.getElementById('inputSection').style.display = 'block';
+        return;
       }
-    }
 
-    async function scrapeUrl(url) {
-      const res  = await fetch('/api/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || 'Scraping failed');
-      return data;
+      if (cached.hit) {
+        // We have a result — use it (fresh or stale)
+        if (!currentUser) { incrementUsage(); updateAuthBar(); updatePaywall(); }
+        currentSlug = cached.slug;
+        displayResearch(cached.data);
+        showCacheStrip(cached.daysOld, cached.slug, !cached.fresh);
+        saveSearch(cached.data);
+        if (cached.post_narrative) {
+          // Cached post — display instantly, no API call needed
+          displayPost(cached.post_narrative);
+        } else {
+          showPostLoading();
+          await runPost(cached.data);
+        }
+        return;
+      }
+
+      // ── No cache — run fresh research ──
+      showLoading('Researching ' + q + '...', 'Claude is searching reviews, ingredients, and company records');
+      await runResearch({ query: q });
     }
 
     async function runResearch(payload) {
@@ -2196,17 +2108,12 @@
       document.getElementById('postLoading').classList.remove('visible');
       document.getElementById('criteriaSection').innerHTML = '';
       document.getElementById('inputSection').style.display = 'block';
-      document.getElementById('urlInput').value = '';
       document.getElementById('queryInput').value = '';
-      document.getElementById('fallbackInput').value = '';
       ['gate1Bar','gate2Bar','gate3Bar'].forEach(id => document.getElementById(id).style.width = '0%');
-      hideCacheStrip(); hideError(); hideFallback(); usingFallback = false; currentSearchQuery = null;
-      switchTab('name');
+      hideCacheStrip(); hideError(); currentSearchQuery = null;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function showFallback() { usingFallback = true; document.getElementById('fallbackSection').classList.add('visible'); document.getElementById('fallbackInput').focus(); }
-    function hideFallback() { usingFallback = false; document.getElementById('fallbackSection').classList.remove('visible'); }
 
     function showLoading(text, sub) {
       document.getElementById('loadingText').textContent    = text || 'Researching...';
@@ -2256,7 +2163,6 @@
     function showError(msg) { const el = document.getElementById('errorMsg'); el.textContent = msg; el.classList.add('visible'); document.getElementById('inputSection').style.display = 'block'; }
     function hideError() { document.getElementById('errorMsg').classList.remove('visible'); }
 
-    document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
     document.getElementById('queryInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
 
     // ============================================================
@@ -2339,17 +2245,7 @@
       // Give the normal handler a tick, then start animation
       setTimeout(() => {
         if (document.getElementById('loadingState').classList.contains('visible')) {
-          // If we're in URL mode, start with scrape messages
-          const isUrlMode = document.getElementById('tabUrl').classList.contains('active');
-          startLoadingMessages(isUrlMode ? 'scrape' : 'research');
-          // Switch to research messages after ~6s (scraping completes), advance to step 2
-          if (isUrlMode) {
-            setTimeout(() => {
-              if (document.getElementById('loadingState').classList.contains('visible')) {
-                startLoadingMessages('research', 2);
-              }
-            }, 6000);
-          }
+          startLoadingMessages('research');
         }
       }, 100);
     }, true); // capture phase so it fires before onclick
@@ -2406,41 +2302,82 @@
     }
 
     // ============================================================
-    // ROTATING EXAMPLE CHIPS
-    // Shows 4 random chips from a larger pool each visit/search
+    // EXAMPLE / RECENT CHIPS
+    // Logged-in users: show their last 5 searched products.
+    // Guests: show 5 random chips from the static pool.
     // ============================================================
     const EXAMPLE_POOL = [
-      { type: 'name', label: 'Allbirds shoes',            value: 'Allbirds Tree Runners' },
-      { type: 'name', label: 'Blueland dish soap',        value: 'Blueland dish soap tablets' },
-      { type: 'name', label: 'Patagonia fleece',          value: 'Patagonia Better Sweater fleece' },
-      { type: 'name', label: 'Pela phone case',           value: 'Pela eco-friendly iPhone case' },
-      { type: 'name', label: 'Seventh Generation',        value: 'Seventh Generation laundry detergent' },
-      { type: 'name', label: "Dr. Bronner's soap",        value: "Dr. Bronner's castile soap" },
-      { type: 'name', label: "Burt's Bees lip balm",    value: "Burt's Bees beeswax lip balm" },
-      { type: 'name', label: 'Hydro Flask bottle',        value: 'Hydro Flask 32oz water bottle' },
-      { type: 'name', label: 'Grove Co. cleaner',         value: 'Grove Collaborative multi-surface spray' },
-      { type: 'name', label: 'Bombas socks',              value: 'Bombas ankle socks' },
-      { type: 'name', label: 'Sonos speaker',             value: 'Sonos Era 100 speaker' },
-      { type: 'name', label: 'Stanley tumbler',           value: 'Stanley Quencher 40oz tumbler' },
-      { type: 'name', label: 'EWG Verified sunscreen',    value: 'Badger Sport sunscreen SPF 40' },
-      { type: 'name', label: 'Cotopaxi backpack',         value: 'Cotopaxi Allpa 35L backpack' },
+      { label: 'Allbirds shoes',         value: 'Allbirds Tree Runners' },
+      { label: 'Blueland dish soap',     value: 'Blueland dish soap tablets' },
+      { label: 'Patagonia fleece',       value: 'Patagonia Better Sweater fleece' },
+      { label: 'Pela phone case',        value: 'Pela eco-friendly iPhone case' },
+      { label: 'Seventh Generation',     value: 'Seventh Generation laundry detergent' },
+      { label: "Dr. Bronner's soap",     value: "Dr. Bronner's castile soap" },
+      { label: "Burt's Bees lip balm",   value: "Burt's Bees beeswax lip balm" },
+      { label: 'Hydro Flask bottle',     value: 'Hydro Flask 32oz water bottle' },
+      { label: 'Grove Co. cleaner',      value: 'Grove Collaborative multi-surface spray' },
+      { label: 'Bombas socks',           value: 'Bombas ankle socks' },
+      { label: 'Sonos speaker',          value: 'Sonos Era 100 speaker' },
+      { label: 'Stanley tumbler',        value: 'Stanley Quencher 40oz tumbler' },
+      { label: 'EWG Verified sunscreen', value: 'Badger Sport sunscreen SPF 40' },
+      { label: 'Cotopaxi backpack',      value: 'Cotopaxi Allpa 35L backpack' },
     ];
 
-    function rotateExampleChips() {
+    function _renderStaticChips() {
       const container = document.getElementById('exampleChips');
+      const hint = document.getElementById('examplesHint');
       if (!container) return;
-
-      // Pick 5 random chips without repeating
+      hint.textContent = 'People are researching right now:';
       const shuffled = [...EXAMPLE_POOL].sort(() => Math.random() - 0.5).slice(0, 5);
-      container.innerHTML = shuffled.map(chip => `
-        <span class="example-chip" onclick="fillExample('${chip.type}', '${chip.value.replace(/'/g, "\'")}')">
-          ${chip.label}
-        </span>
-      `).join('');
+      container.innerHTML = shuffled.map(chip =>
+        `<span class="example-chip" onclick="fillExample('name', '${chip.value.replace(/'/g, "\\'")}')">${chip.label}</span>`
+      ).join('');
     }
 
-    // Rotate on page load
-    rotateExampleChips();
+    async function renderExampleChips() {
+      const container = document.getElementById('exampleChips');
+      const hint = document.getElementById('examplesHint');
+      if (!container) return;
+
+      if (!currentUser) {
+        _renderStaticChips();
+        return;
+      }
+
+      // Logged-in: try to fetch recent searches
+      try {
+        // Use _hlCache if already loaded, otherwise fetch lightweight list
+        let rows = _hlCache?.userId === currentUser.id ? _hlCache.data : null;
+        if (!rows) {
+          const { data } = await supabaseClient
+            .from('searches')
+            .select('product_name')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+          rows = data || [];
+        }
+
+        if (!rows.length) {
+          _renderStaticChips();
+          return;
+        }
+
+        hint.textContent = 'Your recent searches:';
+        container.innerHTML = rows.map(row => {
+          const name = row.product_name || 'Unknown';
+          const safe = name.replace(/'/g, "\\'");
+          // Truncate label to keep chips tidy
+          const label = name.length > 28 ? name.slice(0, 26) + '…' : name;
+          return `<span class="example-chip" onclick="fillExample('name', '${safe}')">${escapeHtml(label)}</span>`;
+        }).join('');
+      } catch {
+        _renderStaticChips();
+      }
+    }
+
+    // Initial render (user not yet known — shows static chips)
+    _renderStaticChips();
 
   </script>
 </body>

@@ -5,6 +5,16 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.1 — 2026-04-08
+
+### UI cleanup: remove URL tab, dynamic recent chips
+
+- Removed "Paste a link" URL tab, URL panel, fallback textarea, and all scraping-path JS — name search is the only input mode now
+- Example chips below the search box now show a logged-in user's last 5 searches; guests see rotating static examples
+- Chips refresh automatically after sign-in/sign-out and after each new search is saved
+
+---
+
 ## v1.8.0 — 2026-04-07
 
 ### Phase 2: True Async Research Queue
