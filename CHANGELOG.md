@@ -5,6 +5,17 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.3 — 2026-04-08
+
+### Fix: admin→root logout + admin toggle button
+
+- **Bug fix:** admin.html now uses the same `_authStorage` adapter as index.html, preventing session key mismatch that caused apparent sign-out on navigation back to root
+- **Bug fix:** `stopAutoRefresh()` called on `beforeunload` in admin.html so index.html's Supabase client can acquire the navigator.locks lock cleanly
+- Admin toggle button: after visiting `/admin`, an "Admin" link appears in the index.html auth bar (stored in sessionStorage, no extra network call needed); cleared on sign-out
+- Upgraded admin top bar "Home" link to a prominent "← View site" button
+
+---
+
 ## v1.8.2 — 2026-04-08
 
 ### Claude optimization + Perplexity admin import

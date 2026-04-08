@@ -168,7 +168,7 @@
   <div class="top-bar-right">
     <span class="top-bar-badge">Admin</span>
     <a class="top-bar-link" href="/directory">Directory</a>
-    <a class="top-bar-link" href="/">Home</a>
+    <a href="/" style="font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:6px 14px;text-decoration:none;white-space:nowrap;">← View site</a>
   </div>
 </div>
 
@@ -194,10 +194,23 @@
   const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-  // Use default Supabase client — no custom lock (was buggy, removed in v1.3.4)
+  // Same storage adapter as index.html — prevents session key mismatch
+  // when navigating between pages (was causing apparent logout on return).
+  const _authStorage = (() => {
+    const k = '_sb_probe_';
+    try { localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch {}
+    try { sessionStorage.setItem(k, '1'); sessionStorage.removeItem(k); return sessionStorage; } catch {}
+    const _m = new Map();
+    return { getItem: k => _m.get(k) ?? null, setItem: (k,v) => _m.set(k,v), removeItem: k => _m.delete(k) };
+  })();
+
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, broadcastAuthEvents: false },
+    auth: { persistSession: true, autoRefreshToken: true, broadcastAuthEvents: false, storage: _authStorage },
   });
+
+  // Release the auto-refresh lock before navigating away so index.html's
+  // Supabase client can acquire it cleanly (prevents apparent sign-out).
+  window.addEventListener('beforeunload', () => supabaseClient.auth.stopAutoRefresh());
 
   let _session  = null;
   let _tab      = 'overview';
@@ -247,6 +260,9 @@
     if (!session) { showGate('not-signed-in'); return; }
     _session = session;
     supabaseClient.auth.onAuthStateChange((ev, s) => { if (s) _session = s; });
+    // Signal to index.html that this user has admin access so it can show
+    // the Admin button in the auth bar without an extra network request.
+    try { sessionStorage.setItem('_isAdmin', '1'); } catch {}
     setupTabs();
     loadTab('overview');
   }

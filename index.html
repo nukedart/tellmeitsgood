@@ -751,7 +751,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.2</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.3</p>
     </footer>
   </div>
 
@@ -970,6 +970,16 @@
         dirLink.href = '/directory';
         dirLink.textContent = 'Browse directory';
         left.appendChild(dirLink);
+
+        // Admin link — only shown to users who have successfully loaded /admin
+        if (sessionStorage.getItem('_isAdmin') === '1') {
+          const adminLink = document.createElement('a');
+          adminLink.className = 'auth-bar-dir-link';
+          adminLink.href = '/admin';
+          adminLink.textContent = 'Admin';
+          adminLink.style.cssText = 'color:var(--danger);font-weight:700;';
+          left.appendChild(adminLink);
+        }
 
         // Gear icon — opens settings modal
         const gearBtn = document.createElement('button');
@@ -1669,6 +1679,7 @@
     // SIGN OUT
     // ============================================================
     async function handleSignOut() {
+      try { sessionStorage.removeItem('_isAdmin'); } catch {}
       await supabaseClient.auth.signOut();
       closeModal('settingsModal');
     }
