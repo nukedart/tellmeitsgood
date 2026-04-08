@@ -751,7 +751,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.3</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.4</p>
     </footer>
   </div>
 
@@ -800,8 +800,9 @@
     const PRO_LIMIT  = 25; // shown in UI only — actual limit in _rateLimit.js
 
     // ── current session state ──
-    let currentUser    = null;  // Supabase user object or null
-    let currentUserPro = false; // whether they're a Pro subscriber
+    let currentUser      = null;  // Supabase user object or null
+    let currentUserPro   = false; // whether they're a Pro subscriber
+    let currentUserAdmin = false; // whether they're the site admin
 
     // ── cache state ──
     let currentSlug        = null;  // slug of the currently displayed result
@@ -875,6 +876,7 @@
         closeModal('authModal');
         currentUser = session.user;
         await checkProStatus();
+        checkAdminStatus().then(() => updateAuthBar()); // non-blocking
         updateAuthBar();
         updatePaywall();
         return;
@@ -904,8 +906,9 @@
           }
         } catch { /* fall through to sign-out */ }
         _hlCache = null; _savedCache = null; window._hiItems = {};
-        currentUser    = null;
-        currentUserPro = false;
+        currentUser      = null;
+        currentUserPro   = false;
+        currentUserAdmin = false;
         updateAuthBar();
         updatePaywall();
         return;
@@ -916,6 +919,7 @@
         if (session?.user) {
           currentUser = session.user;
           await checkProStatus();
+          checkAdminStatus().then(() => updateAuthBar()); // non-blocking
         }
         updateAuthBar();
         updatePaywall();
@@ -926,18 +930,33 @@
     // ============================================================
     // CHECK PRO STATUS
     // ============================================================
-    // Reads the user's profile from Supabase to see if is_pro = true.
-    // We use a profiles table for this (set up in Supabase).
     async function checkProStatus() {
       if (!currentUser) { currentUserPro = false; return; }
       try {
-        const { data, error } = await supabaseClient
+        const { data } = await supabaseClient
           .from('profiles')
           .select('is_pro')
           .eq('id', currentUser.id)
           .single();
         currentUserPro = data?.is_pro === true;
       } catch { currentUserPro = false; }
+    }
+
+    // ============================================================
+    // CHECK ADMIN STATUS
+    // ============================================================
+    // Pings /api/admin-stats?view=ping — returns 200 for admin, 403 otherwise.
+    // Fire-and-forget; never blocks the page render.
+    async function checkAdminStatus() {
+      if (!currentUser) { currentUserAdmin = false; return; }
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) { currentUserAdmin = false; return; }
+        const r = await fetch('/api/admin-stats?view=ping', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        });
+        currentUserAdmin = r.ok;
+      } catch { currentUserAdmin = false; }
     }
 
     // ============================================================
@@ -971,8 +990,8 @@
         dirLink.textContent = 'Browse directory';
         left.appendChild(dirLink);
 
-        // Admin link — only shown to users who have successfully loaded /admin
-        if (sessionStorage.getItem('_isAdmin') === '1') {
+        // Admin link — only shown after checkAdminStatus() confirms access
+        if (currentUserAdmin) {
           const adminLink = document.createElement('a');
           adminLink.className = 'auth-bar-dir-link';
           adminLink.href = '/admin';

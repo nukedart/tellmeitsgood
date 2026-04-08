@@ -116,6 +116,11 @@ export default async function handler(req, res) {
 
     const view = req.query?.view;
 
+    // ── PING — lightweight admin check (no Supabase queries) ──
+    if (view === 'ping') {
+      return res.json({ ok: true });
+    }
+
     // ── PRODUCTS view ──────────────────────────────────────────
     if (view === 'products') {
       const page   = Math.max(0, parseInt(req.query?.page || '0'));
