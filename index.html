@@ -128,13 +128,33 @@
     .auth-link-btn:hover { color: var(--accent); }
 
     /* ── Pro upgrade modal ── */
-    .pro-modal-icon { font-size: 36px; margin-bottom: 16px; text-align: center; }
-    .pro-feature-list { list-style: none; margin: 20px 0 24px; display: flex; flex-direction: column; gap: 10px; }
-    .pro-feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text); line-height: 1.4; }
+    .pro-modal-icon { font-size: 32px; margin-bottom: 12px; text-align: center; }
+    .pro-feature-list { list-style: none; margin: 16px 0 20px; display: flex; flex-direction: column; gap: 8px; }
+    .pro-feature-list li { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; color: var(--text-2); line-height: 1.4; }
     .pro-feature-list li::before { content: '✓'; color: var(--pro); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-    .pro-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 20px; }
-    .pro-price { font-family: var(--font-display); font-size: 36px; color: var(--text); }
-    .pro-price-period { font-size: 14px; color: var(--text-3); }
+
+    /* Pricing cards */
+    .pricing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 18px; }
+    .pricing-card {
+      font-family: var(--font-body); text-align: center; background: var(--surface);
+      border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 16px 12px;
+      cursor: pointer; transition: all .15s; position: relative;
+    }
+    .pricing-card:hover { border-color: var(--pro); }
+    .pricing-card.selected { background: var(--pro-surf); border-color: var(--pro); }
+    .pricing-card-badge {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      background: var(--pro); color: #fff; padding: 2px 10px; border-radius: 100px;
+      white-space: nowrap;
+    }
+    .pricing-card-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .pricing-card.selected .pricing-card-label { color: var(--pro); }
+    .pricing-card-price { font-family: var(--font-display); font-size: 30px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+    .pricing-card-price span { font-family: var(--font-body); font-size: 14px; font-weight: 400; color: var(--text-3); }
+    .pricing-card-sub { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+    .pricing-card.selected .pricing-card-sub { color: var(--pro); font-weight: 600; }
+
     .pro-cta-btn { width: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 15px; font-weight: 600; color: #fff; background: var(--pro); border: none; border-radius: var(--radius-md); height: 48px; cursor: pointer; transition: all .15s; margin-bottom: 10px; }
     .pro-cta-btn:hover { background: #6D28D9; box-shadow: 0 4px 16px rgba(124,58,237,.3); }
     .pro-later-btn { width: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 13px; color: var(--text-3); background: none; border: none; cursor: pointer; padding: 8px; transition: color .15s; }
@@ -367,11 +387,6 @@
     .criteria-gate-btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--pro); border: none; border-radius: var(--radius-md); padding: 11px 24px; cursor: pointer; transition: background .15s; }
     .criteria-gate-btn:hover { background: #6D28D9; }
 
-    /* ── Billing toggle ── */
-    .pro-billing-toggle { display: flex; background: var(--surface); border-radius: var(--radius-md); padding: 3px; gap: 3px; margin: 16px 0 8px; }
-    .billing-opt { flex: 1; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-2); background: none; border: none; border-radius: calc(var(--radius-md) - 2px); padding: 7px 8px; cursor: pointer; transition: all .15s; }
-    .billing-opt.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); font-weight: 600; }
-    .billing-save { background: var(--success-surf); color: var(--success); font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; margin-left: 4px; letter-spacing: .03em; }
 
     /* ── Notify-me toggle ── */
     .notify-me-wrap { margin-top: 10px; text-align: center; }
@@ -515,24 +530,28 @@
       <button class="modal-close" onclick="closeModal('proModal')">×</button>
       <div class="pro-modal-icon">⭐</div>
       <div class="modal-title">Go Pro</div>
-      <p class="modal-subtitle">See the full evidence behind every verdict — every score, source, and criterion unlocked.</p>
+      <p class="modal-subtitle">Every score, source, and criterion — fully unlocked.</p>
       <ul class="pro-feature-list">
-        <li><strong>Full breakdown</strong> — all 15 scored criteria with evidence &amp; sources</li>
-        <li><strong>25 deep researches/day</strong> — vs 3 on free</li>
-        <li><strong>Full search history</strong> — every verdict saved</li>
-        <li><strong>Fresh research</strong> — re-run any cached product on demand</li>
-        <li><strong>Email notifications</strong> — submit and get notified when done</li>
+        <li>25 deep researches per day</li>
+        <li>All 15 scored criteria with evidence &amp; sources</li>
+        <li>Complete search history &amp; saved products</li>
+        <li>Re-run any cached result for fresh research</li>
+        <li>Email notifications when research completes</li>
       </ul>
-      <div class="pro-billing-toggle">
-        <button class="billing-opt active" id="billingMonthly" onclick="switchBilling('monthly')">Monthly</button>
-        <button class="billing-opt" id="billingYearly" onclick="switchBilling('yearly')">Yearly <span class="billing-save">Save 28%</span></button>
+      <div class="pricing-cards">
+        <button class="pricing-card" id="cardMonthly" onclick="selectPlan('monthly')">
+          <div class="pricing-card-label">Monthly</div>
+          <div class="pricing-card-price">$14<span>/mo</span></div>
+          <div class="pricing-card-sub">billed monthly</div>
+        </button>
+        <button class="pricing-card selected" id="cardYearly" onclick="selectPlan('yearly')">
+          <div class="pricing-card-badge">Best value</div>
+          <div class="pricing-card-label">Annual</div>
+          <div class="pricing-card-price">$10<span>/mo</span></div>
+          <div class="pricing-card-sub">$120/yr · 2 months free</div>
+        </button>
       </div>
-      <div class="pro-price-row">
-        <span class="pro-price" id="proPrice">$14</span>
-        <span class="pro-price-period" id="proPeriod">/ month</span>
-      </div>
-      <p id="proYearlySub" style="display:none;font-size:12px;color:var(--text-3);text-align:center;margin-top:-8px;margin-bottom:12px">$120 billed annually — 2 months free</p>
-      <button class="pro-cta-btn" onclick="handleProCheckout()">Upgrade to Pro →</button>
+      <button class="pro-cta-btn" id="proCta" onclick="handleProCheckout()">Get Pro — $10/month →</button>
       <button class="pro-later-btn" onclick="closeModal('proModal')">Maybe later</button>
     </div>
   </div>
@@ -596,12 +615,12 @@
 
       <!-- Paywall banner — shown below input when free limit reached -->
       <div class="paywall-banner" id="paywallBanner">
-        <div class="paywall-icon">🔒</div>
-        <div class="paywall-title">You've used your 3 free searches</div>
-        <p class="paywall-desc">Go Pro for $14/month — 25 researches/day, full 15-criterion breakdowns with sources, and complete search history.</p>
+        <div class="paywall-icon">⭐</div>
+        <div class="paywall-title">You've hit your daily limit</div>
+        <p class="paywall-desc">Go Pro for 25 researches/day, all 15 scored criteria, full history, and email notifications. From $10/month on the annual plan.</p>
         <div class="paywall-actions">
-          <button class="paywall-pro-btn" onclick="openModal('proModal')">⭐ Go Pro — $14/month</button>
-          <button class="paywall-signin-btn" id="paywallSigninBtn" onclick="openModal('authModal')" style="display:none">Already have an account? Sign in</button>
+          <button class="paywall-pro-btn" onclick="openModal('proModal')">See Pro plans →</button>
+          <button class="paywall-signin-btn" id="paywallSigninBtn" onclick="openModal('authModal')" style="display:none">Have an account? Sign in</button>
         </div>
       </div>
     </div>
@@ -751,7 +770,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.8</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.9</p>
     </footer>
   </div>
 
@@ -1769,7 +1788,7 @@
         ? `<div class="settings-plan-pro">⭐ Pro — 25 searches/day</div>
            <button class="settings-manage-btn" id="manageSubBtn" onclick="openStripePortal()">Manage subscription</button>`
         : `<div class="settings-plan-free">Free — 3 searches/day</div>
-           <button class="settings-upgrade-btn" onclick="closeModal('settingsModal'); handleProCheckout()">⭐ Upgrade to Pro — $14/month</button>`;
+           <button class="settings-upgrade-btn" onclick="closeModal('settingsModal'); openModal('proModal')">⭐ Upgrade to Pro — from $10/month</button>`;
 
       content.innerHTML = `
         <div class="settings-section">
@@ -1836,15 +1855,14 @@
     const STRIPE_MONTHLY = 'https://buy.stripe.com/fZu4gAbWF42i2hI4hcgMw01';
     const STRIPE_YEARLY  = 'https://buy.stripe.com/4gM28s7Gp1Ua3lM00WgMw02';
 
-    let _billingCycle = 'monthly';
+    let _billingCycle = 'yearly'; // default to annual — better value for user, better LTV
 
-    function switchBilling(cycle) {
+    function selectPlan(cycle) {
       _billingCycle = cycle;
-      document.getElementById('billingMonthly').classList.toggle('active', cycle === 'monthly');
-      document.getElementById('billingYearly').classList.toggle('active', cycle === 'yearly');
-      document.getElementById('proPrice').textContent = cycle === 'yearly' ? '$10' : '$14';
-      document.getElementById('proPeriod').textContent = '/ month';
-      document.getElementById('proYearlySub').style.display = cycle === 'yearly' ? 'block' : 'none';
+      document.getElementById('cardMonthly').classList.toggle('selected', cycle === 'monthly');
+      document.getElementById('cardYearly').classList.toggle('selected', cycle === 'yearly');
+      document.getElementById('proCta').textContent =
+        cycle === 'yearly' ? 'Get Pro — $10/month →' : 'Get Pro — $14/month →';
     }
 
     function handleProCheckout() {

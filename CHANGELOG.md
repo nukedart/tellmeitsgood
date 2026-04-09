@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.9 — 2026-04-09
+
+### Polish: Go Pro screen redesign — pricing cards + annual default
+
+- **Pro modal:** replaced pill billing toggle with two side-by-side pricing cards (Monthly $14/mo · Annual $10/mo); Annual card shows "Best value" badge and is selected by default
+- **CTA button** updates dynamically — "Get Pro — $10/month →" or "Get Pro — $14/month →" based on selected card
+- **Paywall banner:** cleaner copy mentioning "from $10/month on the annual plan"; CTA now opens the modal so users see both options
+- **Settings modal** upgrade button now opens the Pro modal instead of going straight to checkout
+- Default billing cycle changed from monthly → annual
+
+---
+
 ## v1.8.8 — 2026-04-09
 
 ### Fix: Brave session timeout + instant auth on page load
