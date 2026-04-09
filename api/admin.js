@@ -7,6 +7,10 @@
 
 import { rateLimit } from './_rateLimit.js';
 
+// Rate limit admin GET — 120 requests/hour per IP (generous for legitimate use,
+// blocks enumeration scripts)
+const ADMIN_RATE = { windowMs: 60 * 60 * 1000, max: 120 };
+
 // ── In-process rate limit for refresh requests ────────────────
 const refreshRequested = new Map();
 
@@ -87,6 +91,9 @@ export default async function handler(req, res) {
 
   // ── GET: admin stats ──────────────────────────────────────────
   if (req.method === 'GET') {
+    const limited = rateLimit(req, res, ADMIN_RATE);
+    if (limited) return;
+
     const SUPABASE_URL         = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const ADMIN_EMAIL          = process.env.ADMIN_EMAIL;
@@ -124,7 +131,7 @@ export default async function handler(req, res) {
     // ── PRODUCTS view ──────────────────────────────────────────
     if (view === 'products') {
       const page   = Math.max(0, parseInt(req.query?.page || '0'));
-      const q      = (req.query?.q || '').trim();
+      const q      = (req.query?.q || '').trim().replace(/[*%]/g, ''); // strip PostgREST wildcards
       const limit  = 50;
       const offset = page * limit;
       const filter = q ? `&product_name=ilike.*${encodeURIComponent(q)}*` : '';

@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.2 — 2026-04-09
+
+### Security: hardened headers + env var validation + prompt injection defense
+
+- **vercel.json:** added `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, and `Permissions-Policy` headers on all routes — prevents clickjacking, MIME-sniffing, and silent referrer leakage
+- **api/research.js:** env var guard at handler startup — returns 500 with a list of missing vars instead of silently failing mid-request
+- **api/research.js:** scraped product page content wrapped in `<product_page_content>` XML delimiters — prevents injected instructions in a product page from hijacking the research prompt
+- **api/admin.js:** PostgREST wildcard chars (`*` `%`) stripped from search query param to prevent ilike injection
+- **api/admin.js:** rate limiter (120 req/hr per IP) applied to admin GET endpoint
+
+---
+
 ## v1.9.1 — 2026-04-09
 
 ### Fix: instant sign-out — no more UI lag

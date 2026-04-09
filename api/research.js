@@ -129,6 +129,17 @@ function slugify(str) {
 
 export default async function handler(req, res) {
 
+  // ── Env var guard ──────────────────────────────────────────
+  const missing = [
+    !process.env.ANTHROPIC_API_KEY      && 'ANTHROPIC_API_KEY',
+    !process.env.SUPABASE_URL           && 'SUPABASE_URL',
+    !process.env.SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY',
+  ].filter(Boolean);
+  if (missing.length) {
+    console.error('research.js: missing env vars:', missing);
+    return res.status(500).json({ error: 'Server misconfigured', missing });
+  }
+
   // ── Cron: process one pending queue item (GET, Vercel sends Authorization: Bearer CRON_SECRET) ──
   if (req.method === 'GET') {
     const CRON_SECRET = process.env.CRON_SECRET;
@@ -181,8 +192,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Provide either productData or query.' });
   }
 
+  // Wrap scraped content in explicit delimiters so injected instructions
+  // embedded in a product page are treated as data, not as directives.
   const userMessage = hasProductData
-    ? `Research and score this product using the Triple Filter. Here is the scraped product page content:\n\n${productData}\n\nSource URL: ${sourceUrl || 'not provided'}`
+    ? `Research and score this product using the Triple Filter.\n\nSource URL: ${sourceUrl || 'not provided'}\n\n<product_page_content>\n${productData}\n</product_page_content>`
     : `Research and score this product using the Triple Filter: "${query.trim()}"`;
 
   // ── 3. Call Claude with web_search enabled ─────────────────
