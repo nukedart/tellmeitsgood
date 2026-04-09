@@ -22,6 +22,8 @@
       --font-display: 'DM Serif Display', Georgia, serif;
       --font-body: 'DM Sans', system-ui, sans-serif;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+      --topbar-h: 56px;
+      --sidebar-w: 216px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -33,31 +35,91 @@
         --warning: #E09640; --warning-surf: #2B1E0D;
         --danger: #E86060; --danger-surf: #2B1212;
         --pro: #A78BFA; --pro-surf: #1E1533;
+        --shadow-md: 0 4px 12px rgba(0,0,0,.3);
       }
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 
     /* ── Top bar ── */
-    .top-bar { width: 100%; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--card); position: sticky; top: 0; z-index: 20; }
+    .top-bar {
+      position: sticky; top: 0; z-index: 30;
+      width: 100%; height: var(--topbar-h);
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
     .top-bar-logo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-decoration: none; display: flex; align-items: center; gap: 8px; }
     .top-bar-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-    .top-bar-right { display: flex; align-items: center; gap: 16px; }
+    .top-bar-right { display: flex; align-items: center; gap: 14px; }
+    .top-bar-badge { font-size: 11px; font-weight: 700; letter-spacing: .05em; background: var(--danger-surf); color: var(--danger); padding: 3px 9px; border-radius: 100px; text-transform: uppercase; }
     .top-bar-link { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; }
     .top-bar-link:hover { color: var(--text); }
-    .top-bar-badge { font-size: 11px; font-weight: 700; letter-spacing: .05em; background: var(--danger-surf); color: var(--danger); padding: 3px 8px; border-radius: 100px; text-transform: uppercase; }
+    .top-bar-site-btn { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-surf); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 6px 14px; text-decoration: none; white-space: nowrap; transition: background .15s; }
+    .top-bar-site-btn:hover { background: var(--accent); color: #fff; }
 
-    /* ── Tab nav ── */
-    .tab-nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
-    .tab-btn { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--text-3); background: none; border: none; border-bottom: 2px solid transparent; padding: 12px 16px; cursor: pointer; white-space: nowrap; transition: color .15s, border-color .15s; margin-bottom: -1px; }
-    .tab-btn:hover { color: var(--text-2); }
-    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    /* ── Shell ── */
+    .shell {
+      display: flex;
+      min-height: calc(100vh - var(--topbar-h));
+    }
 
-    /* ── Page ── */
-    .page { max-width: 1040px; margin: 0 auto; padding: 36px 20px 80px; }
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: var(--topbar-h);
+      height: calc(100vh - var(--topbar-h));
+      overflow-y: auto;
+      padding: 20px 12px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sidebar-section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+      color: var(--text-3); padding: 18px 8px 6px; margin-top: 2px;
+    }
+    .sidebar-section-label:first-child { padding-top: 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      color: var(--text-2); background: none; border: none;
+      border-radius: var(--radius-md); padding: 9px 10px;
+      cursor: pointer; width: 100%; text-align: left;
+      transition: background .12s, color .12s;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--text); }
+    .nav-item.active { background: var(--accent-surf); color: var(--accent-text); font-weight: 600; }
+    .nav-item.active .nav-icon { color: var(--accent); }
+    .nav-icon { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; color: var(--text-3); }
+
+    /* ── Main content ── */
+    .main { flex: 1; min-width: 0; padding: 32px 28px 80px; }
+    @media (min-width: 900px) { .main { padding: 36px 40px 80px; } }
+
+    /* Mobile: sidebar becomes horizontal scroll strip */
+    @media (max-width: 680px) {
+      .shell { flex-direction: column; }
+      .sidebar {
+        width: 100%; height: auto; position: static;
+        flex-direction: row; flex-wrap: nowrap;
+        overflow-x: auto; overflow-y: hidden;
+        padding: 8px 12px; gap: 4px;
+        border-right: none; border-bottom: 1px solid var(--border);
+      }
+      .sidebar-section-label { display: none; }
+      .nav-item { white-space: nowrap; flex-shrink: 0; padding: 7px 12px; }
+      .nav-icon { display: none; }
+      .main { padding: 20px 16px 60px; }
+    }
 
     /* ── Stat grid ── */
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 32px; }
     .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
     .stat-value { font-family: var(--font-display); font-size: 34px; color: var(--text); line-height: 1; margin-bottom: 5px; }
     .stat-label { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
@@ -69,6 +131,7 @@
     .section { margin-bottom: 32px; }
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .section-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+    .page-title { font-family: var(--font-display); font-size: 24px; color: var(--text); margin-bottom: 24px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
 
@@ -89,6 +152,10 @@
     .badge-pill.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; }
     .badge-pill.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); }
     .badge-pill.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); }
+    @media (prefers-color-scheme: dark) {
+      .badge-pill.CLEAN_PICK   { background: #0D2B1E; color: #4CB87F; }
+      .badge-pill.ETHICAL_PICK { background: #1E1B4B; color: #A5B4FC; }
+    }
 
     /* ── Table ── */
     .table-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
@@ -103,12 +170,9 @@
     .cell-pro { font-size: 11px; font-weight: 700; color: var(--pro); background: var(--pro-surf); padding: 2px 8px; border-radius: 100px; display: inline-block; }
     .cell-free { font-size: 11px; color: var(--text-3); }
 
-    /* products: badge | name | score | cat | age | action */
-    .row-product { grid-template-columns: 100px minmax(0,1fr) 48px 120px 80px 80px; }
-    /* users: email | joined | last active | plan */
-    .row-user { grid-template-columns: minmax(0,1fr) 100px 100px 70px; }
-    /* searches: badge | name | count */
-    .row-search { grid-template-columns: 100px minmax(0,1fr) 60px; }
+    .row-product { grid-template-columns: 110px minmax(0,1fr) 48px 120px 80px 80px; }
+    .row-user    { grid-template-columns: minmax(0,1fr) 100px 100px 70px; }
+    .row-search  { grid-template-columns: 110px minmax(0,1fr) 60px; }
     @media (max-width: 640px) {
       .row-product { grid-template-columns: 80px minmax(0,1fr) 40px 60px; }
       .row-product .col-cat, .row-product .col-action { display: none; }
@@ -128,25 +192,30 @@
     .pag-btn:hover { background: var(--accent-surf); }
     .pag-btn:disabled { color: var(--text-3); cursor: default; background: none; }
 
-    /* ── Sparkline bars (searches per day) ── */
+    /* ── Sparkline ── */
     .spark-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
     .spark-chart { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-bottom: 8px; }
     .spark-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
-    .spark-bar { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; transition: height .3s; }
+    .spark-bar { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; }
     .spark-label { font-size: 9px; color: var(--text-3); text-align: center; }
     .spark-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-3); margin-top: 4px; }
 
     /* ── Cost cards ── */
-    .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
     .cost-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
-    .cost-card .cost-val { font-family: var(--font-display); font-size: 28px; color: var(--text); margin-bottom: 4px; }
-    .cost-card .cost-label { font-size: 12px; color: var(--text-3); }
-    .cost-card .cost-note { font-size: 11px; color: var(--success); margin-top: 4px; }
+    .cost-val { font-family: var(--font-display); font-size: 28px; color: var(--text); margin-bottom: 4px; }
+    .cost-label { font-size: 12px; color: var(--text-3); }
+    .cost-note { font-size: 11px; color: var(--success); margin-top: 4px; }
 
-    /* ── Action button ── */
+    /* ── Buttons ── */
     .action-btn { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--accent); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 10px; cursor: pointer; transition: background .15s; white-space: nowrap; }
     .action-btn:hover { background: var(--accent-surf); }
     .action-btn.sent { color: var(--success); border-color: var(--success); pointer-events: none; }
+    .refresh-btn { font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
+    .refresh-btn:hover { text-decoration: underline; }
+    .primary-btn { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 12px 28px; cursor: pointer; transition: background .15s; }
+    .primary-btn:hover { background: var(--accent-hover); }
+    .primary-btn:disabled { opacity: .6; cursor: default; }
 
     /* ── Loading / state ── */
     .state-center { text-align: center; padding: 64px 24px; }
@@ -154,8 +223,23 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .state-title { font-family: var(--font-display); font-size: 20px; color: var(--text); margin-bottom: 6px; }
     .state-text { font-size: 14px; color: var(--text-2); }
-    .refresh-btn { font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0; }
-    .refresh-btn:hover { text-decoration: underline; }
+
+    /* ── Form elements ── */
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+    .form-input { width: 100%; font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 11px 14px; outline: none; transition: border-color .15s; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-3); }
+    .form-textarea { width: 100%; font-family: var(--font-body); font-size: 13px; color: var(--text); background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 11px 14px; outline: none; resize: vertical; line-height: 1.6; transition: border-color .15s; }
+    .form-textarea:focus { border-color: var(--accent); }
+    .form-textarea::placeholder { color: var(--text-3); }
+    .form-group { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Notice boxes ── */
+    .notice { border-radius: var(--radius-lg); padding: 16px 20px; font-size: 13px; line-height: 1.6; }
+    .notice.success { background: var(--success-surf); border: 1px solid var(--success); color: var(--success); }
+    .notice.danger  { background: var(--danger-surf);  border: 1px solid var(--danger);  color: var(--danger); }
+    .notice.info    { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); }
+    .notice-title   { font-weight: 700; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -168,26 +252,45 @@
   <div class="top-bar-right">
     <span class="top-bar-badge">Admin</span>
     <a class="top-bar-link" href="/directory">Directory</a>
-    <a href="/" style="font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:6px 14px;text-decoration:none;white-space:nowrap;">← View site</a>
+    <a class="top-bar-site-btn" href="/">← View site</a>
   </div>
 </div>
 
-<div class="tab-nav">
-  <button class="tab-btn active" data-tab="overview">Overview</button>
-  <button class="tab-btn" data-tab="products">Products</button>
-  <button class="tab-btn" data-tab="users">Users</button>
-  <button class="tab-btn" data-tab="searches">Searches</button>
-  <button class="tab-btn" data-tab="cost">Cost</button>
-  <button class="tab-btn" data-tab="import">Import</button>
-</div>
+<div class="shell">
+  <!-- ── Sidebar nav ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section-label">Dashboard</div>
+    <button class="nav-item active" data-tab="overview">
+      <span class="nav-icon">◈</span> Overview
+    </button>
+    <button class="nav-item" data-tab="products">
+      <span class="nav-icon">⊞</span> Products
+    </button>
+    <button class="nav-item" data-tab="users">
+      <span class="nav-icon">◯</span> Users
+    </button>
+    <button class="nav-item" data-tab="searches">
+      <span class="nav-icon">⌕</span> Searches
+    </button>
+    <button class="nav-item" data-tab="cost">
+      <span class="nav-icon">$</span> Cost
+    </button>
 
-<div class="page">
-  <div id="content">
-    <div class="state-center">
-      <div class="spinner"></div>
-      <div class="state-title">Loading...</div>
+    <div class="sidebar-section-label">Tools</div>
+    <button class="nav-item" data-tab="import">
+      <span class="nav-icon">↓</span> Import
+    </button>
+  </nav>
+
+  <!-- ── Main content ── -->
+  <main class="main">
+    <div id="content">
+      <div class="state-center">
+        <div class="spinner"></div>
+        <div class="state-title">Loading…</div>
+      </div>
     </div>
-  </div>
+  </main>
 </div>
 
 <script>
@@ -195,7 +298,6 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
   // Same storage adapter as index.html — prevents session key mismatch
-  // when navigating between pages (was causing apparent logout on return).
   const _authStorage = (() => {
     const k = '_sb_probe_';
     try { localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch {}
@@ -208,8 +310,6 @@
     auth: { persistSession: true, autoRefreshToken: true, broadcastAuthEvents: false, storage: _authStorage },
   });
 
-  // Release the auto-refresh lock before navigating away so index.html's
-  // Supabase client can acquire it cleanly (prevents apparent sign-out).
   window.addEventListener('beforeunload', () => supabaseClient.auth.stopAutoRefresh());
 
   let _session  = null;
@@ -218,7 +318,7 @@
   let _prodPage = 0;
   let _prodQ    = '';
 
-  // ── Helpers ────────────────────────────────────────────────────
+  // ── Helpers ─────────────────────────────────────────────────────
   function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function timeAgo(iso) {
@@ -231,15 +331,14 @@
   }
 
   function shortDate(iso) {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
   }
 
   function badgePill(b) {
     return b ? `<span class="badge-pill ${esc(b)}">${esc(b).replace(/_/g,' ')}</span>` : '<span class="cell-muted">—</span>';
   }
 
-  function loading() {
+  function setLoading() {
     document.getElementById('content').innerHTML = `<div class="state-center"><div class="spinner"></div></div>`;
   }
 
@@ -254,16 +353,14 @@
     return r.json();
   }
 
-  // ── Auth ────────────────────────────────────────────────────────
+  // ── Auth ─────────────────────────────────────────────────────────
   async function init() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { showGate('not-signed-in'); return; }
     _session = session;
     supabaseClient.auth.onAuthStateChange((ev, s) => { if (s) _session = s; });
-    // Signal to index.html that this user has admin access so it can show
-    // the Admin button in the auth bar without an extra network request.
     try { sessionStorage.setItem('_isAdmin', '1'); } catch {}
-    setupTabs();
+    setupNav();
     loadTab('overview');
   }
 
@@ -273,11 +370,11 @@
       : `<div class="state-center"><div class="state-title">Access denied</div><p class="state-text">This page is restricted to admins.</p></div>`;
   }
 
-  // ── Tabs ────────────────────────────────────────────────────────
-  function setupTabs() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+  // ── Sidebar nav ──────────────────────────────────────────────────
+  function setupNav() {
+    document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         _tab = btn.dataset.tab;
         loadTab(_tab);
@@ -286,19 +383,18 @@
   }
 
   async function loadTab(tab, force) {
+    if (tab === 'import') { renderTab('import', null); return; }
     if (_cache[tab] && !force) { renderTab(tab, _cache[tab]); return; }
-    loading();
+    setLoading();
     try {
       let data;
-      if (tab === 'import') { renderTab('import', null); return; }
       if (tab === 'overview') data = await api('/api/admin-stats');
       else if (tab === 'products') data = await api(`/api/admin-stats?view=products&page=${_prodPage}&q=${encodeURIComponent(_prodQ)}`);
       else if (tab === 'users')    data = await api('/api/admin-stats?view=users');
       else if (tab === 'searches') data = await api('/api/admin-stats?view=searches');
       else if (tab === 'cost')     data = _cache['overview'] || await api('/api/admin-stats');
 
-      if (tab !== 'products') _cache[tab] = data; // don't cache paginated products
-      if (tab === 'import') { renderTab(tab, null); return; }
+      if (tab !== 'products') _cache[tab] = data;
       renderTab(tab, data);
     } catch (err) {
       if (err.message === 'unauthorized') { showGate('forbidden'); return; }
@@ -307,9 +403,8 @@
         const rows = vars.map(v => `<code style="display:block;margin:6px 0;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;color:var(--danger)">${esc(v)}</code>`).join('');
         document.getElementById('content').innerHTML = `<div class="state-center">
           <div class="state-title">Setup required</div>
-          <p class="state-text" style="margin-bottom:16px">Add the following to <strong>Vercel → Project → Settings → Environment Variables</strong>, then redeploy:</p>
+          <p class="state-text" style="margin-bottom:16px">Add to <strong>Vercel → Settings → Environment Variables</strong>, then redeploy:</p>
           ${rows}
-          <p class="state-text" style="margin-top:16px;font-size:12px">After saving, Vercel will redeploy automatically. Refresh this page once it's live.</p>
         </div>`;
         return;
       }
@@ -328,7 +423,7 @@
     attachHandlers(tab, d);
   }
 
-  // ── Overview ────────────────────────────────────────────────────
+  // ── Overview ─────────────────────────────────────────────────────
   function renderOverview(d) {
     const convRate = d.totalUsers > 0 ? ((d.proUsers / d.totalUsers) * 100).toFixed(1) : '0';
 
@@ -362,6 +457,7 @@
       </div>`).join('') || '<div class="table-row"><span class="cell-muted">No products yet</span></div>';
 
     return `
+      <div class="page-title">Overview</div>
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-value">${d.totalProducts}</div>
@@ -393,7 +489,13 @@
           <span class="section-title">Recent products</span>
           <button class="refresh-btn" onclick="loadTab('overview',true)">↻ Refresh</button>
         </div>
-        <div class="table-card">${recentRows}</div>
+        <div class="table-card">
+          <div class="table-row header row-product">
+            <span>Badge</span><span>Product</span><span>Score</span>
+            <span class="col-cat">Category</span><span>Age</span><span></span>
+          </div>
+          ${recentRows}
+        </div>
       </div>
 
       <div class="two-col section">
@@ -408,7 +510,7 @@
       </div>`;
   }
 
-  // ── Products ────────────────────────────────────────────────────
+  // ── Products ──────────────────────────────────────────────────────
   function renderProducts(d) {
     const totalPages = Math.ceil((d.total || 0) / (d.limit || 50));
     const rows = (d.products || []).map(p => `
@@ -422,6 +524,7 @@
       </div>`).join('') || '<div class="table-row" style="padding:20px 18px"><span class="cell-muted">No products found</span></div>';
 
     return `
+      <div class="page-title">Products</div>
       <div class="search-wrap">
         <input class="search-input" id="prodSearch" placeholder="Search products…" value="${esc(_prodQ)}" />
       </div>
@@ -435,8 +538,8 @@
       <div class="pagination">
         <span>${d.total ?? 0} products · page ${(d.page || 0) + 1} of ${totalPages || 1}</span>
         <div style="display:flex;gap:8px">
-          <button class="pag-btn" id="prevBtn" ${_prodPage === 0 ? 'disabled' : ''} onclick="changePage(-1)">← Prev</button>
-          <button class="pag-btn" id="nextBtn" ${_prodPage >= totalPages - 1 ? 'disabled' : ''} onclick="changePage(1)">Next →</button>
+          <button class="pag-btn" ${_prodPage === 0 ? 'disabled' : ''} onclick="changePage(-1)">← Prev</button>
+          <button class="pag-btn" ${_prodPage >= totalPages - 1 ? 'disabled' : ''} onclick="changePage(1)">Next →</button>
         </div>
       </div>`;
   }
@@ -474,7 +577,7 @@
     } catch { btn.textContent = 'Error'; }
   }
 
-  // ── Users ────────────────────────────────────────────────────────
+  // ── Users ─────────────────────────────────────────────────────────
   function renderUsers(d) {
     const rows = (d.users || []).map(u => `
       <div class="table-row row-user">
@@ -485,6 +588,7 @@
       </div>`).join('') || '<div class="table-row"><span class="cell-muted">No users yet</span></div>';
 
     return `
+      <div class="page-title">Users</div>
       <div class="stat-grid" style="margin-bottom:20px">
         <div class="stat-card">
           <div class="stat-value">${d.total ?? 0}</div>
@@ -508,11 +612,11 @@
       </div>`;
   }
 
-  // ── Searches ────────────────────────────────────────────────────
+  // ── Searches ──────────────────────────────────────────────────────
   function renderSearches(d) {
-    const days    = Object.entries(d.byDay || {});
-    const maxVal  = Math.max(...days.map(([,v]) => v), 1);
-    const bars    = days.map(([date, count]) => {
+    const days   = Object.entries(d.byDay || {});
+    const maxVal = Math.max(...days.map(([,v]) => v), 1);
+    const bars   = days.map(([date, count]) => {
       const pct   = Math.round((count / maxVal) * 100);
       const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return `<div class="spark-bar-wrap" title="${label}: ${count}">
@@ -532,6 +636,7 @@
     const total14d = days.reduce((s,[,v]) => s+v, 0);
 
     return `
+      <div class="page-title">Searches</div>
       <div class="stat-grid" style="margin-bottom:20px">
         <div class="stat-card">
           <div class="stat-value">${d.total ?? 0}</div>
@@ -549,7 +654,7 @@
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:12px">Daily search volume (14 days)</div>
+        <div class="section-title" style="margin-bottom:12px">Daily volume — 14 days</div>
         <div class="spark-wrap">
           <div class="spark-chart">${bars}</div>
           <div class="spark-meta">
@@ -568,15 +673,15 @@
       </div>`;
   }
 
-  // ── Cost ────────────────────────────────────────────────────────
+  // ── Cost ──────────────────────────────────────────────────────────
   function renderCost(d) {
     const totalProducts = d.totalProducts || 0;
-    // Approximate cost: research ~$0.006 + post ~$0.003 per new product (Haiku pricing with caching)
     const costPerSearch = 0.009;
     const estTotal = (totalProducts * costPerSearch).toFixed(2);
-    const est30d    = ((d.searches30d || 0) * costPerSearch * 0.3).toFixed(2); // ~30% are cache misses
+    const est30d   = ((d.searches30d || 0) * costPerSearch * 0.3).toFixed(2);
 
     return `
+      <div class="page-title">Cost</div>
       <div class="cost-grid">
         <div class="cost-card">
           <div class="cost-val">$${estTotal}</div>
@@ -586,7 +691,7 @@
         <div class="cost-card">
           <div class="cost-val">~$0.009</div>
           <div class="cost-label">Per new search (cache miss)</div>
-          <div class="cost-note">Research + post, Haiku pricing</div>
+          <div class="cost-note">Research + post, combined call</div>
         </div>
         <div class="cost-card">
           <div class="cost-val">~$0.002</div>
@@ -608,16 +713,8 @@
             <span class="cell-muted" style="margin-left:auto;font-size:12px">~1,500 tokens system (cached) + ~500 user</span>
           </div>
           <div class="breakdown-row">
-            <span class="breakdown-key">research.js — output</span>
-            <span class="cell-muted" style="margin-left:auto;font-size:12px">~1,200 tokens JSON</span>
-          </div>
-          <div class="breakdown-row">
-            <span class="breakdown-key">post.js — input</span>
-            <span class="cell-muted" style="margin-left:auto;font-size:12px">~900 tokens (slimmed in v1.3.8)</span>
-          </div>
-          <div class="breakdown-row">
-            <span class="breakdown-key">post.js — output</span>
-            <span class="cell-muted" style="margin-left:auto;font-size:12px">~400 tokens JSON</span>
+            <span class="breakdown-key">research.js — output (incl. post_narrative)</span>
+            <span class="cell-muted" style="margin-left:auto;font-size:12px">~1,600 tokens JSON</span>
           </div>
           <div class="breakdown-row">
             <span class="breakdown-key">Haiku pricing</span>
@@ -630,10 +727,10 @@
         <div class="section-title" style="margin-bottom:12px">Monthly cost at scale</div>
         <div class="breakdown-card">
           ${[
-            ['100 searches/mo', '$0.27'],
-            ['500 searches/mo', '$1.35'],
-            ['1,000 searches/mo', '$2.70'],
-            ['5,000 searches/mo', '$13.50'],
+            ['100 searches/mo',    '$0.27'],
+            ['500 searches/mo',    '$1.35'],
+            ['1,000 searches/mo',  '$2.70'],
+            ['5,000 searches/mo',  '$13.50'],
             ['10,000 searches/mo', '$27.00'],
           ].map(([label, cost]) => `
             <div class="breakdown-row">
@@ -641,38 +738,41 @@
               <span class="breakdown-val">${cost}</span>
             </div>`).join('')}
         </div>
-        <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Assumes 30% cache miss rate. Pro plan at $9/mo breaks even at ~33 paying users.</p>
+        <p style="font-size:12px;color:var(--text-3);margin-top:10px;">Assumes 30% cache miss rate. Pro plan at $14/mo breaks even at ~24 paying users.</p>
       </div>`;
   }
 
-  // ── Import tab (Perplexity → JSON → save) ───────────────────────
+  // ── Import ────────────────────────────────────────────────────────
   function renderImport() {
     return `
-      <div class="section">
-        <div class="section-title" style="margin-bottom:4px">Import from Perplexity Deep Research</div>
-        <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6;">
-          Run a Perplexity deep research, paste the output below. Claude will format it into the
-          Triple Filter schema and save it to the products database — no web search API cost.
-        </p>
+      <div class="page-title">Import from Perplexity</div>
 
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;">
-          <div style="font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Perplexity prompt to use</div>
-          <pre id="perplexityPrompt" style="font-family:monospace;font-size:12px;color:var(--text-2);white-space:pre-wrap;line-height:1.6;margin:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;overflow-x:auto;">Research: [PRODUCT NAME]
+      <div class="notice info" style="margin-bottom:24px;">
+        Run a Perplexity deep research using the prompt below, then paste the output. Claude Sonnet will format it into the Triple Filter schema and save it to the products database — no web search cost.
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">Perplexity prompt template</span>
+          <button onclick="copyPrompt()" style="font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:5px 14px;cursor:pointer;">Copy prompt</button>
+        </div>
+        <div class="breakdown-card" style="padding:0;">
+          <pre id="perplexityPrompt" style="font-family:monospace;font-size:12px;color:var(--text-2);white-space:pre-wrap;line-height:1.6;margin:0;padding:18px;overflow-x:auto;">Research: [PRODUCT NAME]
 
 I need detailed findings for a product quality and ethics audit. Search thoroughly and provide specific evidence with source URLs.
 
-GATE 1 — VALUE & QUALITY
+GATE 1 — VALUE &amp; QUALITY
 1. Core performance: How well does it actually work? Professional reviews, owner reports, lab tests.
-2. Build quality & longevity: Durability over time, common failure points, warranty claims.
+2. Build quality &amp; longevity: Durability over time, common failure points, warranty claims.
 3. Price-to-quality ratio: Cost vs comparable alternatives — name specific competitors and price gaps.
 4. Honest product claims: Do marketing claims match real-world performance? Any misleading claims?
-5. Usability & experience: Day-to-day ease of use, learning curve, maintenance burden.
+5. Usability &amp; experience: Day-to-day ease of use, learning curve, maintenance burden.
 
-GATE 2 — CLEAN & SAFE
+GATE 2 — CLEAN &amp; SAFE
 6. Ingredient safety: Full ingredient list. Flag any EWG Skin Deep scores 7–10. Restricted substances?
 7. Full ingredient disclosure: Are all ingredients disclosed? Any vague terms like "fragrance"?
 8. No greenwashing: Are "natural," "clean," "eco" claims accurate? Any FTC actions?
-9. Safe around kids & pets: Known hazards for sensitive populations.
+9. Safe around kids &amp; pets: Known hazards for sensitive populations.
 10. Packaging honesty: Recycling claims accurate? Misleading sustainability marketing?
 
 GATE 3 — ETHICAL COMPANY
@@ -683,30 +783,37 @@ GATE 3 — ETHICAL COMPANY
 15. Accountability track record: How does the company respond to complaints? BBB rating.
 
 For each criterion provide: your finding, a suggested score (1–10), and the source URL.</pre>
-          <button onclick="navigator.clipboard.writeText(document.getElementById('perplexityPrompt').textContent)" style="margin-top:10px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:6px 14px;cursor:pointer;">Copy prompt</button>
         </div>
+      </div>
 
-        <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="section">
+        <div class="section-title" style="margin-bottom:16px">Paste research &amp; import</div>
+        <div class="form-group">
           <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;">Product name</label>
-            <input id="importProductName" type="text" placeholder="e.g. Blueland dish soap tablets" style="width:100%;font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;outline:none;" />
+            <label class="form-label" for="importProductName">Product name</label>
+            <input class="form-input" id="importProductName" type="text" placeholder="e.g. Blueland dish soap tablets" />
           </div>
           <div>
-            <label style="display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px;">Perplexity research output</label>
-            <textarea id="importResearchText" rows="14" placeholder="Paste the full Perplexity deep research output here..." style="width:100%;font-family:var(--font-body);font-size:13px;color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;outline:none;resize:vertical;line-height:1.6;"></textarea>
+            <label class="form-label" for="importResearchText">Perplexity research output</label>
+            <textarea class="form-textarea" id="importResearchText" rows="16" placeholder="Paste the full Perplexity deep research output here…"></textarea>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button id="importBtn" onclick="runImport()" style="font-family:var(--font-body);font-size:14px;font-weight:600;color:#fff;background:var(--accent);border:none;border-radius:var(--radius-md);padding:12px 28px;cursor:pointer;">Format &amp; Import →</button>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <button class="primary-btn" id="importBtn" onclick="runImport()">Format &amp; Import →</button>
             <span id="importStatus" style="font-size:13px;color:var(--text-2);"></span>
           </div>
         </div>
+      </div>
 
-        <div id="importResult" style="display:none;margin-top:24px;background:var(--success-surf);border:1px solid var(--success);border-radius:var(--radius-lg);padding:20px;">
-          <div style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:10px;">Imported successfully</div>
-          <div id="importResultBody" style="font-size:13px;color:var(--text);line-height:1.6;"></div>
-        </div>
-        <div id="importError" style="display:none;margin-top:24px;background:var(--danger-surf);border:1px solid var(--danger);border-radius:var(--radius-lg);padding:16px;font-size:13px;color:var(--danger);"></div>
-      </div>`;
+      <div id="importResult" style="display:none;margin-top:8px;" class="notice success">
+        <div class="notice-title">Imported successfully</div>
+        <div id="importResultBody" style="color:var(--text);"></div>
+      </div>
+      <div id="importError" style="display:none;margin-top:8px;" class="notice danger"></div>`;
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('perplexityPrompt')?.textContent || '';
+    navigator.clipboard.writeText(text).catch(() => {});
   }
 
   async function runImport() {
@@ -718,14 +825,15 @@ For each criterion provide: your finding, a suggested score (1–10), and the so
     const resultBody   = document.getElementById('importResultBody');
     const errorBox     = document.getElementById('importError');
 
+    errorBox.style.display  = 'none';
+    resultBox.style.display = 'none';
+
     if (!productName) { errorBox.style.display='block'; errorBox.textContent='Enter a product name.'; return; }
     if (!researchText || researchText.length < 100) { errorBox.style.display='block'; errorBox.textContent='Paste the Perplexity research output (needs at least 100 characters).'; return; }
 
     btn.disabled = true;
     btn.textContent = 'Formatting…';
-    status.textContent = 'Claude is converting the research into the Triple Filter schema…';
-    resultBox.style.display = 'none';
-    errorBox.style.display  = 'none';
+    status.textContent = 'Claude Sonnet is converting the research into the Triple Filter schema…';
 
     try {
       const r = await fetch('/api/admin-import', {
@@ -734,22 +842,27 @@ For each criterion provide: your finding, a suggested score (1–10), and the so
         body: JSON.stringify({ productName, researchText, accessToken: _session.access_token }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error || `Server ${r.status}`);
+      if (!r.ok) {
+        let msg = data.error || `Server ${r.status}`;
+        if (data.hint) msg += '\n' + data.hint;
+        if (data.raw_preview) msg += '\n\nResponse preview: ' + data.raw_preview;
+        throw new Error(msg);
+      }
 
       status.textContent = '';
       resultBox.style.display = 'block';
       resultBody.innerHTML = `
-        <div style="margin-bottom:8px;"><strong>Product:</strong> ${esc(data.research?.productName || productName)}</div>
-        <div style="margin-bottom:8px;"><strong>Badge:</strong> ${esc(data.badge || '—')}</div>
-        <div style="margin-bottom:8px;"><strong>Score:</strong> ${data.overallScore ?? '—'}/10</div>
-        <div style="margin-bottom:12px;"><strong>Slug:</strong> <a href="/p/${esc(data.slug)}" target="_blank" style="color:var(--accent)">/p/${esc(data.slug)}</a></div>
+        <div style="margin-bottom:6px;"><strong>Product:</strong> ${esc(data.research?.productName || productName)}</div>
+        <div style="margin-bottom:6px;"><strong>Badge:</strong> ${esc(data.badge || '—')}</div>
+        <div style="margin-bottom:6px;"><strong>Score:</strong> ${data.overallScore ?? '—'}/10</div>
+        <div style="margin-bottom:10px;"><strong>Slug:</strong> <a href="/p/${esc(data.slug)}" target="_blank" style="color:var(--success)">/p/${esc(data.slug)}</a></div>
         <div><strong>TL;DR:</strong> ${esc(data.research?.summary?.tldr || '—')}</div>`;
 
-      // Clear the form
       document.getElementById('importProductName').value = '';
       document.getElementById('importResearchText').value = '';
     } catch (err) {
       errorBox.style.display = 'block';
+      errorBox.style.whiteSpace = 'pre-wrap';
       errorBox.textContent = err.message;
       status.textContent = '';
     } finally {

@@ -21,11 +21,14 @@ function slugify(str) {
 }
 
 function extractOutermostJson(text) {
-  const start = text.indexOf('{');
+  // Strip markdown code fences (```json ... ``` or ``` ... ```)
+  let cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+
+  const start = cleaned.indexOf('{');
   if (start === -1) return null;
   let depth = 0, inString = false, escape = false;
-  for (let i = start; i < text.length; i++) {
-    const char = text[i];
+  for (let i = start; i < cleaned.length; i++) {
+    const char = cleaned[i];
     if (escape) { escape = false; continue; }
     if (char === '\\' && inString) { escape = true; continue; }
     if (char === '"') { inString = !inString; continue; }
@@ -34,7 +37,7 @@ function extractOutermostJson(text) {
       if (char === '}') {
         depth--;
         if (depth === 0) {
-          try { return JSON.parse(text.slice(start, i + 1)); } catch { return null; }
+          try { return JSON.parse(cleaned.slice(start, i + 1)); } catch { return null; }
         }
       }
     }
@@ -176,8 +179,8 @@ Return this exact JSON structure:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4500,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 6000,
         system: systemPrompt,
         messages: [{
           role: 'user',
@@ -196,8 +199,12 @@ Return this exact JSON structure:
     const research = extractOutermostJson(rawText);
 
     if (!research) {
-      console.error('JSON parse failed. Raw:', rawText.slice(0, 500));
-      return res.status(502).json({ error: 'Could not parse Claude response as JSON. Try again.' });
+      console.error('JSON parse failed. Raw (first 800):', rawText.slice(0, 800));
+      return res.status(502).json({
+        error: 'Could not parse Claude response as JSON.',
+        hint: 'The research text may be too complex or ambiguous. Try shortening it or breaking it into sections.',
+        raw_preview: rawText.slice(0, 300),
+      });
     }
 
     // ── Save to products table ────────────────────────────────

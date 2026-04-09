@@ -5,6 +5,16 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.6 — 2026-04-09
+
+### Admin: side nav layout + import fix
+
+- **Admin panel revamp:** replaced horizontal tab nav with a persistent sidebar — Overview / Products / Users / Searches / Cost under "Dashboard", Import under "Tools"; collapses to horizontal scroll strip on mobile
+- **Import fix:** switched from Haiku to Claude Sonnet 4.6 for better JSON compliance; bumped max_tokens to 6,000; strip markdown code fences before parsing; improved error message shows hint and response preview when parse fails
+- Page titles added to each section; cleaner form styling with shared CSS classes; dark mode updated throughout
+
+---
+
 ## v1.8.5 — 2026-04-09
 
 ### Feature: require login to search + auth-aware rate limits
