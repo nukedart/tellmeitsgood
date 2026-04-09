@@ -751,7 +751,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.7</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.8</p>
     </footer>
   </div>
 
@@ -765,8 +765,7 @@
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-    // Storage adapter: probe localStorage (blocked by Brave Shields in aggressive mode),
-    // fall back to sessionStorage (survives refresh, lost on tab close), then in-memory.
+    // ── Storage: localStorage → sessionStorage → in-memory ───────────
     const _authStorage = (() => {
       const k = '_sb_probe_';
       try { localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch {}
@@ -775,18 +774,73 @@
       return { getItem: k => _m.get(k) ?? null, setItem: (k,v) => _m.set(k,v), removeItem: k => _m.delete(k) };
     })();
 
+    // ── Explicit storage key (must match across all pages) ────────────
+    const _SB_STORAGE_KEY = 'sb-idypfzpfrgvtkypasqhl-auth-token';
+
+    // ── Custom lock: navigator.locks fallback for Brave Shields ───────
+    // Brave can block navigator.locks entirely (SecurityError / NotSupportedError).
+    // When that happens Supabase's token refresh hangs indefinitely and the session
+    // appears to time out on every page load. This wrapper catches the error and
+    // falls back to an in-memory promise queue — safe for single-origin use.
+    const _lock = (() => {
+      const _queues = {};
+      const _inMemory = (name, fn) => {
+        if (!_queues[name]) _queues[name] = Promise.resolve();
+        const next = _queues[name].then(() => fn(), () => fn());
+        _queues[name] = next.then(() => {}, () => {});
+        return next;
+      };
+
+      const hasLocks = typeof navigator !== 'undefined' &&
+        typeof navigator.locks?.request === 'function';
+      if (!hasLocks) return _inMemory;
+
+      return async (name, acquireTimeout, fn) => {
+        const opts = {};
+        let timer;
+        if (acquireTimeout >= 0) {
+          const ctrl = new AbortController();
+          timer = setTimeout(() => ctrl.abort(), acquireTimeout);
+          opts.signal = ctrl.signal;
+        }
+        try {
+          return await navigator.locks.request(name, opts, () => {
+            clearTimeout(timer);
+            return fn();
+          });
+        } catch {
+          // navigator.locks was blocked or aborted — degrade gracefully
+          clearTimeout(timer);
+          return _inMemory(name, fn);
+        }
+      };
+    })();
+
+    // ── Instant session pre-read ──────────────────────────────────────
+    // Read the session from storage *synchronously* before the Supabase client
+    // initialises so we can set currentUser immediately and avoid the flash
+    // where the page briefly renders as logged-out on every navigation.
+    let _preSession = null;
+    try {
+      const raw = _authStorage.getItem(_SB_STORAGE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        // expires_at is a Unix timestamp in seconds; keep ≥10s of margin
+        if (p?.access_token && p?.expires_at > Math.floor(Date.now() / 1000) + 10) {
+          _preSession = p;
+        }
+      }
+    } catch { /* storage unavailable or corrupt — ignore */ }
+
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        storage: _authStorage,
-        // Prevent a SIGNED_OUT event in one tab from cascading to all other open tabs.
-        // Without this, a failed token refresh in any tab signs the user out everywhere.
-        broadcastAuthEvents: false,
-        // No custom lock — Supabase's built-in navigator.locks implementation
-        // handles timeouts via AbortController, which our custom mutex didn't.
-        // A stuck ghost lock from a previous page was causing getSession() to
-        // hang indefinitely, making the user appear logged out on every navigation.
+        persistSession:      true,
+        autoRefreshToken:    true,
+        storage:             _authStorage,
+        storageKey:          _SB_STORAGE_KEY,
+        broadcastAuthEvents: false,  // stop SIGNED_OUT in one tab killing all others
+        detectSessionInUrl:  true,   // needed for password-reset magic links
+        lock:                _lock,  // Brave-safe lock
       },
     });
 
@@ -1807,7 +1861,15 @@
     // INITIAL_SESSION shortly after and updates to the real auth state.
     // ============================================================
     (function initAuth() {
-      // Render logged-out defaults instantly so the nav appears without delay
+      // If we have a valid pre-read session, set currentUser immediately so the
+      // auth bar renders correctly on first paint — no async wait, no logged-out flash.
+      if (_preSession?.user) {
+        currentUser = _preSession.user;
+        // Pro status from the token's app_metadata (Stripe sets this) — instant, no fetch
+        currentUserPro = _preSession.user?.app_metadata?.is_pro === true ||
+                         _preSession.user?.user_metadata?.is_pro === true ||
+                         false;
+      }
       updateAuthBar();
       updatePaywall();
 

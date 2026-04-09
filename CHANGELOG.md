@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.8 — 2026-04-09
+
+### Fix: Brave session timeout + instant auth on page load
+
+- **Root cause:** Brave Shields blocks `navigator.locks` — Supabase's token refresh hangs indefinitely waiting for a lock that never acquires, making the session appear timed out on every navigation
+- **Custom lock:** wraps `navigator.locks.request()` with a catch; on any error (`SecurityError`, `NotSupportedError`, `AbortError`) falls back to an in-memory promise queue — token refresh works in all browsers
+- **Instant session pre-read:** reads the auth token from storage *synchronously* before the Supabase client initialises; sets `currentUser` on first paint so the auth bar is correct immediately — no logged-out flash while `INITIAL_SESSION` resolves
+- **Explicit `storageKey`:** `sb-idypfzpfrgvtkypasqhl-auth-token` — shared identically across index.html and admin.html so sessions are never double-stored or misread
+- Same lock + storageKey applied to admin.html
+
+---
+
 ## v1.8.7 — 2026-04-09
 
 ### Feature: batch import — multiple products from one Perplexity paste

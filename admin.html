@@ -297,7 +297,7 @@
   const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
 
-  // Same storage adapter as index.html — prevents session key mismatch
+  // Same storage adapter as index.html — must be identical or session keys mismatch
   const _authStorage = (() => {
     const k = '_sb_probe_';
     try { localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch {}
@@ -306,8 +306,44 @@
     return { getItem: k => _m.get(k) ?? null, setItem: (k,v) => _m.set(k,v), removeItem: k => _m.delete(k) };
   })();
 
+  const _SB_STORAGE_KEY = 'sb-idypfzpfrgvtkypasqhl-auth-token';
+
+  // Brave-safe lock — mirrors index.html implementation exactly
+  const _lock = (() => {
+    const _queues = {};
+    const _inMemory = (name, fn) => {
+      if (!_queues[name]) _queues[name] = Promise.resolve();
+      const next = _queues[name].then(() => fn(), () => fn());
+      _queues[name] = next.then(() => {}, () => {});
+      return next;
+    };
+    const hasLocks = typeof navigator !== 'undefined' &&
+      typeof navigator.locks?.request === 'function';
+    if (!hasLocks) return _inMemory;
+    return async (name, acquireTimeout, fn) => {
+      const opts = {};
+      let timer;
+      if (acquireTimeout >= 0) {
+        const ctrl = new AbortController();
+        timer = setTimeout(() => ctrl.abort(), acquireTimeout);
+        opts.signal = ctrl.signal;
+      }
+      try {
+        return await navigator.locks.request(name, opts, () => { clearTimeout(timer); return fn(); });
+      } catch { clearTimeout(timer); return _inMemory(name, fn); }
+    };
+  })();
+
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, broadcastAuthEvents: false, storage: _authStorage },
+    auth: {
+      persistSession:      true,
+      autoRefreshToken:    true,
+      broadcastAuthEvents: false,
+      storage:             _authStorage,
+      storageKey:          _SB_STORAGE_KEY,
+      detectSessionInUrl:  false,
+      lock:                _lock,
+    },
   });
 
   window.addEventListener('beforeunload', () => supabaseClient.auth.stopAutoRefresh());
