@@ -751,7 +751,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.4</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.5</p>
     </footer>
   </div>
 
@@ -1850,9 +1850,9 @@
     async function handleSubmit() {
       hideError();
 
-      // Fast client-side pre-check (avoids a network round-trip when obviously at limit)
-      if (isAtFreeLimit()) {
-        updatePaywall();
+      // Require login to search
+      if (!currentUser) {
+        openModal('authModal');
         return;
       }
 
@@ -1878,7 +1878,6 @@
 
       if (cached.hit) {
         // We have a result — use it (fresh or stale)
-        if (!currentUser) { incrementUsage(); updateAuthBar(); updatePaywall(); }
         currentSlug = cached.slug;
         displayResearch(cached.data);
         showCacheStrip(cached.daysOld, cached.slug, !cached.fresh);
@@ -1900,9 +1899,12 @@
 
     async function runResearch(payload) {
       try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (session?.access_token) reqHeaders['Authorization'] = `Bearer ${session.access_token}`;
         const res = await fetch('/api/research', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: reqHeaders,
           body: JSON.stringify(payload),
         });
 
@@ -1916,13 +1918,6 @@
         }
 
         const research = await res.json();
-
-        // Increment the free-tier counter (for anonymous users)
-        if (!currentUser) {
-          incrementUsage();
-          updateAuthBar(); // refresh usage pill
-          updatePaywall(); // refresh paywall state
-        }
 
         displayResearch(research);
 

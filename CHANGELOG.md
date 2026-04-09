@@ -5,6 +5,17 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.5 — 2026-04-09
+
+### Feature: require login to search + auth-aware rate limits
+
+- **Login gate:** `handleSubmit()` now checks `currentUser` first — unauthenticated visitors see the sign-in modal instead of consuming a search slot
+- **Auth-aware rate limiting:** `research.js` verifies the user's Bearer token via Supabase; authenticated users bypass the 5/hour IP cap (free users are still subject to the 3/day `check-limit.js` quota; Pro users have no quota)
+- **Dead code removal:** removed `incrementUsage()` calls from cache hit and fresh research paths — anonymous usage tracking is no longer needed
+- Auth token is now forwarded from `runResearch()` to `/api/research` via `Authorization` header
+
+---
+
 ## v1.8.3 — 2026-04-08
 
 ### Fix: admin→root logout + admin toggle button

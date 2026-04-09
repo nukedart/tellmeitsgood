@@ -140,15 +140,31 @@ export default async function handler(req, res) {
   }
 
   // ── 0. Rate limiting ───────────────────────────────────────
-  // Research is the most expensive call (Claude + web search).
-  // 5 requests per IP per hour is generous for real use and
-  // prevents a single person or bot from running up your bill.
-  const limited = rateLimit(req, res, {
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5,
-    message: 'You have made too many research requests. Please try again in an hour.',
-  });
-  if (limited) return;
+  // Authenticated users (valid Supabase token) bypass IP rate limit —
+  // their daily quota is enforced by check-limit.js instead.
+  // Unauthenticated API calls (bots, direct abuse) still get capped.
+  const userAuth = req.headers.authorization || '';
+  let isAuthenticated = false;
+  if (userAuth.startsWith('Bearer ')) {
+    try {
+      const verifyRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+          'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': userAuth,
+        },
+      });
+      isAuthenticated = verifyRes.ok;
+    } catch { /* treat as unauthenticated */ }
+  }
+
+  if (!isAuthenticated) {
+    const limited = rateLimit(req, res, {
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 5,
+      message: 'You have made too many research requests. Please try again in an hour.',
+    });
+    if (limited) return;
+  }
 
   // ── 1. Only accept POST requests ──────────────────────────
   if (req.method !== 'POST') {
