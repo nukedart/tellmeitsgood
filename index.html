@@ -770,7 +770,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.2</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.3</p>
     </footer>
   </div>
 
@@ -995,7 +995,7 @@
         if (session?.user) {
           currentUser = session.user;
           await checkProStatus();
-          checkAdminStatus().then(() => updateAuthBar()); // non-blocking
+          checkAdminStatus().then(() => { updateAuthBar(); updatePaywall(); }); // non-blocking
         }
         updateAuthBar();
         updatePaywall();
@@ -1032,6 +1032,7 @@
           headers: { 'Authorization': `Bearer ${session.access_token}` },
         });
         currentUserAdmin = r.ok;
+        if (currentUserAdmin) currentUserPro = true; // admin always has pro access
       } catch { currentUserAdmin = false; }
     }
 

@@ -5,6 +5,15 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.3 — 2026-04-09
+
+### Fix: admin account now inherits Pro access automatically
+
+- `checkAdminStatus()` sets `currentUserPro = true` when the admin ping succeeds — admin always has full Pro access without needing a Stripe subscription
+- After admin check resolves, both `updateAuthBar()` and `updatePaywall()` are called so the "Go Pro" button and search limit gate rerender correctly
+
+---
+
 ## v1.9.2 — 2026-04-09
 
 ### Security: hardened headers + env var validation + prompt injection defense
