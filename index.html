@@ -770,7 +770,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.8.9</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.0</p>
     </footer>
   </div>
 
@@ -1130,6 +1130,7 @@
       card.style.opacity    = blocked ? '0.4' : '1';
       card.style.pointerEvents = blocked ? 'none' : '';
       submitBtn.disabled    = blocked;
+      submitBtn.textContent = currentUser ? 'Research this product →' : 'Sign in to search →';
 
       // Show sign-in button inside paywall only if not logged in
       if (signInPrompt) signInPrompt.style.display = !currentUser ? 'inline-flex' : 'none';

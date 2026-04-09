@@ -5,6 +5,14 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.0 — 2026-04-09
+
+### Fix: search button communicates login requirement
+
+- Submit button now reads "Sign in to search →" for logged-out visitors and "Research this product →" once signed in — no more surprise auth modal with no warning
+
+---
+
 ## v1.8.9 — 2026-04-09
 
 ### Polish: Go Pro screen redesign — pricing cards + annual default
