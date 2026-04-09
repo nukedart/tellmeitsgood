@@ -5,6 +5,16 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.1 — 2026-04-09
+
+### Fix: instant sign-out — no more UI lag
+
+- `handleSignOut()` clears all state and closes the modal synchronously before the network call, so the UI responds instantly
+- `supabaseClient.auth.signOut()` now fires in the background (fire-and-forget) to invalidate the server-side refresh token
+- `SIGNED_OUT` handler short-circuits with an early return when `currentUser` is already null — skips the expensive `getSession()` re-verification that was adding another round-trip on every explicit sign-out
+
+---
+
 ## v1.9.0 — 2026-04-09
 
 ### Fix: search button communicates login requirement

@@ -770,7 +770,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.1</p>
     </footer>
   </div>
 
@@ -965,9 +965,12 @@
       }
 
       // SIGNED_OUT fires on explicit signOut(), refresh token failure, or a spurious
-      // navigator.locks race on rapid page reloads. Verify with getSession() before
-      // clearing state — if a valid session still exists, keep the user signed in.
+      // navigator.locks race on rapid page reloads.
+      // If handleSignOut() already cleared currentUser synchronously, skip everything.
+      // Otherwise verify with getSession() — if a valid session still exists it was
+      // spurious, so keep the user signed in.
       if (event === 'SIGNED_OUT') {
+        if (!currentUser) return; // already handled by handleSignOut()
         try {
           const { data: { session: live } } = await supabaseClient.auth.getSession();
           if (live?.user) {
@@ -977,7 +980,7 @@
             updatePaywall();
             return;
           }
-        } catch { /* fall through to sign-out */ }
+        } catch { /* fall through */ }
         _hlCache = null; _savedCache = null; window._hiItems = {};
         currentUser      = null;
         currentUserPro   = false;
@@ -1773,8 +1776,21 @@
     // ============================================================
     async function handleSignOut() {
       try { sessionStorage.removeItem('_isAdmin'); } catch {}
-      await supabaseClient.auth.signOut();
+
+      // Clear state synchronously so the UI responds instantly —
+      // don't wait for the network call to Supabase.
+      _hlCache = null; _savedCache = null; window._hiItems = {};
+      currentUser      = null;
+      currentUserPro   = false;
+      currentUserAdmin = false;
+      updateAuthBar();
+      updatePaywall();
       closeModal('settingsModal');
+
+      // Invalidate the refresh token server-side in the background.
+      // The SIGNED_OUT event will fire but currentUser is already null,
+      // so the handler skips the expensive getSession() re-verification.
+      supabaseClient.auth.signOut().catch(() => {});
     }
 
     // ============================================================
