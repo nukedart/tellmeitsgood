@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.8.7 — 2026-04-09
+
+### Feature: batch import — multiple products from one Perplexity paste
+
+- **admin-import.js:** Claude now returns a JSON array; saves one DB row per product found — one paste can import 3, 5, or 10 products at once
+- **Normalisation:** if Claude returns a single object instead of array, it's auto-wrapped so single-product imports still work
+- **max_tokens** raised to 16,000 to accommodate multiple full schemas in one response
+- **Admin import UI:** product name field replaced with optional "Research topic" hint; result panel lists all imported products with badge, score, slug, and TL;DR
+- **Perplexity prompt template** updated to show multi-product batch format
+
+---
+
 ## v1.8.6 — 2026-04-09
 
 ### Admin: side nav layout + import fix

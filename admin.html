@@ -757,9 +757,9 @@
           <button onclick="copyPrompt()" style="font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-surf);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:5px 14px;cursor:pointer;">Copy prompt</button>
         </div>
         <div class="breakdown-card" style="padding:0;">
-          <pre id="perplexityPrompt" style="font-family:monospace;font-size:12px;color:var(--text-2);white-space:pre-wrap;line-height:1.6;margin:0;padding:18px;overflow-x:auto;">Research: [PRODUCT NAME]
+          <pre id="perplexityPrompt" style="font-family:monospace;font-size:12px;color:var(--text-2);white-space:pre-wrap;line-height:1.6;margin:0;padding:18px;overflow-x:auto;">Research: [PRODUCT NAME or "Top 3 [category]" for batch]
 
-I need detailed findings for a product quality and ethics audit. Search thoroughly and provide specific evidence with source URLs.
+For EACH product covered, provide detailed findings for a quality and ethics audit. Label each product clearly (e.g. "## Product 1: Brand Name Model"). Search thoroughly and provide specific evidence with source URLs.
 
 GATE 1 — VALUE &amp; QUALITY
 1. Core performance: How well does it actually work? Professional reviews, owner reports, lab tests.
@@ -790,12 +790,13 @@ For each criterion provide: your finding, a suggested score (1–10), and the so
         <div class="section-title" style="margin-bottom:16px">Paste research &amp; import</div>
         <div class="form-group">
           <div>
-            <label class="form-label" for="importProductName">Product name</label>
-            <input class="form-input" id="importProductName" type="text" placeholder="e.g. Blueland dish soap tablets" />
+            <label class="form-label" for="importResearchTopic">Research topic <span style="font-weight:400;color:var(--text-3)">(optional — e.g. "top 3 chef's knives")</span></label>
+            <input class="form-input" id="importResearchTopic" type="text" placeholder="e.g. top 3 chef's knives" />
           </div>
           <div>
             <label class="form-label" for="importResearchText">Perplexity research output</label>
-            <textarea class="form-textarea" id="importResearchText" rows="16" placeholder="Paste the full Perplexity deep research output here…"></textarea>
+            <p style="font-size:12px;color:var(--text-3);margin-bottom:8px;">Can cover one product or multiple — Claude will detect each and import them all.</p>
+            <textarea class="form-textarea" id="importResearchText" rows="18" placeholder="Paste the full Perplexity deep research output here…"></textarea>
           </div>
           <div style="display:flex;align-items:center;gap:14px;">
             <button class="primary-btn" id="importBtn" onclick="runImport()">Format &amp; Import →</button>
@@ -805,7 +806,7 @@ For each criterion provide: your finding, a suggested score (1–10), and the so
       </div>
 
       <div id="importResult" style="display:none;margin-top:8px;" class="notice success">
-        <div class="notice-title">Imported successfully</div>
+        <div class="notice-title" id="importResultTitle">Imported successfully</div>
         <div id="importResultBody" style="color:var(--text);"></div>
       </div>
       <div id="importError" style="display:none;margin-top:8px;" class="notice danger"></div>`;
@@ -817,29 +818,33 @@ For each criterion provide: your finding, a suggested score (1–10), and the so
   }
 
   async function runImport() {
-    const productName  = document.getElementById('importProductName')?.value.trim();
-    const researchText = document.getElementById('importResearchText')?.value.trim();
-    const btn          = document.getElementById('importBtn');
-    const status       = document.getElementById('importStatus');
-    const resultBox    = document.getElementById('importResult');
-    const resultBody   = document.getElementById('importResultBody');
-    const errorBox     = document.getElementById('importError');
+    const researchTopic = document.getElementById('importResearchTopic')?.value.trim();
+    const researchText  = document.getElementById('importResearchText')?.value.trim();
+    const btn           = document.getElementById('importBtn');
+    const status        = document.getElementById('importStatus');
+    const resultBox     = document.getElementById('importResult');
+    const resultTitle   = document.getElementById('importResultTitle');
+    const resultBody    = document.getElementById('importResultBody');
+    const errorBox      = document.getElementById('importError');
 
     errorBox.style.display  = 'none';
     resultBox.style.display = 'none';
 
-    if (!productName) { errorBox.style.display='block'; errorBox.textContent='Enter a product name.'; return; }
-    if (!researchText || researchText.length < 100) { errorBox.style.display='block'; errorBox.textContent='Paste the Perplexity research output (needs at least 100 characters).'; return; }
+    if (!researchText || researchText.length < 100) {
+      errorBox.style.display='block';
+      errorBox.textContent='Paste the Perplexity research output (needs at least 100 characters).';
+      return;
+    }
 
     btn.disabled = true;
     btn.textContent = 'Formatting…';
-    status.textContent = 'Claude Sonnet is converting the research into the Triple Filter schema…';
+    status.textContent = 'Claude Sonnet is reading the research and building each product schema…';
 
     try {
       const r = await fetch('/api/admin-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_session.access_token}` },
-        body: JSON.stringify({ productName, researchText, accessToken: _session.access_token }),
+        body: JSON.stringify({ researchTopic, researchText, accessToken: _session.access_token }),
       });
       const data = await r.json();
       if (!r.ok) {
@@ -850,15 +855,22 @@ For each criterion provide: your finding, a suggested score (1–10), and the so
       }
 
       status.textContent = '';
+      const products = data.products || [];
+      resultTitle.textContent = `Imported ${products.length} product${products.length !== 1 ? 's' : ''} successfully`;
       resultBox.style.display = 'block';
-      resultBody.innerHTML = `
-        <div style="margin-bottom:6px;"><strong>Product:</strong> ${esc(data.research?.productName || productName)}</div>
-        <div style="margin-bottom:6px;"><strong>Badge:</strong> ${esc(data.badge || '—')}</div>
-        <div style="margin-bottom:6px;"><strong>Score:</strong> ${data.overallScore ?? '—'}/10</div>
-        <div style="margin-bottom:10px;"><strong>Slug:</strong> <a href="/p/${esc(data.slug)}" target="_blank" style="color:var(--success)">/p/${esc(data.slug)}</a></div>
-        <div><strong>TL;DR:</strong> ${esc(data.research?.summary?.tldr || '—')}</div>`;
+      resultBody.innerHTML = products.map((p, i) => `
+        <div style="${i > 0 ? 'margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,0,0,.08);' : ''}">
+          <div style="font-weight:600;margin-bottom:4px;">${esc(p.productName || p.slug)}</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+            <span>${badgePill(p.badge)}</span>
+            <span>Score: <strong>${p.overallScore ?? '—'}/10</strong></span>
+            <a href="/p/${esc(p.slug)}" target="_blank" style="color:var(--success)">/p/${esc(p.slug)}</a>
+            ${p.error ? `<span style="color:var(--danger)">${esc(p.error)}</span>` : ''}
+          </div>
+          ${p.tldr ? `<div style="font-size:12px;color:var(--text-2);margin-top:4px;">${esc(p.tldr)}</div>` : ''}
+        </div>`).join('');
 
-      document.getElementById('importProductName').value = '';
+      document.getElementById('importResearchTopic').value = '';
       document.getElementById('importResearchText').value = '';
     } catch (err) {
       errorBox.style.display = 'block';

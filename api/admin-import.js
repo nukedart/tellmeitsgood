@@ -20,21 +20,36 @@ function slugify(str) {
     .replace(/^-|-$/g, '');
 }
 
-function extractOutermostJson(text) {
-  // Strip markdown code fences (```json ... ``` or ``` ... ```)
+// Extracts the outermost JSON array or object from a Claude response.
+// Returns the parsed value (may be an array or an object).
+function extractJson(text) {
+  // Strip markdown code fences
   let cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
 
-  const start = cleaned.indexOf('{');
-  if (start === -1) return null;
+  // First try a straight parse in case the response is clean
+  try { return JSON.parse(cleaned); } catch {}
+
+  // Find the first [ or { and balance-match to the end
+  const firstBracket = cleaned.indexOf('[');
+  const firstBrace   = cleaned.indexOf('{');
+  let start;
+  if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+    start = firstBracket;
+  } else if (firstBrace !== -1) {
+    start = firstBrace;
+  } else {
+    return null;
+  }
+
   let depth = 0, inString = false, escape = false;
   for (let i = start; i < cleaned.length; i++) {
-    const char = cleaned[i];
+    const c = cleaned[i];
     if (escape) { escape = false; continue; }
-    if (char === '\\' && inString) { escape = true; continue; }
-    if (char === '"') { inString = !inString; continue; }
+    if (c === '\\' && inString) { escape = true; continue; }
+    if (c === '"') { inString = !inString; continue; }
     if (!inString) {
-      if (char === '{') depth++;
-      if (char === '}') {
+      if (c === '[' || c === '{') depth++;
+      if (c === ']' || c === '}') {
         depth--;
         if (depth === 0) {
           try { return JSON.parse(cleaned.slice(start, i + 1)); } catch { return null; }
@@ -54,7 +69,7 @@ export default async function handler(req, res) {
   const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
   // ── Auth: verify admin session ────────────────────────────
-  const { productName, researchText, accessToken } = req.body || {};
+  const { researchTopic, researchText, accessToken } = req.body || {};
 
   if (!accessToken) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -66,9 +81,6 @@ export default async function handler(req, res) {
   if (user.email !== ADMIN_EMAIL) return res.status(403).json({ error: 'Forbidden' });
 
   // ── Validate inputs ───────────────────────────────────────
-  if (!productName || typeof productName !== 'string' || productName.trim().length < 2) {
-    return res.status(400).json({ error: 'productName required' });
-  }
   if (!researchText || typeof researchText !== 'string' || researchText.trim().length < 100) {
     return res.status(400).json({ error: 'researchText too short (need at least 100 chars)' });
   }
@@ -100,13 +112,14 @@ POST NARRATIVE VOICE:
 - Never use: "comprehensive", "seamlessly", "robust", "game-changer", "revolutionary".
 
 CRITICAL OUTPUT RULES:
-- Your ENTIRE response must be a single valid JSON object.
-- Do NOT write any text before { or after }
+- Your ENTIRE response must be a valid JSON array — even if there is only one product.
+- Start with [ and end with ]
+- Do NOT write any text before [ or after ]
 - Do NOT use markdown code fences.
 
-Return this exact JSON structure:
+Return a JSON array where each element follows this exact schema (one element per distinct product found in the research):
 
-{
+[{
   "productName": string,
   "brand": string,
   "price": "$XX.XX or Price not found",
@@ -168,7 +181,7 @@ Return this exact JSON structure:
     "who_its_not_for": "one sentence describing who should skip it",
     "bottom_line": "the single most honest thing you can say"
   }
-}`;
+}]`;
 
   try {
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -180,11 +193,11 @@ Return this exact JSON structure:
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 6000,
+        max_tokens: 16000,
         system: systemPrompt,
         messages: [{
           role: 'user',
-          content: `Product name: ${productName.trim()}\n\nPerplexity research findings:\n\n${researchText.trim()}`,
+          content: `${researchTopic ? `Research topic: ${researchTopic}\n\n` : ''}Perplexity research findings:\n\n${researchText.trim()}`,
         }],
       }),
     });
@@ -196,9 +209,9 @@ Return this exact JSON structure:
 
     const claudeData = await claudeRes.json();
     const rawText = claudeData.content?.find(b => b.type === 'text')?.text || '';
-    const research = extractOutermostJson(rawText);
+    const parsed = extractJson(rawText);
 
-    if (!research) {
+    if (!parsed) {
       console.error('JSON parse failed. Raw (first 800):', rawText.slice(0, 800));
       return res.status(502).json({
         error: 'Could not parse Claude response as JSON.',
@@ -207,38 +220,55 @@ Return this exact JSON structure:
       });
     }
 
-    // ── Save to products table ────────────────────────────────
-    const slug = slugify(research.productName || productName);
-    const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SERVICE_KEY,
-        'Authorization': `Bearer ${SERVICE_KEY}`,
-        'Prefer': 'resolution=merge-duplicates',
-      },
-      body: JSON.stringify({
-        slug,
-        query:          (research.productName || productName).toLowerCase().trim(),
-        product_name:   research.productName   || productName,
-        brand:          research.brand          || null,
-        badge:          research.badge          || null,
-        category:       research.category       || null,
-        overall_score:  research.overallScore   || null,
-        full_result:    research,
-        post_narrative: research.post_narrative || null,
-        researched_at:  new Date().toISOString(),
-        is_public:      true,
-      }),
-    });
+    // Normalise to array — Claude may return a single object if research covers one product
+    const items = Array.isArray(parsed) ? parsed : [parsed];
 
-    if (!saveRes.ok) {
-      const err = await saveRes.text();
-      console.error('Supabase save error:', saveRes.status, err);
-      return res.status(502).json({ error: 'Formatted OK but failed to save to database.' });
+    // ── Save each product to the products table ───────────────
+    const now = new Date().toISOString();
+    const saved = [];
+
+    for (const research of items) {
+      if (!research || typeof research !== 'object') continue;
+      const slug = slugify(research.productName || 'unknown-product');
+      const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SERVICE_KEY,
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          slug,
+          query:          (research.productName || '').toLowerCase().trim(),
+          product_name:   research.productName   || null,
+          brand:          research.brand          || null,
+          badge:          research.badge          || null,
+          category:       research.category       || null,
+          overall_score:  research.overallScore   || null,
+          full_result:    research,
+          post_narrative: research.post_narrative || null,
+          researched_at:  now,
+          is_public:      true,
+        }),
+      });
+
+      if (!saveRes.ok) {
+        const err = await saveRes.text();
+        console.error('Supabase save error for', slug, ':', saveRes.status, err);
+        saved.push({ slug, error: 'Failed to save to database' });
+      } else {
+        saved.push({
+          slug,
+          productName:  research.productName,
+          badge:        research.badge,
+          overallScore: research.overallScore,
+          tldr:         research.summary?.tldr || null,
+        });
+      }
     }
 
-    return res.json({ ok: true, slug, badge: research.badge, overallScore: research.overallScore, research });
+    return res.json({ ok: true, count: saved.length, products: saved });
 
   } catch (err) {
     console.error('admin-import error:', err.message);
