@@ -5,6 +5,14 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.4 — 2026-04-09
+
+### Cost: slim research_queue fetch — drop select=*
+
+- `processQueue()` now fetches only `id,query,user_email,user_id` instead of `select=*` — avoids pulling `full_result` and other large columns on every cron tick
+
+---
+
 ## v1.9.3 — 2026-04-09
 
 ### Fix: admin account now inherits Pro access automatically

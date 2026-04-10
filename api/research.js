@@ -355,7 +355,7 @@ async function processQueue(res) {
   try {
     // 1. Fetch one pending queue item
     const qRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/research_queue?status=eq.pending&order=created_at.asc&limit=1&select=*`,
+      `${SUPABASE_URL}/rest/v1/research_queue?status=eq.pending&order=created_at.asc&limit=1&select=id,query,user_email,user_id`,
       { headers: sbHeaders }
     );
     const items = await qRes.json();
