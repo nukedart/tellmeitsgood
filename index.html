@@ -219,7 +219,13 @@
     .logo { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 24px; }
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
     .headline { font-family: var(--font-display); font-size: clamp(26px, 6vw, 44px); line-height: 1.15; color: var(--text); margin-bottom: 12px; }
-    .subheadline { font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 480px; margin: 0 auto; }
+    .subheadline { font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 480px; margin: 0 auto 24px; }
+    .how-it-works { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 0; }
+    .how-step { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 5px 12px; }
+    .how-step-num { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .how-step-arrow { color: var(--border-strong); font-size: 14px; }
+    .trust-strip { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .trust-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3); }
 
     /* ── Input card ── */
     .input-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px 16px; box-shadow: var(--shadow-md); margin-bottom: 20px; }
@@ -583,8 +589,15 @@
   <div class="page">
     <header class="header">
       <div class="logo"><span class="logo-dot"></span>tellmeitsgood.com</div>
-      <h1 class="headline">The trusted place to discover products worth buying.</h1>
-      <p class="subheadline">High quality. Non-toxic. From honest companies. AI-researched so it stays current — not sponsored, not curated by ads.</p>
+      <h1 class="headline">Is it actually good?<br>We'll tell you.</h1>
+      <p class="subheadline">Every product scored on quality, ingredient safety, and company ethics — AI-researched from real sources, no ads, no sponsored results.</p>
+      <div class="how-it-works">
+        <div class="how-step"><span class="how-step-num">1</span>Type any product</div>
+        <span class="how-step-arrow">→</span>
+        <div class="how-step"><span class="how-step-num">2</span>We research 15 criteria</div>
+        <span class="how-step-arrow">→</span>
+        <div class="how-step"><span class="how-step-num">3</span>Get an honest verdict</div>
+      </div>
     </header>
 
     <!-- ── Input section ── -->
@@ -612,6 +625,14 @@
 
       <p class="examples-hint" id="examplesHint">People are researching right now:</p>
       <div class="examples" id="exampleChips"></div>
+
+      <div class="trust-strip" id="trustStrip">
+        <span class="trust-chip">✓ No affiliate influence on scores</span>
+        <span class="trust-chip">·</span>
+        <span class="trust-chip">✓ Sources cited for every claim</span>
+        <span class="trust-chip">·</span>
+        <span class="trust-chip">✓ Re-researched every 30 days</span>
+      </div>
 
       <!-- Paywall banner — shown below input when free limit reached -->
       <div class="paywall-banner" id="paywallBanner">
@@ -770,7 +791,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.4</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.5</p>
     </footer>
   </div>
 

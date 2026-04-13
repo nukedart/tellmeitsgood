@@ -5,6 +5,17 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.5 — 2026-04-13
+
+### Feature: landing page copy for cold visitors
+
+- **Headline** rewritten to "Is it actually good? We'll tell you." — direct, punchy, answers the question every visitor has
+- **Subheadline** rewritten to lead with the three-gate value prop (quality · ingredients · ethics) and call out "no ads, no sponsored results"
+- **How it works** — 3-step pill strip below the subheadline (Type → Research → Verdict) gives first-time visitors an instant mental model
+- **Trust strip** — 3 proof chips below the search chips (no affiliate influence · sources cited · re-researched every 30 days); hidden automatically when results load since it lives inside `inputSection`
+
+---
+
 ## v1.9.4 — 2026-04-09
 
 ### Cost: slim research_queue fetch — drop select=*
