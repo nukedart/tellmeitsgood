@@ -5,6 +5,44 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.7 — 2026-04-17
+
+### Feature: Price Tracker
+
+- **Price Tracker panel** — collapsible section at the bottom of the main page. Paste any product URL → Claude Haiku scrapes the page and extracts the current price → stored in a new `price_history` Supabase table.
+- **Trend indicator** — compares the latest check to the previous one and shows ▲/▼/— with a percentage change.
+- **Price history list** — shows all past checks for the same URL (most recent first), so you can see how the price has moved over time.
+- **`/api/price-track.js`** — POST endpoint. Fetches the page via plain HTTP (no Firecrawl), extracts JSON-LD structured data + visible text, asks Claude Haiku for `product_name`, `price_text`, `price_cents`, `currency`. Rate limited 10/IP/hour.
+- **`/api/price-history.js`** — GET endpoint. Returns up to 20 price checks for a given URL from `price_history`.
+- Works without auth (anonymous tracking via hashed IP). Dark mode supported throughout.
+
+### Supabase table required
+```sql
+CREATE TABLE IF NOT EXISTS price_history (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_url  text NOT NULL,
+  product_name text,
+  price_text   text,
+  price_cents  int,
+  currency     text DEFAULT 'USD',
+  checked_at   timestamptz DEFAULT now(),
+  ip_hash      text
+);
+CREATE INDEX IF NOT EXISTS price_history_url_idx ON price_history (product_url, checked_at DESC);
+```
+
+---
+
+## v1.9.6 — 2026-04-15
+
+### Improvements: research validation, autocomplete ranking, NOT_LISTED tracking
+
+- **Research JSON validation** — after extracting Claude's JSON, validate all required fields (gates, criteria, post_narrative) before returning or caching. Incomplete responses return a retryable 502 instead of silently producing broken cards.
+- **Autocomplete relevance ranking** — fetch 20 candidates and re-rank by query match quality (exact → starts with → all words → any word) before returning 6. Previously sorted only by overall_score, which buried obvious matches.
+- **NOT_LISTED reason tracking** — `research.js` now derives `not_listed_reason` (`gate1_low` | `gate2_disqualified` | `gate3_disqualified` | `other`) and saves it to `products.not_listed_reason`. Requires a `not_listed_reason text` column in Supabase.
+
+---
+
 ## v1.9.5 — 2026-04-13
 
 ### Feature: landing page copy for cold visitors
