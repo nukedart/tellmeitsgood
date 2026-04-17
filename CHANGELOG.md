@@ -5,6 +5,25 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.9 — 2026-04-17
+
+### Feature: per-user job queue + background research
+
+- **Job Queue drawer** — "Jobs" button in the auth bar opens a right-side drawer (bottom sheet on mobile) showing all of the user's research jobs: queued, researching, and done. Badge + score shown on completed jobs. "View verdict →" links to the product page.
+- **Background-safe research** — every search now creates a `research_queue` entry first, then marks it `processing` before the direct API call starts. If the user navigates away mid-research, the job stays in the queue and the existing Vercel Cron picks it up and completes it.
+- **On-page-load restore** — when a user returns to the app, `INITIAL_SESSION` now fetches their recent jobs and resumes polling if any are pending/processing. Completed jobs appear immediately in the drawer.
+- **Polling** — every 5 seconds while jobs are active; stops automatically when the queue is clear.
+- **New `/api/job-queue.js`** — POST (create), GET (list), PATCH (update status/badge/score/slug). Ownership-verified before any update.
+- **`research.js` cron** — `processQueue` now saves `badge` and `overall_score` to the queue row when marking done, so the drawer shows the result without a separate products lookup.
+
+### Supabase migration required
+```sql
+ALTER TABLE research_queue ADD COLUMN IF NOT EXISTS badge text;
+ALTER TABLE research_queue ADD COLUMN IF NOT EXISTS overall_score numeric(4,1);
+```
+
+---
+
 ## v1.9.8 — 2026-04-17
 
 ### Features: badge tooltip + price drop alerts + price tracker cooldown

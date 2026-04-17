@@ -460,6 +460,54 @@
     .footer { text-align: center; margin-top: 64px; font-size: 12px; color: var(--text-3); }
     @media (max-width: 480px) { .page { padding: 40px 16px 60px; } .input-card { padding: 20px; } }
 
+    /* ── Job Queue Drawer ── */
+    .job-drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 149; }
+    .job-drawer-backdrop.open { display: block; }
+    .job-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 340px; max-width: 100vw;
+      background: var(--card); border-left: 1px solid var(--border); z-index: 150;
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+      box-shadow: var(--shadow-lg);
+    }
+    .job-drawer.open { transform: translateX(0); }
+    @media (max-width: 480px) {
+      .job-drawer { width: 100vw; top: auto; border-left: none; border-top: 1px solid var(--border); border-radius: var(--radius-xl) var(--radius-xl) 0 0; max-height: 75vh; }
+    }
+    .job-drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .job-drawer-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .job-drawer-close { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: var(--font-body); flex-shrink: 0; }
+    .job-drawer-close:hover { background: var(--surface-2); color: var(--text); }
+    .job-drawer-list { flex: 1; overflow-y: auto; padding: 12px 0; }
+    .job-drawer-empty { padding: 32px 20px; text-align: center; font-size: 13px; color: var(--text-3); }
+    .job-card { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: default; transition: background .12s; }
+    .job-card:last-child { border-bottom: none; }
+    .job-card:hover { background: var(--surface); }
+    .job-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+    .job-card-query { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .job-card-status { flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 100px; text-transform: uppercase; }
+    .job-card-status.pending    { background: var(--surface-2); color: var(--text-3); }
+    .job-card-status.processing { background: var(--accent-surf); color: var(--accent-text); }
+    .job-card-status.done       { background: var(--success-surf); color: var(--success); }
+    .job-card-status.failed     { background: var(--danger-surf); color: var(--danger); }
+    .job-card-meta { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
+    .job-card-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-bottom: 6px; }
+    .job-card-badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); }
+    .job-card-badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; }
+    .job-card-badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; }
+    .job-card-badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); }
+    .job-card-badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); }
+    .job-card-actions { display: flex; gap: 8px; }
+    .job-card-view-btn { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-surf); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 4px 12px; cursor: pointer; transition: all .12s; }
+    .job-card-view-btn:hover { background: var(--accent); color: #fff; }
+    .job-card-spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--accent-surf); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 5px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .job-queue-btn { font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 6px 12px; cursor: pointer; font-family: var(--font-body); transition: all .15s; display: flex; align-items: center; gap: 6px; }
+    .job-queue-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-surf); }
+    .job-queue-count { font-size: 10px; font-weight: 800; background: var(--accent); color: #fff; border-radius: 100px; padding: 1px 6px; min-width: 16px; text-align: center; }
+    .job-queue-count.active { background: var(--warning); animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+
     /* ── Badge tooltip ── */
     .badge { cursor: pointer; }
     .badge-tooltip {
@@ -540,6 +588,18 @@
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+
+  <!-- ── Job Queue Drawer ── -->
+  <div class="job-drawer-backdrop" id="jobDrawerBackdrop" onclick="closeJobDrawer()"></div>
+  <div class="job-drawer" id="jobDrawer" role="dialog" aria-label="Research jobs">
+    <div class="job-drawer-header">
+      <span class="job-drawer-title">Research Jobs</span>
+      <button class="job-drawer-close" onclick="closeJobDrawer()" aria-label="Close">×</button>
+    </div>
+    <div class="job-drawer-list" id="jobDrawerList">
+      <div class="job-drawer-empty">No research jobs yet. Start a search to track it here.</div>
+    </div>
+  </div>
 
   <!-- ── Badge tooltip (global, positioned by JS) ── -->
   <div class="badge-tooltip" id="badgeTooltip" role="tooltip" aria-live="polite">
@@ -924,7 +984,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.8</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.9</p>
     </footer>
   </div>
 
@@ -1150,6 +1210,11 @@
           currentUser = session.user;
           await checkProStatus();
           checkAdminStatus().then(() => { updateAuthBar(); updatePaywall(); }); // non-blocking
+          // Load jobs and resume polling for any in-progress work
+          loadJobs().then(jobs => {
+            const hasActive = jobs.some(j => j.status === 'pending' || j.status === 'processing');
+            if (hasActive) startJobPolling();
+          });
         }
         updateAuthBar();
         updatePaywall();
@@ -1231,6 +1296,13 @@
           left.appendChild(adminLink);
         }
 
+        // Jobs queue button
+        const jobsBtn = document.createElement('button');
+        jobsBtn.id = 'jobQueueBtn';
+        jobsBtn.className = 'job-queue-btn';
+        jobsBtn.onclick = toggleJobDrawer;
+        jobsBtn.innerHTML = 'Jobs <span class="job-queue-count" id="jobQueueCount" style="display:none">0</span>';
+
         // Gear icon — opens settings modal
         const gearBtn = document.createElement('button');
         gearBtn.className = 'auth-bar-gear';
@@ -1239,6 +1311,7 @@
         gearBtn.onclick = openSettings;
 
         right.innerHTML = '';
+        right.appendChild(jobsBtn);
         right.appendChild(gearBtn);
 
       } else {
@@ -2144,12 +2217,19 @@
         return;
       }
 
-      // ── No cache — run fresh research ──
+      // ── No cache — create job then run fresh research ──
       showLoading('Researching ' + q + '...', 'Claude is searching reviews, ingredients, and company records');
-      await runResearch({ query: q });
+      const job = await createJob(q);
+      _activeJobId = job?.job_id || null;
+      if (_activeJobId) {
+        await patchJob(_activeJobId, { status: 'processing' });
+        startJobPolling();
+        renderJobDrawer();
+      }
+      await runResearch({ query: q }, _activeJobId);
     }
 
-    async function runResearch(payload) {
+    async function runResearch(payload, jobId) {
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
         const reqHeaders = { 'Content-Type': 'application/json' };
@@ -2194,14 +2274,32 @@
               currentSlug = saved.slug;
               showCacheStrip(0, saved.slug, false);
             }
+            // Mark job done with badge/score/slug now that we have the slug
+            if (jobId) {
+              patchJob(jobId, {
+                status: 'done',
+                badge: research.badge || null,
+                overall_score: research.overallScore || null,
+                result_slug: saved?.slug || null,
+              });
+              _activeJobId = null;
+              renderJobDrawer();
+            }
             sendNotifyEmail(research, saved?.slug);
           });
         } else {
+          if (jobId) {
+            patchJob(jobId, { status: 'done', badge: research.badge || null, overall_score: research.overallScore || null });
+            _activeJobId = null;
+            renderJobDrawer();
+          }
           sendNotifyEmail(research, null);
         }
 
       } catch (err) {
         hideLoading();
+        // Revert job to pending so cron can retry
+        if (jobId) patchJob(jobId, { status: 'pending' });
         const msg = (err.message || '').includes('JSON') || (err.message || '').includes('Unexpected token')
           ? 'The research took too long. Please try again.'
           : (err.message || 'Something went wrong. Please try again.');
@@ -2663,6 +2761,174 @@
 
     // Initial render (user not yet known — shows static chips)
     _renderStaticChips();
+
+    // ============================================================
+    // JOB QUEUE
+    // ============================================================
+
+    let _jobs = [];
+    let _activeJobId = null;
+    let _jobPollInterval = null;
+    let _jobDrawerOpen = false;
+
+    const JOB_BADGE_LABELS = {
+      TELL_ME_ITS_GOOD: "⭐ Tell Me It's Good",
+      CLEAN_PICK:  '🌿 Clean Pick',
+      ETHICAL_PICK:'🤝 Ethical Pick',
+      QUALITY_PICK:'✓ Quality Pick',
+      NOT_LISTED:  '✗ Not Listed',
+    };
+
+    async function getAccessToken() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      return session?.access_token || null;
+    }
+
+    async function createJob(query) {
+      if (!currentUser) return null;
+      try {
+        const token = await getAccessToken();
+        if (!token) return null;
+        const r = await fetch('/api/job-queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ query }),
+        });
+        if (!r.ok) return null;
+        return await r.json();
+      } catch { return null; }
+    }
+
+    async function patchJob(jobId, patch) {
+      if (!currentUser || !jobId) return;
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        await fetch(`/api/job-queue?job_id=${jobId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(patch),
+        });
+        // Update local state
+        const j = _jobs.find(j => j.id === jobId);
+        if (j) Object.assign(j, patch);
+        updateJobQueueBtn();
+      } catch { /* non-fatal */ }
+    }
+
+    async function loadJobs() {
+      if (!currentUser) return [];
+      try {
+        const token = await getAccessToken();
+        if (!token) return [];
+        const r = await fetch('/api/job-queue', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!r.ok) return [];
+        const { jobs } = await r.json();
+        _jobs = Array.isArray(jobs) ? jobs : [];
+        updateJobQueueBtn();
+        renderJobDrawer();
+        return _jobs;
+      } catch { return []; }
+    }
+
+    function startJobPolling() {
+      if (_jobPollInterval) return;
+      _jobPollInterval = setInterval(async () => {
+        await loadJobs();
+        const hasActive = _jobs.some(j => j.status === 'pending' || j.status === 'processing');
+        if (!hasActive) stopJobPolling();
+      }, 5000);
+    }
+
+    function stopJobPolling() {
+      clearInterval(_jobPollInterval);
+      _jobPollInterval = null;
+    }
+
+    function updateJobQueueBtn() {
+      const btn   = document.getElementById('jobQueueBtn');
+      const count = document.getElementById('jobQueueCount');
+      if (!btn || !count) return;
+      const active = _jobs.filter(j => j.status === 'pending' || j.status === 'processing').length;
+      const total  = _jobs.length;
+      if (total === 0) { count.style.display = 'none'; return; }
+      count.style.display = 'inline-block';
+      count.textContent = total;
+      count.className = 'job-queue-count' + (active > 0 ? ' active' : '');
+    }
+
+    function toggleJobDrawer() {
+      _jobDrawerOpen ? closeJobDrawer() : openJobDrawer();
+    }
+
+    function openJobDrawer() {
+      _jobDrawerOpen = true;
+      document.getElementById('jobDrawer').classList.add('open');
+      document.getElementById('jobDrawerBackdrop').classList.add('open');
+      renderJobDrawer();
+    }
+
+    function closeJobDrawer() {
+      _jobDrawerOpen = false;
+      document.getElementById('jobDrawer').classList.remove('open');
+      document.getElementById('jobDrawerBackdrop').classList.remove('open');
+    }
+
+    function renderJobDrawer() {
+      const list = document.getElementById('jobDrawerList');
+      if (!list) return;
+      if (!_jobs.length) {
+        list.innerHTML = '<div class="job-drawer-empty">No research jobs yet. Start a search to track it here.</div>';
+        return;
+      }
+      list.innerHTML = _jobs.map(job => {
+        const isActive = job.id === _activeJobId;
+        const ago = timeAgo(job.created_at);
+        const statusLabel = { pending: 'Queued', processing: 'Researching', done: 'Done', failed: 'Failed' }[job.status] || job.status;
+        const spinner = (job.status === 'processing') ? '<span class="job-card-spinner"></span>' : '';
+
+        let badge = '';
+        if (job.status === 'done' && job.badge) {
+          const label = JOB_BADGE_LABELS[job.badge] || job.badge;
+          badge = `<div class="job-card-badge ${job.badge}">${escapeHtml(label)}${job.overall_score ? ` · ${job.overall_score}` : ''}</div>`;
+        }
+
+        let actions = '';
+        if (job.status === 'done') {
+          if (job.result_slug) {
+            actions = `<div class="job-card-actions"><button class="job-card-view-btn" onclick="closeJobDrawer();window.location='/p/${escapeHtml(job.result_slug)}'">View verdict →</button></div>`;
+          } else {
+            actions = `<div class="job-card-actions"><button class="job-card-view-btn" onclick="viewJobByQuery('${escapeHtml(job.query)}')">View results →</button></div>`;
+          }
+        }
+
+        return `<div class="job-card">
+          <div class="job-card-top">
+            <div class="job-card-query" title="${escapeHtml(job.query)}">${escapeHtml(job.query)}</div>
+            <span class="job-card-status ${job.status}">${spinner}${statusLabel}</span>
+          </div>
+          <div class="job-card-meta">${ago}${isActive ? ' · active' : ''}</div>
+          ${badge}
+          ${actions}
+        </div>`;
+      }).join('');
+    }
+
+    async function viewJobByQuery(query) {
+      closeJobDrawer();
+      document.getElementById('queryInput').value = query;
+      handleSubmit();
+    }
+
+    function timeAgo(isoStr) {
+      if (!isoStr) return '';
+      const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+      if (diff < 60)   return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      return `${Math.floor(diff / 3600)}h ago`;
+    }
 
     // ============================================================
     // BADGE TOOLTIP

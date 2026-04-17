@@ -275,6 +275,13 @@ export default async function handler(req, res) {
       });
     }
 
+    const validationError = validateResearch(research);
+    if (validationError) {
+      console.error('Research validation failed:', validationError, '| Raw:', rawText.slice(0, 300));
+      return res.status(502).json({ error: 'Research response was incomplete. Please try again.' });
+    }
+
+    research.not_listed_reason = deriveNotListedReason(research);
     return res.status(200).json(research);
 
   } catch (err) {
@@ -329,6 +336,41 @@ function extractOutermostJson(text) {
   }
 
   return null;
+}
+
+// =============================================================
+// validateResearch(r)
+// =============================================================
+// Checks that all required top-level fields are present in Claude's
+// JSON response before we return or cache it. Returns an error string
+// on failure, or null on success.
+//
+function validateResearch(r) {
+  const top = ['productName', 'brand', 'badge', 'overallScore', 'gate1', 'gate2', 'gate3', 'summary', 'post_narrative'];
+  for (const key of top) {
+    if (r[key] == null) return `Missing field: ${key}`;
+  }
+  for (const gate of ['gate1', 'gate2', 'gate3']) {
+    if (typeof r[gate].average !== 'number') return `${gate}.average not a number`;
+    if (!r[gate].criteria || typeof r[gate].criteria !== 'object') return `${gate}.criteria missing`;
+  }
+  if (!Array.isArray(r.summary.pros) || !Array.isArray(r.summary.cons)) return 'summary.pros/cons not arrays';
+  if (!r.post_narrative.hook || !r.post_narrative.verdict_paragraph) return 'post_narrative incomplete';
+  return null;
+}
+
+// =============================================================
+// deriveNotListedReason(r)
+// =============================================================
+// For NOT_LISTED products, returns the primary reason so it can
+// be stored in products.not_listed_reason for analytics.
+//
+function deriveNotListedReason(r) {
+  if (r.badge !== 'NOT_LISTED') return null;
+  if (r.gate2?.disqualified) return 'gate2_disqualified';
+  if (r.gate3?.disqualified) return 'gate3_disqualified';
+  if (r.gate1?.average < 6)  return 'gate1_low';
+  return 'other';
 }
 
 // =============================================================
@@ -395,6 +437,10 @@ async function processQueue(res) {
     const research = extractOutermostJson(textBlocks[textBlocks.length - 1].text);
     if (!research) throw new Error('Could not parse research JSON');
 
+    const validationError = validateResearch(research);
+    if (validationError) throw new Error(`Research validation failed: ${validationError}`);
+    research.not_listed_reason = deriveNotListedReason(research);
+
     // 4. Save to products cache
     const slug = slugify(research.productName || item.query);
     const cacheRes = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
@@ -402,27 +448,30 @@ async function processQueue(res) {
       headers: { ...sbHeaders, 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({
         slug,
-        query:          item.query.toLowerCase().trim(),
-        product_name:   research.productName  || item.query,
-        brand:          research.brand         || null,
-        badge:          research.badge         || null,
-        category:       research.category      || null,
-        overall_score:  research.overallScore  || null,
-        full_result:    research,
-        post_narrative: research.post_narrative || null,
-        researched_at:  new Date().toISOString(),
-        is_public:      true,
+        query:             item.query.toLowerCase().trim(),
+        product_name:      research.productName        || item.query,
+        brand:             research.brand              || null,
+        badge:             research.badge              || null,
+        category:          research.category           || null,
+        overall_score:     research.overallScore       || null,
+        not_listed_reason: research.not_listed_reason  || null,
+        full_result:       research,
+        post_narrative:    research.post_narrative      || null,
+        researched_at:     new Date().toISOString(),
+        is_public:         true,
       }),
     });
     const resultSlug = cacheRes.ok ? slug : null;
 
-    // 5. Mark queue item done
+    // 5. Mark queue item done with badge + score for job panel display
     await fetch(`${SUPABASE_URL}/rest/v1/research_queue?id=eq.${item.id}`, {
       method: 'PATCH', headers: sbHeaders,
       body: JSON.stringify({
-        status: 'done',
-        completed_at: new Date().toISOString(),
-        result_slug: resultSlug,
+        status:        'done',
+        completed_at:  new Date().toISOString(),
+        result_slug:   resultSlug,
+        badge:         research.badge        || null,
+        overall_score: research.overallScore || null,
       }),
     });
 
