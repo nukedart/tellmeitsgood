@@ -32,7 +32,32 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Server misconfigured.' });
   }
 
-  // ── 1. Fetch the product page ──────────────────────────────
+  // ── 1. Cache check — skip Claude if checked in last hour ──
+  if (!req.body.force) {
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const cacheParams = new URLSearchParams({
+        product_url: `eq.${trimmedUrl}`,
+        'checked_at': `gte.${oneHourAgo}`,
+        select: 'product_name,price_text,price_cents,currency,checked_at',
+        order: 'checked_at.desc',
+        limit: '1',
+      });
+      const cacheRes = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/price_history?${cacheParams}`,
+        { headers: { 'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } }
+      );
+      if (cacheRes.ok) {
+        const rows = await cacheRes.json();
+        if (rows.length > 0) {
+          const c = rows[0];
+          return res.json({ product_name: c.product_name, price_text: c.price_text, price_cents: c.price_cents, currency: c.currency, checked_at: c.checked_at, url: trimmedUrl, cached: true });
+        }
+      }
+    } catch { /* non-fatal — proceed with fresh check */ }
+  }
+
+  // ── 3. Fetch the product page ──────────────────────────────
   let pageContent = '';
   let pageTitle = '';
   try {
@@ -78,7 +103,7 @@ export default async function handler(req, res) {
     return res.status(422).json({ error: 'Could not load that URL. The site may be blocking requests.' });
   }
 
-  // ── 2. Extract price with Claude Haiku ────────────────────
+  // ── 4. Extract price with Claude Haiku ────────────────────
   let priceData;
   try {
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -117,7 +142,7 @@ Return ONLY the JSON object. No other text, no markdown, no code fences.`,
     return res.status(502).json({ error: 'Failed to extract price from that page.' });
   }
 
-  // ── 3. Save to price_history ───────────────────────────────
+  // ── 5. Save to price_history ───────────────────────────────
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
   const ipHash = crypto.createHash('sha256').update(ip).digest('hex').slice(0, 16);
   const checkedAt = new Date().toISOString();

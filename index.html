@@ -460,6 +460,42 @@
     .footer { text-align: center; margin-top: 64px; font-size: 12px; color: var(--text-3); }
     @media (max-width: 480px) { .page { padding: 40px 16px 60px; } .input-card { padding: 20px; } }
 
+    /* ── Badge tooltip ── */
+    .badge { cursor: pointer; }
+    .badge-tooltip {
+      position: fixed; z-index: 200;
+      background: var(--card); border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg); padding: 14px 16px; width: 240px;
+      box-shadow: var(--shadow-lg); pointer-events: none;
+      opacity: 0; transition: opacity .15s;
+    }
+    .badge-tooltip.visible { opacity: 1; }
+    .badge-tooltip-name { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .badge-tooltip-desc { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 10px; }
+    .badge-tooltip-gates { display: flex; flex-direction: column; gap: 5px; }
+    .badge-tooltip-gate { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+    .badge-tooltip-gate-label { color: var(--text-2); }
+    .badge-tooltip-gate-score { font-weight: 700; color: var(--text); }
+    .badge-tooltip-gate-score.pass { color: var(--success); }
+    .badge-tooltip-gate-score.fail { color: var(--danger); }
+
+    /* ── Price alert form ── */
+    .price-alert-form { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .price-alert-form-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .price-alert-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .price-alert-input { font-family: var(--font-body); font-size: 13px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; outline: none; transition: border-color .15s; }
+    .price-alert-input:focus { border-color: var(--accent); }
+    .price-alert-input::placeholder { color: var(--text-3); }
+    .price-alert-threshold { width: 90px; }
+    .price-alert-email { flex: 1; min-width: 140px; }
+    .price-alert-btn { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: #fff; background: var(--success); border: none; border-radius: var(--radius-md); padding: 0 16px; height: 38px; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .price-alert-btn:hover { background: #2d8058; }
+    .price-alert-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .price-alert-success { display: none; font-size: 13px; color: var(--success); margin-top: 8px; }
+    .price-alert-success.visible { display: block; }
+    .price-alert-error { display: none; font-size: 13px; color: var(--danger); margin-top: 8px; }
+    .price-alert-error.visible { display: block; }
+
     /* ── Price Tracker ── */
     .price-tracker { margin-top: 48px; }
     .price-tracker-toggle-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; cursor: pointer; font-family: var(--font-body); transition: border-color .15s, background .15s; }
@@ -504,6 +540,13 @@
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+
+  <!-- ── Badge tooltip (global, positioned by JS) ── -->
+  <div class="badge-tooltip" id="badgeTooltip" role="tooltip" aria-live="polite">
+    <div class="badge-tooltip-name" id="badgeTooltipName"></div>
+    <div class="badge-tooltip-desc" id="badgeTooltipDesc"></div>
+    <div class="badge-tooltip-gates" id="badgeTooltipGates"></div>
+  </div>
 
   <!-- ── Auth bar ── -->
   <div class="auth-bar" id="authBar">
@@ -854,6 +897,17 @@
           <div class="price-tracker-result-price" id="priceTrackerPrice"></div>
           <div class="price-tracker-result-meta" id="priceTrackerMeta"></div>
           <div id="priceTrackerTrend"></div>
+          <!-- Price drop alert form -->
+          <div class="price-alert-form" id="priceAlertForm">
+            <div class="price-alert-form-title">Alert me if price drops to:</div>
+            <div class="price-alert-row">
+              <input type="number" id="priceAlertThreshold" class="price-alert-input price-alert-threshold" placeholder="$0.00" min="0" step="0.01" />
+              <input type="email"  id="priceAlertEmail"     class="price-alert-input price-alert-email"     placeholder="your@email.com" />
+              <button class="price-alert-btn" id="priceAlertBtn" onclick="setAlert()">Set Alert</button>
+            </div>
+            <div class="price-alert-success" id="priceAlertSuccess">Alert set — we'll email you when it drops.</div>
+            <div class="price-alert-error"   id="priceAlertError"></div>
+          </div>
         </div>
         <div class="price-tracker-history" id="priceTrackerHistorySection" style="display:none">
           <div class="price-tracker-history-title">Price History</div>
@@ -870,7 +924,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.7</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.8</p>
     </footer>
   </div>
 
@@ -2194,6 +2248,7 @@
       const badgeEl = document.getElementById('productBadge');
       badgeEl.textContent = badgeLabels[data.badge] || data.badge;
       badgeEl.className = 'badge ' + (data.badge || 'NOT_LISTED');
+      wireBadgeTooltip();
 
       document.getElementById('tldrStrip').textContent = '"' + (data.summary?.tldr || '') + '"';
       document.getElementById('overallScoreNum').innerHTML = (data.overallScore || 0).toFixed(1) + '<span> / 10</span>';
@@ -2610,6 +2665,77 @@
     _renderStaticChips();
 
     // ============================================================
+    // BADGE TOOLTIP
+    // ============================================================
+
+    const BADGE_DESCRIPTIONS = {
+      TELL_ME_ITS_GOOD: "Passes all three gates — genuine quality, clean/safe ingredients, and ethical company practices.",
+      CLEAN_PICK:       "Strong quality and clean/safe ingredients. Company ethics weren't fully verified.",
+      ETHICAL_PICK:     "Strong quality and ethical company practices. Ingredients are N/A or unrated for this category.",
+      QUALITY_PICK:     "Passes the quality gate. Ingredients or ethics were not fully rated.",
+      NOT_LISTED:       "Didn't meet the bar — a quality, safety, or ethics concern was found.",
+    };
+
+    let _badgeTooltipTimeout = null;
+
+    function showBadgeTooltip(event) {
+      if (!currentResearch) return;
+      const tt = document.getElementById('badgeTooltip');
+      document.getElementById('badgeTooltipName').textContent = event.currentTarget.textContent;
+      document.getElementById('badgeTooltipDesc').textContent = BADGE_DESCRIPTIONS[currentResearch.badge] || '';
+
+      const g1 = currentResearch.gate1, g2 = currentResearch.gate2, g3 = currentResearch.gate3;
+      document.getElementById('badgeTooltipGates').innerHTML = [
+        { label: 'Quality',     avg: g1?.average, pass: g1?.passes },
+        { label: 'Clean/Safe',  avg: g2?.average, pass: g2?.passes },
+        { label: 'Ethics',      avg: g3?.average, pass: g3?.passes },
+      ].map(g => {
+        const score = g.avg != null ? g.avg.toFixed(1) : '—';
+        const cls = g.pass ? 'pass' : (g.avg != null ? 'fail' : '');
+        return `<div class="badge-tooltip-gate"><span class="badge-tooltip-gate-label">${g.label}</span><span class="badge-tooltip-gate-score ${cls}">${score} / 10</span></div>`;
+      }).join('');
+
+      // Position below the badge, centred
+      const rect = event.currentTarget.getBoundingClientRect();
+      let left = rect.left + rect.width / 2 - 120;
+      left = Math.max(8, Math.min(left, window.innerWidth - 248));
+      let top = rect.bottom + 8;
+      if (top + 200 > window.innerHeight) top = rect.top - 200;
+
+      tt.style.left = left + 'px';
+      tt.style.top  = top + 'px';
+      tt.classList.add('visible');
+    }
+
+    function hideBadgeTooltip() {
+      clearTimeout(_badgeTooltipTimeout);
+      _badgeTooltipTimeout = setTimeout(() => {
+        document.getElementById('badgeTooltip').classList.remove('visible');
+      }, 120);
+    }
+
+    function wireBadgeTooltip() {
+      const el = document.getElementById('productBadge');
+      if (!el) return;
+      el.addEventListener('mouseenter', showBadgeTooltip);
+      el.addEventListener('mouseleave', hideBadgeTooltip);
+      el.addEventListener('click', (e) => {
+        const tt = document.getElementById('badgeTooltip');
+        if (tt.classList.contains('visible')) {
+          tt.classList.remove('visible');
+        } else {
+          showBadgeTooltip(e);
+        }
+      });
+      // Tap outside to close on mobile
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#productBadge') && !e.target.closest('#badgeTooltip')) {
+          document.getElementById('badgeTooltip').classList.remove('visible');
+        }
+      }, { passive: true });
+    }
+
+    // ============================================================
     // PRICE TRACKER
     // ============================================================
 
@@ -2625,6 +2751,53 @@
       btn.classList.toggle('open', _priceTrackerOpen);
       chev.classList.toggle('open', _priceTrackerOpen);
       if (_priceTrackerOpen) document.getElementById('priceTrackerUrl').focus();
+    }
+
+    async function setAlert() {
+      const thresholdInput = document.getElementById('priceAlertThreshold');
+      const emailInput     = document.getElementById('priceAlertEmail');
+      const btn            = document.getElementById('priceAlertBtn');
+      const successEl      = document.getElementById('priceAlertSuccess');
+      const errorEl        = document.getElementById('priceAlertError');
+
+      successEl.className = 'price-alert-success';
+      errorEl.className   = 'price-alert-error';
+
+      const thresholdVal = parseFloat(thresholdInput.value);
+      const email        = emailInput.value.trim();
+      const url          = _lastTrackedUrl;
+
+      if (!url)            { errorEl.textContent = 'Check a price first.';       errorEl.className = 'price-alert-error visible'; return; }
+      if (!email || !email.includes('@')) { errorEl.textContent = 'Valid email required.'; errorEl.className = 'price-alert-error visible'; return; }
+      if (!thresholdVal || thresholdVal <= 0) { errorEl.textContent = 'Enter a price threshold.'; errorEl.className = 'price-alert-error visible'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('/api/price-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url,
+            email,
+            threshold_cents: Math.round(thresholdVal * 100),
+            currency: 'USD',
+            product_name: document.getElementById('priceTrackerName').textContent || '',
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errorEl.textContent = data.error || 'Something went wrong.'; errorEl.className = 'price-alert-error visible'; return; }
+        successEl.className = 'price-alert-success visible';
+        thresholdInput.value = '';
+        emailInput.value = '';
+      } catch {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.className = 'price-alert-error visible';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Set Alert';
+      }
     }
 
     async function checkPrice() {
@@ -2689,7 +2862,8 @@
       document.getElementById('priceTrackerName').textContent = data.product_name || '';
       document.getElementById('priceTrackerPrice').textContent = data.price_text || 'Price not found';
       const checkedDate = new Date(data.checked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      document.getElementById('priceTrackerMeta').textContent = `Checked ${checkedDate}`;
+      const cacheLabel = data.cached ? ' (cached — checked within last hour)' : '';
+      document.getElementById('priceTrackerMeta').textContent = `Checked ${checkedDate}${cacheLabel}`;
       document.getElementById('priceTrackerTrend').innerHTML = '';
       resultEl.className = 'price-tracker-result visible';
     }

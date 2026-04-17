@@ -1,7 +1,11 @@
 {
   "functions": {
-    "api/research.js": { "maxDuration": 60 }
+    "api/research.js":    { "maxDuration": 60 },
+    "api/price-alert.js": { "maxDuration": 30 }
   },
+  "crons": [
+    { "path": "/api/price-alert", "schedule": "0 9 * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

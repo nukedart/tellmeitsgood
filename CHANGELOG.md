@@ -5,6 +5,33 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v1.9.8 — 2026-04-17
+
+### Features: badge tooltip + price drop alerts + price tracker cooldown
+
+- **Badge tooltip** — hover or tap any badge on a result to see a popover explaining what it means, plus all three gate scores. Positioned intelligently (flips above badge if near bottom of viewport). Mobile-friendly tap toggle.
+- **Price drop alerts** — after a price check, users can set an email alert with a threshold (e.g. "notify me if it drops below $19.99"). New `/api/price-alert.js` saves to `price_alerts` table and a daily Vercel Cron (9am UTC) checks all active alerts, emails via Resend, then deactivates the alert so it fires once.
+- **Price tracker cooldown** — `/api/price-track` now skips the fetch + Claude call if the same URL was checked within the last hour, returning the cached result instantly. Pass `force: true` in the request body to bypass. Cuts API cost significantly for repeat checks.
+
+### New Supabase table required
+```sql
+CREATE TABLE IF NOT EXISTS price_alerts (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_url     text NOT NULL,
+  product_name    text,
+  email           text NOT NULL,
+  threshold_cents int NOT NULL,
+  currency        text DEFAULT 'USD',
+  active          boolean DEFAULT true,
+  created_at      timestamptz DEFAULT now(),
+  alerted_at      timestamptz,
+  UNIQUE (product_url, email)
+);
+CREATE INDEX IF NOT EXISTS price_alerts_active_idx ON price_alerts (active) WHERE active = true;
+```
+
+---
+
 ## v1.9.7 — 2026-04-17
 
 ### Feature: Price Tracker
