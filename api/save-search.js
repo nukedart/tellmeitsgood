@@ -16,8 +16,58 @@
 //   Returns { success: true, id: "..." }
 // =============================================================
 
+import { createHash } from 'crypto';
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL     = process.env.FROM_EMAIL || "Tell Me It's Good <hello@tellmeitsgood.com>";
+
+const FREE_LIMIT = 3;
+
+// Absorbed from check-limit.js — rewrite: /api/check-limit → /api/save-search?action=check-limit
+async function handleCheckLimit(req, res) {
+  const ip = (
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+  const ipHash = createHash('sha256').update(ip).digest('hex');
+  const today  = new Date().toISOString().slice(0, 10);
+
+  try {
+    const selectRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/free_searches` +
+      `?ip_hash=eq.${encodeURIComponent(ipHash)}&date=eq.${today}&select=count`,
+      {
+        headers: {
+          'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      }
+    );
+    const rows    = await selectRes.json();
+    const current = rows?.[0]?.count ?? 0;
+
+    if (current >= FREE_LIMIT) {
+      return res.json({ allowed: false, remaining: 0 });
+    }
+
+    await fetch(`${process.env.SUPABASE_URL}/rest/v1/free_searches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Prefer':        'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({ ip_hash: ipHash, date: today, count: current + 1 }),
+    });
+
+    return res.json({ allowed: true, remaining: FREE_LIMIT - (current + 1) });
+  } catch (err) {
+    console.error('check-limit error:', err.message);
+    return res.json({ allowed: true, remaining: 1 });
+  }
+}
 
 // Absorbed from /api/send-welcome — routed here via vercel.json rewrite
 async function handleWelcomeEmail(email, res) {
@@ -81,6 +131,11 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed.' });
+  }
+
+  // check-limit route (rewrite: /api/check-limit → /api/save-search?action=check-limit)
+  if (req.query?.action === 'check-limit') {
+    return handleCheckLimit(req, res);
   }
 
   // Welcome email route (absorbed from /api/send-welcome via vercel.json rewrite)

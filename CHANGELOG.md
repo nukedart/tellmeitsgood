@@ -5,6 +5,120 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v2.4.1 — 2026-05-25
+
+### API consolidation — 18 serverless functions → 11
+
+Merged 8 files into 4 to stay under Vercel's 12-function limit:
+- `cache.js` ← `cache-lookup.js` + `cache-save.js` (dispatch by body field)
+- `price.js` ← `price-track.js` + `price-history.js` + `price-alert.js` + `email-onboard.js` (dispatch by method + query)
+- `admin.js` ← absorbed `admin-import.js` (dispatch by `?action=import`)
+- `save-search.js` ← absorbed `check-limit.js` (dispatch by `?action=check-limit`)
+
+All old URL paths preserved via `vercel.json` rewrites. No frontend changes needed.
+
+---
+
+## v2.4.0 — 2026-05-23
+
+### Homepage redesign — category collections as primary content
+
+- **New headline:** "The best products for families, already researched." — positions the site as a curated resource, not just a search tool. Removed the "how it works" steps.
+- **Homepage category collections:** Five product collections (Top Rated, Safe for Babies, Clean Skincare, Non-Toxic Home, Family Food) now load inline on the homepage below the search bar — identical logic to `lists.html` but embedded in `index.html`.
+- **Search hides collections:** When a search starts (`showLoading`), the collections section slides out of view. `resetApp()` brings them back.
+- New visitors now see real, ranked product cards immediately on landing — no search required to get value.
+
+---
+
+## v2.3.0 — 2026-05-19
+
+### Share moment, email onboarding sequence, age filter
+
+**Share verdict banner:**
+- After any positive verdict (TELL_ME_ITS_GOOD, CLEAN_PICK, ETHICAL_PICK, QUALITY_PICK), a share banner appears below the Buy button.
+- TELL_ME_ITS_GOOD / CLEAN_PICK get a green-tinted banner: "✓ This passed our family safety check — share it with other parents."
+- Other passing verdicts get a neutral banner: "Know a parent who'd want to know about this product?"
+- Button uses `navigator.share()` (native share sheet on iOS/Android). Desktop fallback copies the link to clipboard and shows "✓ Link copied" for 2s. Final fallback: `window.prompt()`.
+- Hidden for NOT_LISTED verdicts. Cleared on `resetApp()`.
+
+**Email onboarding sequence (`/api/email-onboard.js`):**
+- New Vercel Cron runs daily at 10am UTC.
+- Day 3: sends to users where `onboard_sent = 0 AND created_at <= 3 days ago`. Subject: "What does a 9.2/10 product look like inside?" — shows the criteria breakdown feature with specific examples (EWG, CPSC recall, manufacturing ethics), soft CTA to home.
+- Day 7: sends to users where `onboard_sent = 3 AND created_at <= 7 days ago`. Subject: "25 family researches a day, for $10/month" — Pro feature list + price anchoring, CTA to `/?pro=1`.
+- Updates `profiles.onboard_sent` (0→3→7) after each send.
+- Per-user errors are caught and counted; loop continues. Skips silently if `RESEND_API_KEY` unset. Returns `{ day3, day7, errors }`.
+- **Required Supabase migration:**
+  ```sql
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboard_sent int DEFAULT 0;
+  ```
+
+**Age filter in directory:**
+- New "Age group" filter bar: All ages | 👶 Age-rated | 🍼 Babies | 🧒 Kids.
+- "Age-rated" shows products where `full_result->>'age_range'` is not null.
+- "Babies" filters `age_range ilike *month*` (catches "0–12 months" etc.).
+- "Kids" filters `age_range ilike *year*` (catches "1–3 years" etc.).
+- Uses PostgREST JSONB path filtering — no DB migration required.
+
+---
+
+## v2.2.0 — 2026-05-11
+
+### PWA + Family Picks lists page
+
+**PWA (installable app):**
+- `manifest.json` — web app manifest with name, short name, theme color (#2F6FED), background color (#FAF8F5), `display: standalone`, app shortcuts (Browse, Family Picks).
+- `icon.svg` — blue checkmark icon, 512×512, rounded corners. Referenced as `apple-touch-icon` and `rel="icon"` across all pages.
+- `sw.js` — network-first service worker. Caches app shell (`/`, `/directory`, `/lists`, `/pricing`, `/privacy`) on install; purges old caches on activate. Skips API and cross-origin requests.
+- All HTML pages (`index.html`, `product.html`, `directory.html`, `lists.html`) now include `<link rel="manifest">`, `<meta name="theme-color">`, Apple PWA meta tags, and SW registration. App is now installable from Chrome/Safari on mobile.
+
+**Family Picks — `/lists`:**
+- New `lists.html` page with 5 curated collections: Top Rated (≥9), Safe for Babies, Clean Skincare, Non-Toxic Home, Family Food.
+- Each collection is a horizontally-scrollable card strip. Cards bleed to screen edges on mobile.
+- All collections load in parallel from Supabase on page render. Skeleton shimmer shown while loading.
+- "See all →" links to the directory pre-filtered by category.
+- Bottom CTA banner drives users to search their own product.
+- **Bottom nav updated:** ⭐ Picks tab (→ `/lists`) replaces Browse for logged-in users. Logged-out nav gains a 4th tab: Search · Picks · Browse · Sign in.
+- "⭐ Family Picks" link added to directory top bar.
+- `/lists` route added to `vercel.json`.
+
+---
+
+## v2.1.0 — 2026-05-11
+
+### Mobile-first experience
+
+- **Bottom navigation bar** (mobile only, ≤599px) — fixed 4-tab bar at the bottom: Search, Browse, History/Account. Logged-out visitors see Sign in instead of History. Updates when auth state changes. Safe-area inset support for iPhone home indicator.
+- **Simplified top bar on mobile** — shows brand name on the left + settings/sign-in icon on the right. All text links (Browse directory, History, Go Pro, usage pill) move to the bottom nav or are accessible from Account.
+- **Compressed hero on mobile** — headline and subheadline are left-aligned and tighter. "How it works" steps hidden (bottom nav provides the mental model). Logo deduplicated — now in the top bar.
+- **Horizontal-scroll chips** — example chips and trust strip scroll sideways on mobile, no wrapping. Bleed to page edges with fade for native feel.
+- **Bigger submit button** — 52px tall on mobile, 16px font, full-radius.
+- **Verdict score hero** — overall score card stacks vertically and centers on mobile, with a large `52–64px` score number. Feels like a native verdict screen.
+- **Slide-up modals** — all modals animate up from the bottom edge on mobile with rounded top corners. History modal uses `86vh`.
+- **Safe-area insets** — `env(safe-area-inset-bottom)` applied to bottom nav and modals; top inset applied to auth bar. Content never hides under iPhone notch or home indicator.
+- **Page bottom padding** — page content automatically clears the bottom nav on mobile.
+
+---
+
+## v2.0.1 — 2026-05-11
+
+### Display v2.0 family data in UI
+
+- **`age_range` chip** — shown in the product-meta row (next to badge) on both the main results page and individual product pages. Sourced from `r.age_range`. Hidden when absent so older cached results are unaffected.
+- **Certifications strip** — row of green `✓ CertName` chips rendered below the overall-score card on both pages. Sourced from `r.certifications[]`. Hidden when array is empty or absent.
+- **Directory cards** — `age_range` shown as a small chip below the product name. Existing cached products without the field show nothing (graceful degradation).
+
+---
+
+## v2.0.0 — 2026-05-09
+
+### Pivot: family-first product advisor
+
+- **Homepage copy** — headline, subheadline, how-it-works steps, search placeholder, trust strip, and loading steps all reframed around parents and families seeking safe products for their children.
+- **Research prompt** — system prompt reframed as a trusted advisor for parents. Gate 2 search strategy now includes CPSC recall history, California Prop 65, and endocrine disruptor checks. Active CPSC recall added as a Gate 2 auto-disqualifier. Gate 2 `children_pets` criterion relabelled "Child & family safety". Narrative voice updated to address family context.
+- **New JSON fields** — `age_range` (e.g. "0–12 months", "All ages") and `certifications` (array of verified third-party certifications) added to every research result going forward.
+
+---
+
 ## v1.9.9 — 2026-04-17
 
 ### Feature: per-user job queue + background research

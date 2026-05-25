@@ -1,10 +1,11 @@
 {
   "functions": {
-    "api/research.js":    { "maxDuration": 60 },
-    "api/price-alert.js": { "maxDuration": 30 }
+    "api/research.js": { "maxDuration": 60 },
+    "api/price.js":    { "maxDuration": 30 }
   },
   "crons": [
-    { "path": "/api/price-alert", "schedule": "0 9 * * *" }
+    { "path": "/api/price?cron=alerts",  "schedule": "0 9 * * *" },
+    { "path": "/api/price?cron=onboard", "schedule": "0 10 * * *" }
   ],
   "headers": [
     {
@@ -25,18 +26,27 @@
     }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml",         "destination": "/api/sitemap" },
-    { "source": "/privacy",             "destination": "/privacy.html" },
-    { "source": "/pricing",             "destination": "/pricing.html" },
-    { "source": "/p/:slug",             "destination": "/product.html" },
-    { "source": "/directory",           "destination": "/directory.html" },
-    { "source": "/compare",             "destination": "/compare.html" },
-    { "source": "/admin",               "destination": "/admin.html" },
-    { "source": "/api/stripe-webhook",  "destination": "/api/stripe" },
-    { "source": "/api/stripe-portal",   "destination": "/api/stripe" },
-    { "source": "/api/admin-stats",     "destination": "/api/admin" },
-    { "source": "/api/request-refresh", "destination": "/api/admin" },
-    { "source": "/api/send-welcome",    "destination": "/api/save-search" },
-    { "source": "/api/(.*)",            "destination": "/api/$1" }
+    { "source": "/sitemap.xml",              "destination": "/api/sitemap" },
+    { "source": "/privacy",                  "destination": "/privacy.html" },
+    { "source": "/pricing",                  "destination": "/pricing.html" },
+    { "source": "/p/:slug",                  "destination": "/product.html" },
+    { "source": "/lists",                    "destination": "/lists.html" },
+    { "source": "/directory",               "destination": "/directory.html" },
+    { "source": "/compare",                  "destination": "/compare.html" },
+    { "source": "/admin",                    "destination": "/admin.html" },
+    { "source": "/api/stripe-webhook",       "destination": "/api/stripe" },
+    { "source": "/api/stripe-portal",        "destination": "/api/stripe" },
+    { "source": "/api/admin-stats",          "destination": "/api/admin" },
+    { "source": "/api/request-refresh",      "destination": "/api/admin" },
+    { "source": "/api/admin-import",         "destination": "/api/admin?action=import" },
+    { "source": "/api/send-welcome",         "destination": "/api/save-search" },
+    { "source": "/api/check-limit",          "destination": "/api/save-search?action=check-limit" },
+    { "source": "/api/cache-lookup",         "destination": "/api/cache" },
+    { "source": "/api/cache-save",           "destination": "/api/cache" },
+    { "source": "/api/price-track",          "destination": "/api/price" },
+    { "source": "/api/price-history",        "destination": "/api/price" },
+    { "source": "/api/price-alert",          "destination": "/api/price" },
+    { "source": "/api/email-onboard",        "destination": "/api/price" },
+    { "source": "/api/(.*)",                 "destination": "/api/$1" }
   ]
 }
