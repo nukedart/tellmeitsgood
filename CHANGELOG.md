@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v2.5.0 — 2026-05-27
+
+### Auth gate + per-user rate limiting + Turnstile bot protection
+
+- **Auth gate on research**: unauthenticated users attempting a research search now land on the sign-up view (not sign-in) with context "3 free researches/day. No credit card required."
+- **Per-user rate limiting**: `/api/check-limit` now keys by `user_id` (from the auth Bearer token) instead of IP hash. Authenticated users can no longer bypass the daily quota by switching VPNs or IPs. IP hash is kept as a fallback for unauthenticated calls.
+- **Cloudflare Turnstile bot protection**: Turnstile widget renders in the sign-up form when `TURNSTILE_SITE_KEY` is set. Token is verified server-side via `/api/save-search?action=verify-turnstile` before account creation. Fails open if the env var is not configured.
+- **Sign-in button fix**: clicking "Sign in / Sign up" in the nav bar now explicitly shows the sign-in view; clicking Research while logged out shows the sign-up view.
+- **Required env var**: `CLOUDFLARE_TURNSTILE_SECRET_KEY` (optional — Turnstile is disabled if unset). Frontend constant `TURNSTILE_SITE_KEY` in `index.html` also needs to be set from dash.cloudflare.com/turnstile.
+
+---
+
 ## v2.4.1 — 2026-05-25
 
 ### API consolidation — 18 serverless functions → 11

@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tell Me It's Good — Is it worth buying?</title>
+  <title>Tell Me It's Good — Trusted advisor for family-safe products</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2F6FED" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tell Me It's Good" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -327,6 +334,9 @@
     .product-header { margin-bottom: 16px; }
     .product-name { font-family: var(--font-display); font-size: clamp(20px, 4vw, 28px); line-height: 1.2; color: var(--text); margin-bottom: 6px; }
     .product-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .age-chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; color: var(--text-3); background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 3px 10px; }
+    .cert-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .cert-chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; color: #0F6E56; background: #ECFDF5; border: 1px solid #3A9E6F; border-radius: 100px; padding: 3px 10px; }
     .product-price { font-size: 20px; font-weight: 600; color: var(--text-2); }
 
     /* ── Badge ── */
@@ -584,6 +594,145 @@
     .price-tracker-history-date { color: var(--text-3); }
     .price-tracker-sql-hint { margin-top: 16px; background: var(--accent-surf); border: 1px solid var(--accent); border-radius: var(--radius-md); padding: 12px 14px; font-size: 12px; color: var(--accent-text); line-height: 1.6; }
     .price-tracker-sql-hint code { font-family: monospace; font-size: 11px; background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 3px; }
+
+    /* ── Share banner ── */
+    .share-banner { border-radius: var(--radius-lg); padding: 20px 22px; margin: 16px 0 8px; display: none; }
+    .share-banner.visible { display: block; }
+    .share-banner.positive { background: var(--success-surf); border: 1px solid var(--success); }
+    .share-banner.neutral  { background: var(--surface); border: 1px solid var(--border); }
+    .share-banner-text { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; line-height: 1.4; }
+    .share-banner-btn { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 11px 22px; cursor: pointer; transition: background .15s; }
+    .share-banner-btn:hover { background: var(--accent-hover); }
+    .share-banner-btn.copied { background: var(--success); }
+
+    /* ──────────────────────────────────────────
+       MOBILE-FIRST  (≤ 599px)
+       ────────────────────────────────────────── */
+
+    /* Bottom navigation — hidden on desktop */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1.5px solid var(--border);
+      padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+      z-index: 150;
+    }
+    .bottom-nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 4px 6px; min-height: 48px;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--font-body); text-decoration: none;
+      color: var(--text-3); transition: color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bottom-nav-item.active { color: var(--accent); }
+    .bottom-nav-item:active { opacity: .65; }
+    .bottom-nav-icon { font-size: 20px; line-height: 1; }
+    .bottom-nav-label { font-size: 10px; font-weight: 600; letter-spacing: .02em; line-height: 1.2; }
+    /* Auth bar logo — shown only on mobile */
+    .auth-bar-logo {
+      display: none;
+      font-size: 14px; font-weight: 700; color: var(--text);
+      letter-spacing: -.01em; text-decoration: none;
+      flex-shrink: 0;
+    }
+    @keyframes slideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    @media (max-width: 599px) {
+      /* Bottom nav */
+      .bottom-nav { display: flex; }
+      /* Body clears the bottom nav */
+      .page { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
+      /* Safe area on fixed elements */
+      .auth-bar { padding-top: max(10px, env(safe-area-inset-top)) !important; }
+
+      /* Top bar — logo + right icon only */
+      .auth-bar-logo { display: block; }
+      #authBarLeft { display: none !important; }
+      .auth-bar { min-height: 52px !important; padding-left: 16px !important; padding-right: 16px !important; padding-bottom: 10px !important; }
+
+      /* Hero — tighter, left-aligned on mobile */
+      .logo { display: none; }
+      .header { text-align: left; margin-bottom: 12px; }
+      .headline { font-size: clamp(22px, 7vw, 30px) !important; text-align: left; margin-bottom: 8px; }
+      .subheadline { font-size: 14px !important; text-align: left; margin: 0 0 16px !important; }
+      .how-it-works { display: none !important; }
+      .input-card { padding: 16px !important; }
+      .btn-primary.full { font-size: 16px !important; padding: 15px 20px !important; min-height: 52px; border-radius: var(--radius-lg) !important; }
+
+      /* Example chips — horizontal scroll, bleed to page edges */
+      .examples {
+        flex-wrap: nowrap !important;
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; justify-content: flex-start !important;
+        margin-left: -16px !important; margin-right: -16px !important;
+        padding-left: 16px !important; padding-right: 16px !important;
+        margin-bottom: 16px !important;
+      }
+      .examples::-webkit-scrollbar { display: none; }
+      .examples-hint { text-align: left; }
+
+      /* Trust strip — horizontal scroll */
+      .trust-strip {
+        flex-wrap: nowrap !important; overflow-x: auto;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        justify-content: flex-start !important;
+        margin: 12px -16px 0 !important;
+        padding: 0 16px 4px !important;
+      }
+      .trust-strip::-webkit-scrollbar { display: none; }
+
+      /* Results — bigger, centered score as verdict hero */
+      .product-name { font-size: clamp(20px, 6vw, 26px) !important; }
+      .overall-score-card {
+        flex-direction: column; align-items: center; text-align: center;
+        padding: 24px 20px !important;
+      }
+      .overall-score-num { font-size: clamp(52px, 14vw, 64px) !important; }
+
+      /* Modals — slide up from bottom */
+      .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+      .modal-card {
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+        max-width: 100% !important; width: 100% !important;
+        padding: 28px 24px calc(20px + env(safe-area-inset-bottom)) !important;
+        max-height: 90vh; overflow-y: auto;
+        animation: slideUp .25s ease !important;
+      }
+      .history-modal-card { max-height: 86vh !important; }
+    }
+
+    /* ── Homepage collections ── */
+    #collectionsSection { margin-top: 40px; padding-bottom: 40px; }
+    .home-collection { margin-bottom: 44px; }
+    .home-collection-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+    .home-collection-title { font-family: var(--font-display); font-size: clamp(18px, 4vw, 22px); color: var(--text); }
+    .home-collection-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .home-collection-see-all { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: opacity .15s; }
+    .home-collection-see-all:hover { opacity: .75; }
+    .home-card-strip { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+    .home-card-strip::-webkit-scrollbar { display: none; }
+    @media (max-width: 599px) {
+      .home-card-strip { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
+    }
+    .home-list-card { flex-shrink: 0; width: 190px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 7px; transition: border-color .15s, box-shadow .15s; box-shadow: var(--shadow-sm); }
+    .home-list-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+    .home-list-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .home-list-card-badge { font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 7px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+    .home-list-card-badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); border: 1px solid var(--success); }
+    .home-list-card-badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; border: 1px solid #3A9E6F; }
+    .home-list-card-badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
+    .home-list-card-badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
+    .home-list-card-badge.NOT_LISTED       { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+    .home-list-card-score { font-family: var(--font-display); font-size: 17px; color: var(--text); line-height: 1; flex-shrink: 0; }
+    .home-list-card-score span { font-family: var(--font-body); font-size: 10px; color: var(--text-3); }
+    .home-list-card-name { font-family: var(--font-display); font-size: 13px; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+    .home-list-card-brand { font-size: 11px; color: var(--text-3); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .home-list-card-footer { font-size: 11px; font-weight: 600; color: var(--accent); margin-top: auto; }
+    .home-skeleton-strip { display: flex; gap: 12px; overflow: hidden; }
+    .home-skeleton-card { flex-shrink: 0; width: 190px; height: 120px; background: var(--surface); border-radius: var(--radius-lg); animation: shimmer 1.4s ease-in-out infinite; }
+    .home-collection-empty { font-size: 13px; color: var(--text-3); padding: 16px 0; }
   </style>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -610,9 +759,13 @@
 
   <!-- ── Auth bar ── -->
   <div class="auth-bar" id="authBar">
+    <a class="auth-bar-logo" href="/">tellmeitsgood</a>
     <div class="auth-bar-left" id="authBarLeft"></div>
     <div class="auth-bar-right" id="authBarRight"></div>
   </div>
+
+  <!-- ── Bottom navigation (mobile only) ── -->
+  <nav class="bottom-nav" id="bottomNav" aria-label="Main navigation"></nav>
 
   <!-- ── Sign in / Sign up modal ── -->
   <div class="modal-overlay" id="authModal" onclick="handleModalBackdropClick(event, 'authModal')">
@@ -635,9 +788,11 @@
       <!-- Sign up view -->
       <div id="authSignupView" style="display:none">
         <div class="modal-title">Create account</div>
+        <div class="modal-subtitle">3 free researches/day. No credit card required.</div>
         <div class="modal-error" id="authSignupError"></div>
         <input type="email"    id="signupEmail"    class="modal-email-input" placeholder="your@email.com"              autocomplete="email"     />
         <input type="password" id="signupPassword" class="modal-email-input" placeholder="Password (min. 8 characters)" autocomplete="new-password" style="margin-top:8px;" />
+        <div id="turnstileWidget" style="display:none;margin-top:12px;"></div>
         <button class="modal-submit-btn" id="authSignupBtn" onclick="handleSignUp()" style="margin-top:12px;">Create account →</button>
         <div style="text-align:center;margin-top:14px;">
           <button class="auth-link-btn" onclick="switchAuthView('signin')">Already have an account? Sign in</button>
@@ -733,15 +888,8 @@
   <div class="page">
     <header class="header">
       <div class="logo"><span class="logo-dot"></span>tellmeitsgood.com</div>
-      <h1 class="headline">Is it actually good?<br>We'll tell you.</h1>
-      <p class="subheadline">Every product scored on quality, ingredient safety, and company ethics — AI-researched from real sources, no ads, no sponsored results.</p>
-      <div class="how-it-works">
-        <div class="how-step"><span class="how-step-num">1</span>Type any product</div>
-        <span class="how-step-arrow">→</span>
-        <div class="how-step"><span class="how-step-num">2</span>We research 15 criteria</div>
-        <span class="how-step-arrow">→</span>
-        <div class="how-step"><span class="how-step-num">3</span>Get an honest verdict</div>
-      </div>
+      <h1 class="headline">The best products for families,<br>already researched.</h1>
+      <p class="subheadline">We score every product on safety, clean ingredients, and company ethics — so you don't have to spend hours reading reviews.</p>
     </header>
 
     <!-- ── Input section ── -->
@@ -751,7 +899,7 @@
         <div id="panelName">
           <label class="input-label" for="queryInput">Product name or brand</label>
           <div class="autocomplete-wrap">
-            <input type="text" id="queryInput" class="query-input" placeholder="e.g. Seventh Generation dish soap" autocomplete="off" spellcheck="false" />
+            <input type="text" id="queryInput" class="query-input" placeholder="e.g. Honest Company sunscreen, Dr. Bronner's baby soap" autocomplete="off" spellcheck="false" />
             <div id="autocompleteList" class="autocomplete-list" role="listbox"></div>
           </div>
         </div>
@@ -767,15 +915,15 @@
         </div>
       </div>
 
-      <p class="examples-hint" id="examplesHint">People are researching right now:</p>
+      <p class="examples-hint" id="examplesHint">Parents are researching right now:</p>
       <div class="examples" id="exampleChips"></div>
 
       <div class="trust-strip" id="trustStrip">
         <span class="trust-chip">✓ No affiliate influence on scores</span>
         <span class="trust-chip">·</span>
-        <span class="trust-chip">✓ Sources cited for every claim</span>
+        <span class="trust-chip">✓ Child safety checked for every product</span>
         <span class="trust-chip">·</span>
-        <span class="trust-chip">✓ Re-researched every 30 days</span>
+        <span class="trust-chip">✓ Sources cited for every claim</span>
       </div>
 
       <!-- Paywall banner — shown below input when free limit reached -->
@@ -790,6 +938,11 @@
       </div>
     </div>
 
+    <!-- ── Collections (visible on homepage, hidden during search) ── -->
+    <div id="collectionsSection">
+      <div id="homeCollections"></div>
+    </div>
+
     <!-- ── Loading ── -->
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
@@ -798,15 +951,15 @@
       <div class="research-steps" id="researchSteps">
         <div class="research-step" id="step1">
           <div class="step-dot">✓</div>
-          <span class="step-label">Searching the web</span>
+          <span class="step-label">Searching safety databases & reviews</span>
         </div>
         <div class="research-step" id="step2">
           <div class="step-dot">✓</div>
-          <span class="step-label">Scoring 15 criteria</span>
+          <span class="step-label">Scoring safety, ethics & quality</span>
         </div>
         <div class="research-step" id="step3">
           <div class="step-dot">✓</div>
-          <span class="step-label">Writing your verdict</span>
+          <span class="step-label">Writing your family verdict</span>
         </div>
       </div>
     </div>
@@ -833,6 +986,7 @@
         <div class="product-meta">
           <div class="product-price" id="productPrice"></div>
           <div class="badge" id="productBadge"></div>
+          <span class="age-chip" id="productAgeRange" style="display:none"></span>
         </div>
       </div>
 
@@ -845,6 +999,8 @@
           <div class="overall-score-desc">Quality · Clean · Ethics</div>
         </div>
       </div>
+
+      <div class="cert-strip" id="certStrip" style="display:none"></div>
 
       <div class="gates-grid">
         <div class="gate-card" id="gate1Card">
@@ -929,6 +1085,12 @@
         </div>
       </div>
 
+      <!-- Share verdict banner -->
+      <div class="share-banner" id="shareBanner">
+        <div class="share-banner-text" id="shareBannerText"></div>
+        <button class="share-banner-btn" id="shareBannerBtn" onclick="handleShare()">Share this verdict →</button>
+      </div>
+
       <button class="btn-reset" onclick="resetApp()">← Research another product</button>
     </div>
 
@@ -984,7 +1146,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v1.9.9</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v2.5.0</p>
     </footer>
   </div>
 
@@ -997,6 +1159,34 @@
     // ============================================================
     const SUPABASE_URL      = 'https://idypfzpfrgvtkypasqhl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+    // Cloudflare Turnstile — set your site key from dash.cloudflare.com/turnstile
+    // Leave empty to disable bot protection (sign-ups still work, no challenge shown)
+    const TURNSTILE_SITE_KEY = '';
+    let _turnstileWidgetId = null;
+
+    function ensureTurnstileLoaded() {
+      if (!TURNSTILE_SITE_KEY) return;
+      if (document.getElementById('turnstileScript')) { initTurnstile(); return; }
+      const s = document.createElement('script');
+      s.id = 'turnstileScript';
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true;
+      s.defer = true;
+      s.onload = initTurnstile;
+      document.head.appendChild(s);
+    }
+
+    function initTurnstile() {
+      if (!TURNSTILE_SITE_KEY || _turnstileWidgetId !== null) return;
+      const container = document.getElementById('turnstileWidget');
+      if (!container || !window.turnstile) return;
+      container.style.display = 'block';
+      _turnstileWidgetId = window.turnstile.render(container, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      });
+    }
 
     // ── Storage: localStorage → sessionStorage → in-memory ───────────
     const _authStorage = (() => {
@@ -1140,7 +1330,10 @@
     // Server-side limit check — real gate that localStorage can't bypass
     async function checkServerLimit() {
       try {
-        const res = await fetch('/api/check-limit', { method: 'POST' });
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const headers = {};
+        if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+        const res = await fetch('/api/check-limit', { method: 'POST', headers });
         return await res.json(); // { allowed, remaining }
       } catch {
         return { allowed: true, remaining: 1 }; // fail open
@@ -1333,7 +1526,7 @@
         const signInBtn = document.createElement('button');
         signInBtn.className = 'auth-bar-signin';
         signInBtn.textContent = 'Sign in / Sign up';
-        signInBtn.onclick = () => openModal('authModal');
+        signInBtn.onclick = () => { switchAuthView('signin'); openModal('authModal'); };
 
         left.innerHTML = '';
         right.innerHTML = '';
@@ -1344,6 +1537,52 @@
 
       // Refresh chips whenever auth state changes (sign-in, sign-out)
       renderExampleChips();
+      updateBottomNav();
+    }
+
+    // ============================================================
+    // BOTTOM NAV (mobile)
+    // ============================================================
+    function updateBottomNav() {
+      const nav = document.getElementById('bottomNav');
+      if (!nav) return;
+      if (currentUser) {
+        nav.innerHTML = `
+          <button class="bottom-nav-item active" onclick="resetApp()">
+            <span class="bottom-nav-icon">🔍</span>
+            <span class="bottom-nav-label">Search</span>
+          </button>
+          <a class="bottom-nav-item" href="/lists">
+            <span class="bottom-nav-icon">⭐</span>
+            <span class="bottom-nav-label">Picks</span>
+          </a>
+          <button class="bottom-nav-item" onclick="openHistory()">
+            <span class="bottom-nav-icon">📋</span>
+            <span class="bottom-nav-label">History</span>
+          </button>
+          <button class="bottom-nav-item" onclick="openSettings()">
+            <span class="bottom-nav-icon">⚙️</span>
+            <span class="bottom-nav-label">Account</span>
+          </button>`;
+      } else {
+        nav.innerHTML = `
+          <button class="bottom-nav-item active" onclick="resetApp()">
+            <span class="bottom-nav-icon">🔍</span>
+            <span class="bottom-nav-label">Search</span>
+          </button>
+          <a class="bottom-nav-item" href="/lists">
+            <span class="bottom-nav-icon">⭐</span>
+            <span class="bottom-nav-label">Picks</span>
+          </a>
+          <a class="bottom-nav-item" href="/directory">
+            <span class="bottom-nav-icon">📁</span>
+            <span class="bottom-nav-label">Browse</span>
+          </a>
+          <button class="bottom-nav-item" onclick="openModal('authModal')">
+            <span class="bottom-nav-icon">👤</span>
+            <span class="bottom-nav-label">Sign in</span>
+          </button>`;
+      }
     }
 
     // ============================================================
@@ -1645,6 +1884,7 @@
 
       shareLink.href   = `/p/${slug}`;
       compareLink.href = `/compare?a=${slug}`;
+      _shareSlug = slug;
       refreshBtn.style.display  = isStale ? 'inline' : 'none';
       compareLink.style.display = 'inline';
 
@@ -1861,6 +2101,7 @@
         document.getElementById('auth' + v + 'View').style.display = 'none';
       });
       document.getElementById('auth' + view.charAt(0).toUpperCase() + view.slice(1) + 'View').style.display = 'block';
+      if (view === 'signup') ensureTurnstileLoaded();
     }
 
     function closeModal(id) {
@@ -1930,6 +2171,30 @@
 
       const btn = document.getElementById('authSignupBtn');
       btn.disabled = true; btn.textContent = 'Creating account...';
+
+      // Verify Turnstile token if bot protection is configured
+      if (TURNSTILE_SITE_KEY) {
+        const token = window.turnstile?.getResponse(_turnstileWidgetId);
+        if (!token) {
+          authShowError('authSignupError', 'Please complete the security check.');
+          btn.disabled = false; btn.textContent = 'Create account →';
+          return;
+        }
+        try {
+          const verifyRes = await fetch('/api/save-search?action=verify-turnstile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          const verifyData = await verifyRes.json();
+          if (!verifyData.ok) {
+            window.turnstile?.reset(_turnstileWidgetId);
+            authShowError('authSignupError', 'Security check failed. Please try again.');
+            btn.disabled = false; btn.textContent = 'Create account →';
+            return;
+          }
+        } catch { /* fail open */ }
+      }
 
       try {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -2175,8 +2440,10 @@
     async function handleSubmit() {
       hideError();
 
-      // Require login to search
+      // Require login to search — send directly to sign-up view
       if (!currentUser) {
+        switchAuthView('signup');
+        ensureTurnstileLoaded();
         openModal('authModal');
         return;
       }
@@ -2375,6 +2642,22 @@
       linkAlternatives(s.alternatives || []);
       document.getElementById('realTalkText').textContent  = s.realTalk || '';
 
+      const ageRangeEl = document.getElementById('productAgeRange');
+      if (data.age_range) {
+        ageRangeEl.textContent = '👶 ' + data.age_range;
+        ageRangeEl.style.display = 'inline-flex';
+      } else {
+        ageRangeEl.style.display = 'none';
+      }
+
+      const certStrip = document.getElementById('certStrip');
+      if (data.certifications?.length) {
+        certStrip.innerHTML = data.certifications.map(c => `<span class="cert-chip">✓ ${escapeHtml(c)}</span>`).join('');
+        certStrip.style.display = 'flex';
+      } else {
+        certStrip.style.display = 'none';
+      }
+
       document.getElementById('saveConfirm').classList.remove('visible');
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('resultsSection').classList.add('visible');
@@ -2491,9 +2774,12 @@
       document.getElementById('postLoading').classList.remove('visible');
       document.getElementById('criteriaSection').innerHTML = '';
       document.getElementById('inputSection').style.display = 'block';
+      document.getElementById('collectionsSection').style.display = 'block';
       document.getElementById('queryInput').value = '';
       ['gate1Bar','gate2Bar','gate3Bar'].forEach(id => document.getElementById(id).style.width = '0%');
       hideCacheStrip(); hideError(); currentSearchQuery = null;
+      _shareSlug = '';
+      document.getElementById('shareBanner').className = 'share-banner';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -2502,6 +2788,7 @@
       document.getElementById('loadingText').textContent    = text || 'Researching...';
       document.getElementById('loadingSubtext').textContent = sub || '';
       document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('collectionsSection').style.display = 'none';
       document.getElementById('loadingState').classList.add('visible');
       document.getElementById('submitBtn').disabled = true;
     }
@@ -2607,6 +2894,7 @@
       document.getElementById('loadingText').textContent    = text || 'Researching...';
       document.getElementById('loadingSubtext').textContent = sub || '';
       document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('collectionsSection').style.display = 'none';
       document.getElementById('loadingState').classList.add('visible');
       document.getElementById('submitBtn').disabled = true;
     }
@@ -2682,6 +2970,55 @@
 
       // Signup nudge — show only for logged-out users
       nudge.style.display = !currentUser ? 'flex' : 'none';
+
+      updateShareBanner(data);
+    }
+
+    // ── Share banner ──────────────────────────────────────────
+    let _shareSlug = '';
+
+    function updateShareBanner(data) {
+      const banner = document.getElementById('shareBanner');
+      const text   = document.getElementById('shareBannerText');
+      const btn    = document.getElementById('shareBannerBtn');
+      if (!data.badge || data.badge === 'NOT_LISTED') {
+        banner.className = 'share-banner';
+        return;
+      }
+      const glowing = data.badge === 'TELL_ME_ITS_GOOD' || data.badge === 'CLEAN_PICK';
+      text.textContent = glowing
+        ? '✓ This passed our family safety check — share it with other parents.'
+        : 'Know a parent who\'d want to know about this product?';
+      banner.className = `share-banner ${glowing ? 'positive' : 'neutral'} visible`;
+      btn.dataset.productName = data.productName || '';
+      btn.dataset.score       = data.overallScore || '';
+      btn.textContent = 'Share this verdict →';
+      btn.className   = 'share-banner-btn';
+    }
+
+    function handleShare() {
+      const btn  = document.getElementById('shareBannerBtn');
+      const name = btn.dataset.productName || 'this product';
+      const score = btn.dataset.score;
+      const url  = _shareSlug
+        ? `https://tellmeitsgood.com/p/${_shareSlug}`
+        : 'https://tellmeitsgood.com';
+      const text = score
+        ? `${name} scored ${score}/10 for quality, safety & ethics.`
+        : `I just researched ${name} — check the verdict.`;
+
+      if (navigator.share) {
+        navigator.share({ title: `${name} — Tell Me It's Good`, text, url }).catch(() => {});
+        return;
+      }
+      navigator.clipboard.writeText(url).then(() => {
+        btn.textContent = '✓ Link copied';
+        btn.className   = 'share-banner-btn copied';
+        setTimeout(() => {
+          btn.textContent = 'Share this verdict →';
+          btn.className   = 'share-banner-btn';
+        }, 2000);
+      }).catch(() => window.prompt('Copy this link:', url));
     }
 
     // ============================================================
@@ -3177,6 +3514,88 @@
       }
     }
 
+  </script>
+  <script>
+    // ── Homepage collections ──────────────────────────────────────
+    const HOME_COLLECTIONS = [
+      { id: 'top-rated',  emoji: '⭐', title: 'Top Rated',       subtitle: 'Highest-scoring products across all categories', seeAll: '/directory',                            filters: { minScore: 9, excludeNotListed: true } },
+      { id: 'babies',     emoji: '🍼', title: 'Safe for Babies', subtitle: 'Baby & kids products with the highest safety scores', seeAll: '/directory?category=Baby+%26+Kids', filters: { category: 'Baby & Kids', minScore: 7 } },
+      { id: 'skincare',   emoji: '🧴', title: 'Clean Skincare',  subtitle: 'Personal care free from harmful ingredients',     seeAll: '/directory?category=Personal+Care',     filters: { category: 'Personal Care', minScore: 7.5 } },
+      { id: 'cleaning',   emoji: '🧹', title: 'Non-Toxic Home',  subtitle: 'Cleaning products safe around kids and pets',     seeAll: '/directory?category=Cleaning+%26+Home', filters: { category: 'Cleaning & Home', minScore: 7.5 } },
+      { id: 'food',       emoji: '🍎', title: 'Family Food',     subtitle: 'Food and drinks that earned a clean verdict',     seeAll: '/directory?category=Food+%26+Drink',    filters: { category: 'Food & Drink', minScore: 7 } },
+    ];
+
+    const _SUPA_URL = 'https://idypfzpfrgvtkypasqhl.supabase.co';
+    const _SUPA_KEY = 'sb_publishable_SNwAYSpiLmXrZYdK-0P7uA_mrDiF8wb';
+
+    function _homeBadgeLabel(b) {
+      return { TELL_ME_ITS_GOOD: "Tell Me It's Good", CLEAN_PICK: 'Clean Pick', ETHICAL_PICK: 'Ethical Pick', QUALITY_PICK: 'Quality Pick', NOT_LISTED: 'Not Listed' }[b] || b;
+    }
+
+    async function _fetchHomeCollection(filters) {
+      let url = `${_SUPA_URL}/rest/v1/products?is_public=eq.true&select=slug,product_name,brand,badge,overall_score&order=overall_score.desc&limit=10`;
+      if (filters.category)         url += `&category=eq.${encodeURIComponent(filters.category)}`;
+      if (filters.minScore)         url += `&overall_score=gte.${filters.minScore}`;
+      if (filters.excludeNotListed) url += `&badge=neq.NOT_LISTED`;
+      const res = await fetch(url, { headers: { 'apikey': _SUPA_KEY, 'Authorization': `Bearer ${_SUPA_KEY}` } });
+      return res.json();
+    }
+
+    function _renderHomeCard(p) {
+      const badge = p.badge || 'NOT_LISTED';
+      const score = p.overall_score ?? '—';
+      const name  = String(p.product_name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const brand = String(p.brand || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const slug  = String(p.slug || '').replace(/"/g,'&quot;');
+      return `<a class="home-list-card" href="/p/${slug}">
+        <div class="home-list-card-top">
+          <div class="home-list-card-badge ${badge}">${_homeBadgeLabel(badge)}</div>
+          <div class="home-list-card-score">${typeof score === 'number' ? score.toFixed(1) : score}<span> /10</span></div>
+        </div>
+        <div class="home-list-card-name">${name}</div>
+        ${brand ? `<div class="home-list-card-brand">${brand}</div>` : ''}
+        <div class="home-list-card-footer">View verdict →</div>
+      </a>`;
+    }
+
+    async function _loadHomeCollection(col) {
+      const strip = document.getElementById(`hstrip-${col.id}`);
+      if (!strip) return;
+      try {
+        const products = await _fetchHomeCollection(col.filters);
+        if (!products?.length) {
+          strip.innerHTML = `<p class="home-collection-empty">No products yet — check back soon.</p>`;
+          return;
+        }
+        strip.innerHTML = `<div class="home-card-strip">${products.map(_renderHomeCard).join('')}</div>`;
+      } catch {
+        strip.innerHTML = `<p class="home-collection-empty">Couldn't load right now.</p>`;
+      }
+    }
+
+    function buildHomeCollections() {
+      const container = document.getElementById('homeCollections');
+      if (!container) return;
+      container.innerHTML = HOME_COLLECTIONS.map(col => `
+        <div class="home-collection">
+          <div class="home-collection-header">
+            <div>
+              <div class="home-collection-title">${col.emoji} ${col.title}</div>
+              <div class="home-collection-sub">${col.subtitle}</div>
+            </div>
+            <a class="home-collection-see-all" href="${col.seeAll}">See all →</a>
+          </div>
+          <div id="hstrip-${col.id}"><div class="home-skeleton-strip">${Array(4).fill('<div class="home-skeleton-card"></div>').join('')}</div></div>
+        </div>
+      `).join('');
+      HOME_COLLECTIONS.forEach(col => _loadHomeCollection(col));
+    }
+
+    buildHomeCollections();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>

@@ -24,19 +24,41 @@ const FROM_EMAIL     = process.env.FROM_EMAIL || "Tell Me It's Good <hello@tellm
 const FREE_LIMIT = 3;
 
 // Absorbed from check-limit.js — rewrite: /api/check-limit → /api/save-search?action=check-limit
+// Rate limit key: user_id (when auth token present) › IP hash (fallback)
 async function handleCheckLimit(req, res) {
-  const ip = (
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
-  const ipHash = createHash('sha256').update(ip).digest('hex');
-  const today  = new Date().toISOString().slice(0, 10);
+  let limitKey;
+
+  const authHeader = req.headers.authorization || '';
+  if (authHeader.startsWith('Bearer ')) {
+    try {
+      const userRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+          'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': authHeader,
+        },
+      });
+      if (userRes.ok) {
+        const user = await userRes.json();
+        if (user?.id) limitKey = `user_${user.id}`;
+      }
+    } catch { /* fall through to IP */ }
+  }
+
+  if (!limitKey) {
+    const ip = (
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      'unknown'
+    );
+    limitKey = createHash('sha256').update(ip).digest('hex');
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
 
   try {
     const selectRes = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/free_searches` +
-      `?ip_hash=eq.${encodeURIComponent(ipHash)}&date=eq.${today}&select=count`,
+      `?ip_hash=eq.${encodeURIComponent(limitKey)}&date=eq.${today}&select=count`,
       {
         headers: {
           'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -59,13 +81,36 @@ async function handleCheckLimit(req, res) {
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
         'Prefer':        'resolution=merge-duplicates',
       },
-      body: JSON.stringify({ ip_hash: ipHash, date: today, count: current + 1 }),
+      body: JSON.stringify({ ip_hash: limitKey, date: today, count: current + 1 }),
     });
 
     return res.json({ allowed: true, remaining: FREE_LIMIT - (current + 1) });
   } catch (err) {
     console.error('check-limit error:', err.message);
     return res.json({ allowed: true, remaining: 1 });
+  }
+}
+
+// Verifies a Cloudflare Turnstile token server-side.
+// Fails open if CLOUDFLARE_TURNSTILE_SECRET_KEY is not set (opt-in).
+async function handleVerifyTurnstile(req, res) {
+  const { token } = req.body || {};
+  if (!token) return res.status(400).json({ ok: false, error: 'Missing token' });
+
+  const SECRET = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+  if (!SECRET) return res.json({ ok: true }); // not configured — pass through
+
+  try {
+    const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: SECRET, response: token }),
+    });
+    const data = await verifyRes.json();
+    return res.json({ ok: data.success === true });
+  } catch (err) {
+    console.error('turnstile verify error:', err.message);
+    return res.json({ ok: true }); // fail open — don't block real users on transient errors
   }
 }
 
@@ -136,6 +181,11 @@ export default async function handler(req, res) {
   // check-limit route (rewrite: /api/check-limit → /api/save-search?action=check-limit)
   if (req.query?.action === 'check-limit') {
     return handleCheckLimit(req, res);
+  }
+
+  // Turnstile bot-protection verification for sign-up
+  if (req.query?.action === 'verify-turnstile') {
+    return handleVerifyTurnstile(req, res);
   }
 
   // Welcome email route (absorbed from /api/send-welcome via vercel.json rewrite)
