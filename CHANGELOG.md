@@ -5,6 +5,20 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v2.6.0 — 2026-05-28
+
+### UI revamp — Browse mode, buy hero, nav, collections
+
+- **Browse / AI Research tabs**: new two-tab UI above the search bar. Browse tab (free, no auth) searches the existing products database and shows full scored cards with badge, score, brand, and affiliate buy links inline. AI Research tab keeps the existing auth-gated flow. Default is Browse — visitors get immediate value without signing up.
+- **Browse cards**: full-width result cards showing score (color-coded green/amber/red), badge pill, brand, "Full verdict →" link to `/p/:slug`, and "Buy →" Amazon affiliate link for all non-NOT_LISTED products.
+- **Empty state**: when browse finds nothing, shows "Sign up & Research →" CTA that opens sign-up modal with the research mode pre-selected.
+- **Buy button hero**: moved from the very bottom of results to directly below the product name/badge — now the first CTA a user sees after the verdict header. Copy adapts to badge: "✓ This earned the badge — buy it on Amazon →" for TELL_ME_ITS_GOOD.
+- **Nav logo**: logo now always visible on desktop (was mobile-only).
+- **Homepage collection cards**: score number is now color-coded by value; each passing-badge card shows an inline "Buy →" affiliate link.
+- **autocomplete.js**: now returns `product_name` and `brand` fields (used by browse cards).
+
+---
+
 ## v2.5.0 — 2026-05-27
 
 ### Auth gate + per-user rate limiting + Turnstile bot protection

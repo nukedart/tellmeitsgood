@@ -731,8 +731,62 @@
     .home-list-card-brand { font-size: 11px; color: var(--text-3); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .home-list-card-footer { font-size: 11px; font-weight: 600; color: var(--accent); margin-top: auto; }
     .home-skeleton-strip { display: flex; gap: 12px; overflow: hidden; }
-    .home-skeleton-card { flex-shrink: 0; width: 190px; height: 120px; background: var(--surface); border-radius: var(--radius-lg); animation: shimmer 1.4s ease-in-out infinite; }
+    .home-skeleton-card { flex-shrink: 0; width: 190px; height: 130px; background: var(--surface); border-radius: var(--radius-lg); animation: shimmer 1.4s ease-in-out infinite; }
     .home-collection-empty { font-size: 13px; color: var(--text-3); padding: 16px 0; }
+
+    /* ── Search mode tabs ── */
+    .search-mode-tabs { display: flex; border-radius: var(--radius-xl) var(--radius-xl) 0 0; overflow: hidden; border: 1px solid var(--border); border-bottom: none; background: var(--surface); margin-bottom: 0; position: relative; z-index: 1; }
+    .search-mode-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 13px 16px; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--text-2); background: transparent; border: none; cursor: pointer; transition: all .15s; }
+    .search-mode-tab:hover { color: var(--text); background: var(--surface-2); }
+    .search-mode-tab.active { color: var(--accent); background: var(--card); }
+    .search-mode-tab-pill { font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; background: var(--surface-2); color: var(--text-3); border-radius: 100px; padding: 2px 7px; transition: all .15s; }
+    .search-mode-tab.active .search-mode-tab-pill { background: var(--accent); color: #fff; }
+    .input-card.tabbed { border-top-left-radius: 0; border-top-right-radius: 0; border-top-color: transparent; }
+
+    /* ── Browse results ── */
+    .browse-results { margin-top: 8px; }
+    .browse-results-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .browse-card { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; color: inherit; transition: border-color .15s, box-shadow .15s; box-shadow: var(--shadow-sm); cursor: pointer; }
+    .browse-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+    .browse-card-score { font-family: var(--font-display); font-size: 22px; line-height: 1; flex-shrink: 0; width: 44px; text-align: center; }
+    .browse-card-score.score-high { color: var(--success); }
+    .browse-card-score.score-mid  { color: var(--warning); }
+    .browse-card-score.score-low  { color: var(--danger); }
+    .browse-card-score.score-none { color: var(--text-3); }
+    .browse-card-score span { display: block; font-family: var(--font-body); font-size: 9px; color: var(--text-3); margin-top: 2px; }
+    .browse-card-divider { width: 1px; height: 36px; background: var(--border); flex-shrink: 0; }
+    .browse-card-body { flex: 1; min-width: 0; }
+    .browse-card-name { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .browse-card-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .browse-card-badge { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
+    .browse-card-badge.TELL_ME_ITS_GOOD { background: var(--success-surf); color: var(--success); border: 1px solid var(--success); }
+    .browse-card-badge.CLEAN_PICK       { background: #ECFDF5; color: #0F6E56; border: 1px solid #3A9E6F; }
+    .browse-card-badge.ETHICAL_PICK     { background: #EEF2FF; color: #4338CA; border: 1px solid #818CF8; }
+    .browse-card-badge.QUALITY_PICK     { background: var(--accent-surf); color: var(--accent-text); border: 1px solid var(--accent); }
+    .browse-card-badge.NOT_LISTED       { background: var(--danger-surf); color: var(--danger); border: 1px solid var(--danger); }
+    .browse-card-brand { font-size: 11px; color: var(--text-3); }
+    .browse-card-actions { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .browse-card-view { font-size: 11px; font-weight: 600; color: var(--accent-text); background: var(--accent-surf); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 4px 10px; white-space: nowrap; transition: all .15s; }
+    .browse-card:hover .browse-card-view { background: var(--accent); color: #fff; }
+    .browse-card-buy { font-size: 11px; font-weight: 600; color: #fff; background: var(--success); border: none; border-radius: var(--radius-sm); padding: 4px 10px; white-space: nowrap; text-decoration: none; cursor: pointer; transition: background .15s; line-height: 1.4; }
+    .browse-card-buy:hover { background: #2d8058; }
+    .browse-empty { text-align: center; padding: 36px 24px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+    .browse-empty-title { font-family: var(--font-display); font-size: 18px; color: var(--text); margin-bottom: 8px; }
+    .browse-empty-text { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 18px; }
+    .browse-empty-btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: #fff; background: var(--accent); border: none; border-radius: var(--radius-md); padding: 10px 22px; cursor: pointer; transition: background .15s; }
+    .browse-empty-btn:hover { background: var(--accent-hover); }
+    .browse-hint { font-size: 12px; color: var(--text-3); text-align: center; padding: 16px 0 8px; }
+
+    /* ── Results: buy button as hero ── */
+    .results-buy-hero { margin: 14px 0 6px; }
+    .btn-buy-hero { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; font-family: var(--font-body); font-size: 16px; font-weight: 700; color: #fff; background: var(--success); border: none; border-radius: var(--radius-lg); padding: 18px 24px; cursor: pointer; text-decoration: none; transition: all .18s; letter-spacing: .01em; box-shadow: 0 2px 12px rgba(58,158,111,.25); }
+    .btn-buy-hero:hover { background: #2d8058; box-shadow: 0 4px 20px rgba(58,158,111,.4); transform: translateY(-1px); }
+    .btn-buy-hero.not-listed { background: var(--text-2); box-shadow: none; }
+    .btn-buy-hero.not-listed:hover { background: var(--text); }
+    .buy-hero-disclosure { font-size: 11px; color: var(--text-3); text-align: center; margin-top: 5px; line-height: 1.4; }
+
+    /* ── Nav logo — always visible ── */
+    .auth-bar-logo { display: block !important; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.02em; text-decoration: none; flex-shrink: 0; }
   </style>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -895,17 +949,27 @@
     <!-- ── Input section ── -->
     <div id="inputSection">
 
-      <div class="input-card" id="inputCard">
+      <!-- ── Search mode tabs ── -->
+      <div class="search-mode-tabs" id="searchModeTabs">
+        <button class="search-mode-tab active" id="tabBrowse" onclick="switchSearchMode('browse')">
+          Browse <span class="search-mode-tab-pill">Free</span>
+        </button>
+        <button class="search-mode-tab" id="tabResearch" onclick="switchSearchMode('research')">
+          AI Research <span class="search-mode-tab-pill">Sign up</span>
+        </button>
+      </div>
+
+      <div class="input-card tabbed" id="inputCard">
         <div id="panelName">
-          <label class="input-label" for="queryInput">Product name or brand</label>
+          <label class="input-label" id="queryInputLabel" for="queryInput">Search what's already been researched</label>
           <div class="autocomplete-wrap">
-            <input type="text" id="queryInput" class="query-input" placeholder="e.g. Honest Company sunscreen, Dr. Bronner's baby soap" autocomplete="off" spellcheck="false" />
+            <input type="text" id="queryInput" class="query-input" placeholder="e.g. sunscreen, baby formula, dish soap..." autocomplete="off" spellcheck="false" />
             <div id="autocompleteList" class="autocomplete-list" role="listbox"></div>
           </div>
         </div>
         <div class="error-msg" id="errorMsg"></div>
         <div class="input-actions">
-          <button class="btn-primary full" id="submitBtn" onclick="handleSubmit()">Research this product →</button>
+          <button class="btn-primary full" id="submitBtn" onclick="handleSubmit()">Browse →</button>
         </div>
         <div class="notify-me-wrap" id="notifyMeWrap" style="display:none">
           <label class="notify-me-label">
@@ -915,7 +979,12 @@
         </div>
       </div>
 
-      <p class="examples-hint" id="examplesHint">Parents are researching right now:</p>
+      <!-- Browse mode results — populated by JS when in Browse tab -->
+      <div class="browse-results" id="browseResults">
+        <div class="browse-results-list" id="browseResultsList"></div>
+      </div>
+
+      <p class="examples-hint" id="examplesHint">People are searching right now:</p>
       <div class="examples" id="exampleChips"></div>
 
       <div class="trust-strip" id="trustStrip">
@@ -988,6 +1057,12 @@
           <div class="badge" id="productBadge"></div>
           <span class="age-chip" id="productAgeRange" style="display:none"></span>
         </div>
+      </div>
+
+      <!-- Buy hero — prominent affiliate CTA right after verdict header -->
+      <div class="results-buy-hero" id="resultsBuyHero" style="display:none">
+        <a class="btn-buy-hero" id="buyNowBtn" href="#" target="_blank" rel="noopener sponsored">Buy this product →</a>
+        <p class="buy-hero-disclosure" id="affiliateDisclosure" style="display:none">As an Amazon Associate I earn from qualifying purchases. This doesn't affect our research or scores.</p>
       </div>
 
       <div class="tldr-strip" id="tldrStrip"></div>
@@ -1073,12 +1148,8 @@
         <div class="post-bottom-line" id="postBottomLine"></div>
       </div>
 
-      <!-- Buy now + sign up nudge — shown after results -->
+      <!-- Sign-up nudge — shown after verdict for non-logged-in users -->
       <div class="results-cta" id="resultsCta">
-        <a class="btn-buy-now" id="buyNowBtn" href="#" target="_blank" rel="noopener sponsored" style="display:none">
-          Buy this product →
-        </a>
-        <p id="affiliateDisclosure" style="display:none;font-size:11px;color:var(--text-3);text-align:center;margin-top:6px;line-height:1.4;">As an Amazon Associate I earn from qualifying purchases. This doesn't affect our research or scores.</p>
         <div class="results-signup-nudge" id="resultsSignupNudge" style="display:none">
           <div class="nudge-text">Like this verdict? <strong>Sign up free</strong> to save your searches and get history across every device.</div>
           <button class="nudge-btn" onclick="openModal('authModal')">Save this result</button>
@@ -1146,7 +1217,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v2.5.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v2.6.0</p>
     </footer>
   </div>
 
@@ -1338,6 +1409,110 @@
       } catch {
         return { allowed: true, remaining: 1 }; // fail open
       }
+    }
+
+    // ============================================================
+    // BROWSE / RESEARCH MODE
+    // ============================================================
+    let currentSearchMode = 'browse';
+    const AFFILIATE_TAG_BROWSE = 'tellmeitsgood-20';
+
+    const BROWSE_BADGE_LABELS = {
+      TELL_ME_ITS_GOOD: "Tell Me It's Good",
+      CLEAN_PICK:  'Clean Pick',
+      ETHICAL_PICK: 'Ethical Pick',
+      QUALITY_PICK: 'Quality Pick',
+      NOT_LISTED:  'Not Listed',
+    };
+
+    function switchSearchMode(mode) {
+      currentSearchMode = mode;
+      document.getElementById('tabBrowse').classList.toggle('active', mode === 'browse');
+      document.getElementById('tabResearch').classList.toggle('active', mode === 'research');
+
+      const label      = document.getElementById('queryInputLabel');
+      const input      = document.getElementById('queryInput');
+      const submitBtn  = document.getElementById('submitBtn');
+      const browseRes  = document.getElementById('browseResults');
+      const tabPills   = document.querySelectorAll('.search-mode-tab-pill');
+
+      if (mode === 'browse') {
+        label.textContent    = "Search what's already been researched";
+        input.placeholder    = 'e.g. sunscreen, baby formula, dish soap...';
+        submitBtn.textContent = 'Browse →';
+        browseRes.style.display = 'block';
+        // Re-run search if there's already a query
+        const q = input.value.trim();
+        if (q.length >= 2) runBrowseSearch(q);
+      } else {
+        label.textContent    = 'Product name or brand';
+        input.placeholder    = "e.g. Honest Company sunscreen, Dr. Bronner's baby soap";
+        submitBtn.textContent = currentUser ? 'Research this product →' : 'Sign in to research →';
+        browseRes.style.display = 'none';
+        document.getElementById('browseResultsList').innerHTML = '';
+      }
+    }
+
+    let _browseDebounce = null;
+
+    function _onBrowseInput(q) {
+      clearTimeout(_browseDebounce);
+      const list = document.getElementById('browseResultsList');
+      if (q.length < 2) { list.innerHTML = ''; return; }
+      _browseDebounce = setTimeout(() => runBrowseSearch(q), 280);
+    }
+
+    async function runBrowseSearch(q) {
+      const list = document.getElementById('browseResultsList');
+      list.innerHTML = '<div class="browse-hint">Searching...</div>';
+      try {
+        const res  = await fetch(`/api/autocomplete?q=${encodeURIComponent(q)}`);
+        const rows = await res.json();
+        if (!rows.length) {
+          list.innerHTML = `
+            <div class="browse-empty">
+              <div class="browse-empty-title">Nothing found yet</div>
+              <div class="browse-empty-text">We haven't researched "<strong>${escapeHtml(q)}</strong>" yet.<br>Sign up free and we'll research it — 3 credits/day.</div>
+              <button class="browse-empty-btn" onclick="switchSearchMode('research');switchAuthView('signup');ensureTurnstileLoaded();openModal('authModal');">Sign up &amp; Research →</button>
+            </div>`;
+          return;
+        }
+        list.innerHTML = rows.map(renderBrowseCard).join('');
+      } catch {
+        list.innerHTML = '';
+      }
+    }
+
+    function renderBrowseCard(r) {
+      const badge  = r.badge || 'NOT_LISTED';
+      const score  = r.overall_score;
+      const name   = r.product_name || r.query || '';
+      const brand  = r.brand || '';
+      const slug   = r.slug  || '';
+
+      const scoreClass   = typeof score !== 'number' ? 'score-none' : score >= 8 ? 'score-high' : score >= 6 ? 'score-mid' : 'score-low';
+      const scoreDisplay = typeof score === 'number' ? score.toFixed(1) : '—';
+      const safeName     = escapeHtml(name);
+      const safeBrand    = escapeHtml(brand);
+      const safeSlug     = escapeHtml(slug);
+      const amazonUrl    = `https://www.amazon.com/s?k=${encodeURIComponent(name)}&tag=${AFFILIATE_TAG_BROWSE}`;
+      const showBuy      = badge !== 'NOT_LISTED';
+
+      return `<div class="browse-card" onclick="window.location.href='/p/${safeSlug}'">
+        <div class="browse-card-score ${scoreClass}">${scoreDisplay}<span>/ 10</span></div>
+        <div class="browse-card-divider"></div>
+        <div class="browse-card-body">
+          <div class="browse-card-name">${safeName}</div>
+          <div class="browse-card-meta">
+            <span class="browse-card-badge ${badge}">${BROWSE_BADGE_LABELS[badge] || badge}</span>
+            ${safeBrand ? `<span class="browse-card-brand">${safeBrand}</span>` : ''}
+          </div>
+        </div>
+        <div class="browse-card-actions">
+          <span class="browse-card-view">Full verdict →</span>
+          ${showBuy ? `<a class="browse-card-buy" href="${amazonUrl}" target="_blank" rel="noopener sponsored" onclick="event.stopPropagation()">Buy →</a>` : ''}
+        </div>
+      </div>`;
     }
 
     // ============================================================
@@ -1600,7 +1775,9 @@
       card.style.opacity    = blocked ? '0.4' : '1';
       card.style.pointerEvents = blocked ? 'none' : '';
       submitBtn.disabled    = blocked;
-      submitBtn.textContent = currentUser ? 'Research this product →' : 'Sign in to search →';
+      submitBtn.textContent = currentSearchMode === 'browse'
+        ? 'Browse →'
+        : (currentUser ? 'Research this product →' : 'Sign in to research →');
 
       // Show sign-in button inside paywall only if not logged in
       if (signInPrompt) signInPrompt.style.display = !currentUser ? 'inline-flex' : 'none';
@@ -2440,15 +2617,22 @@
     async function handleSubmit() {
       hideError();
 
-      // Require login to search — send directly to sign-up view
+      const q = document.getElementById('queryInput').value.trim();
+
+      // Browse mode — run or refresh the DB search
+      if (currentSearchMode === 'browse') {
+        if (!q || q.length < 2) { showError('Enter at least 2 characters to search.'); return; }
+        runBrowseSearch(q);
+        return;
+      }
+
+      // Research mode — require login
       if (!currentUser) {
         switchAuthView('signup');
         ensureTurnstileLoaded();
         openModal('authModal');
         return;
       }
-
-      const q = document.getElementById('queryInput').value.trim();
       if (!q || q.length < 3) { showError('Enter a product name or brand to search.'); return; }
 
       currentSearchQuery = q;
@@ -2834,6 +3018,9 @@
     function hideError() { document.getElementById('errorMsg').classList.remove('visible'); }
 
     document.getElementById('queryInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
+    document.getElementById('queryInput').addEventListener('input',   e => {
+      if (currentSearchMode === 'browse') _onBrowseInput(e.target.value.trim());
+    });
 
     // ============================================================
     // ANIMATED LOADING MESSAGES
@@ -2922,15 +3109,15 @@
     }, true); // capture phase so it fires before onclick
 
     // ============================================================
-    // BUY NOW BUTTON + SIGNUP NUDGE wiring
-    // Called from displayResearch with the product URL if available
+    // BUY HERO + SIGNUP NUDGE
+    // Buy button lives at the top of results now (right after verdict header)
     // ============================================================
     function updateResultsCta(data) {
-      const buyBtn   = document.getElementById('buyNowBtn');
+      const heroWrap   = document.getElementById('resultsBuyHero');
+      const buyBtn     = document.getElementById('buyNowBtn');
       const disclosure = document.getElementById('affiliateDisclosure');
-      const nudge    = document.getElementById('resultsSignupNudge');
+      const nudge      = document.getElementById('resultsSignupNudge');
 
-      // Buy Now — show if we have a product URL, fall back to Amazon search
       const AFFILIATE_TAG = 'tellmeitsgood-20';
       const productUrl = data.productUrl || null;
       const hasDirectUrl = productUrl && productUrl !== 'null' && productUrl.startsWith('http');
@@ -2942,35 +3129,31 @@
           finalUrl = productUrl + (productUrl.includes('?') ? '&' : '?') + 'tag=' + AFFILIATE_TAG;
         }
       } else if (data.productName) {
-        // Fallback: Amazon search for the product name
         const q = encodeURIComponent(data.productName + (data.brand ? ' ' + data.brand : ''));
         finalUrl = `https://www.amazon.com/s?k=${q}&tag=${AFFILIATE_TAG}`;
       }
 
       if (finalUrl) {
+        heroWrap.style.display = 'block';
         buyBtn.href = finalUrl;
-        buyBtn.style.display = 'flex';
         disclosure.style.display = 'block';
+        buyBtn.className = 'btn-buy-hero';
 
         const verdict = data.badge || '';
         if (verdict === 'TELL_ME_ITS_GOOD') {
-          buyBtn.textContent = '✓ Buy this — it earned the badge →';
-          buyBtn.style.background = '';
+          buyBtn.textContent = '✓ This earned the badge — buy it on Amazon →';
         } else if (verdict === 'NOT_LISTED') {
           buyBtn.textContent = 'View product page (we had concerns) →';
-          buyBtn.style.background = 'var(--text-2)';
+          buyBtn.classList.add('not-listed');
         } else {
           buyBtn.textContent = 'Find it on Amazon →';
-          buyBtn.style.background = '';
         }
       } else {
-        buyBtn.style.display = 'none';
+        heroWrap.style.display = 'none';
         disclosure.style.display = 'none';
       }
 
-      // Signup nudge — show only for logged-out users
       nudge.style.display = !currentUser ? 'flex' : 'none';
-
       updateShareBanner(data);
     }
 
@@ -3533,7 +3716,7 @@
     }
 
     async function _fetchHomeCollection(filters) {
-      let url = `${_SUPA_URL}/rest/v1/products?is_public=eq.true&select=slug,product_name,brand,badge,overall_score&order=overall_score.desc&limit=10`;
+      let url = `${_SUPA_URL}/rest/v1/products?is_public=eq.true&select=slug,product_name,brand,badge,overall_score&order=overall_score.desc.nullslast&limit=10`;
       if (filters.category)         url += `&category=eq.${encodeURIComponent(filters.category)}`;
       if (filters.minScore)         url += `&overall_score=gte.${filters.minScore}`;
       if (filters.excludeNotListed) url += `&badge=neq.NOT_LISTED`;
@@ -3543,18 +3726,25 @@
 
     function _renderHomeCard(p) {
       const badge = p.badge || 'NOT_LISTED';
-      const score = p.overall_score ?? '—';
+      const score = p.overall_score;
       const name  = String(p.product_name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const brand = String(p.brand || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const slug  = String(p.slug || '').replace(/"/g,'&quot;');
+      const scoreDisplay = typeof score === 'number' ? score.toFixed(1) : '—';
+      const scoreColor   = typeof score !== 'number' ? 'var(--text-3)' : score >= 8 ? 'var(--success)' : score >= 6 ? 'var(--warning)' : 'var(--danger)';
+      const showBuy = badge !== 'NOT_LISTED';
+      const amazonUrl = `https://www.amazon.com/s?k=${encodeURIComponent(p.product_name || '')}&tag=tellmeitsgood-20`;
       return `<a class="home-list-card" href="/p/${slug}">
         <div class="home-list-card-top">
           <div class="home-list-card-badge ${badge}">${_homeBadgeLabel(badge)}</div>
-          <div class="home-list-card-score">${typeof score === 'number' ? score.toFixed(1) : score}<span> /10</span></div>
+          <div class="home-list-card-score" style="color:${scoreColor}">${scoreDisplay}<span> /10</span></div>
         </div>
         <div class="home-list-card-name">${name}</div>
         ${brand ? `<div class="home-list-card-brand">${brand}</div>` : ''}
-        <div class="home-list-card-footer">View verdict →</div>
+        <div class="home-list-card-footer" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span>Full verdict →</span>
+          ${showBuy ? `<a class="browse-card-buy" style="font-size:10px;padding:3px 8px;" href="${amazonUrl}" target="_blank" rel="noopener sponsored" onclick="event.preventDefault();event.stopPropagation();window.open('${amazonUrl}','_blank')">Buy →</a>` : ''}
+        </div>
       </a>`;
     }
 

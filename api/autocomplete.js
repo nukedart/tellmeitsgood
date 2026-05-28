@@ -21,13 +21,14 @@ export default async function handler(req, res) {
 
   try {
     // PostgREST ilike uses * as the wildcard character
+    // Fetch 20 candidates so we can re-rank by query relevance before returning 6
     const url =
       `${SUPABASE_URL}/rest/v1/products` +
       `?query=ilike.*${encodeURIComponent(safe)}*` +
       `&is_public=eq.true` +
-      `&select=query,slug,badge,overall_score` +
+      `&select=query,slug,product_name,brand,badge,overall_score` +
       `&order=overall_score.desc.nullslast` +
-      `&limit=6`;
+      `&limit=20`;
 
     const response = await fetch(url, {
       headers: {
@@ -39,7 +40,25 @@ export default async function handler(req, res) {
     if (!response.ok) return res.json([]);
 
     const rows = await response.json();
-    return res.json(Array.isArray(rows) ? rows : []);
+    if (!Array.isArray(rows)) return res.json([]);
+
+    // Re-rank by relevance to the typed query, then by score within each tier.
+    // Tier 0: exact match · Tier 1: starts with query · Tier 2: all words present · Tier 3: any word present
+    const terms = safe.split(/\s+/).filter(Boolean);
+    const ranked = rows
+      .map(row => {
+        const name = (row.query || '').toLowerCase();
+        let tier = 3;
+        if (name === safe)                          tier = 0;
+        else if (name.startsWith(safe))             tier = 1;
+        else if (terms.every(t => name.includes(t))) tier = 2;
+        return { ...row, _tier: tier };
+      })
+      .sort((a, b) => a._tier - b._tier || (b.overall_score || 0) - (a.overall_score || 0))
+      .slice(0, 6)
+      .map(({ _tier, ...row }) => row);
+
+    return res.json(ranked);
 
   } catch {
     return res.json([]);
