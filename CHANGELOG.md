@@ -5,6 +5,18 @@ Format: Version · Date · What changed · Why
 
 ---
 
+## v2.6.1 — 2026-05-28
+
+### Browse mode: pre-populated defaults + category chips
+
+- **Top-rated pre-load**: Browse tab now shows the top 8 highest-scoring products on load instead of a blank state. Skeleton cards appear while loading. Label reads "Top-rated products" or "Top [Category] products" when a chip is active.
+- **Category chips**: horizontal scrollable chip row (All · Skincare · Baby & Kids · Home · Food · Health · Electronics) filters the browse results. Chip state persists while typing — search + category work together.
+- **Empty state with category context**: "Nothing found for X in [Category]" with a clear Sign up & Research CTA.
+- **`autocomplete.js`**: now accepts optional `category` query param to filter server-side.
+- **State hygiene**: `showLoading` hides the browse section; `resetApp` restores it when returning from a research result.
+
+---
+
 ## v2.6.0 — 2026-05-28
 
 ### UI revamp — Browse mode, buy hero, nav, collections

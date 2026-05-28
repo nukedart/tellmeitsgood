@@ -787,6 +787,17 @@
 
     /* ── Nav logo — always visible ── */
     .auth-bar-logo { display: block !important; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.02em; text-decoration: none; flex-shrink: 0; }
+
+    /* ── Browse category chips ── */
+    .browse-category-chips { display: flex; gap: 7px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 12px 0 4px; -webkit-overflow-scrolling: touch; }
+    .browse-category-chips::-webkit-scrollbar { display: none; }
+    @media (max-width: 599px) { .browse-category-chips { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; } }
+    .browse-cat-chip { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--text-2); background: var(--card); border: 1.5px solid var(--border); border-radius: 100px; padding: 6px 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all .15s; }
+    .browse-cat-chip:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-surf); }
+    .browse-cat-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Browse section label ── */
+    .browse-section-label { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); padding: 12px 0 8px; }
   </style>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -979,9 +990,20 @@
         </div>
       </div>
 
-      <!-- Browse mode results — populated by JS when in Browse tab -->
-      <div class="browse-results" id="browseResults">
-        <div class="browse-results-list" id="browseResultsList"></div>
+      <!-- Browse mode: category chips + results -->
+      <div id="browseSection">
+        <div class="browse-category-chips" id="browseCategoryChips">
+          <button class="browse-cat-chip active" data-cat="" onclick="setBrowseCategory('')">All</button>
+          <button class="browse-cat-chip" data-cat="Personal Care" onclick="setBrowseCategory('Personal Care')">Skincare</button>
+          <button class="browse-cat-chip" data-cat="Baby &amp; Kids" onclick="setBrowseCategory('Baby &amp; Kids')">Baby &amp; Kids</button>
+          <button class="browse-cat-chip" data-cat="Cleaning &amp; Home" onclick="setBrowseCategory('Cleaning &amp; Home')">Home</button>
+          <button class="browse-cat-chip" data-cat="Food &amp; Drink" onclick="setBrowseCategory('Food &amp; Drink')">Food</button>
+          <button class="browse-cat-chip" data-cat="Supplements &amp; Health" onclick="setBrowseCategory('Supplements &amp; Health')">Health</button>
+          <button class="browse-cat-chip" data-cat="Electronics" onclick="setBrowseCategory('Electronics')">Electronics</button>
+        </div>
+        <div class="browse-results" id="browseResults">
+          <div class="browse-results-list" id="browseResultsList"></div>
+        </div>
       </div>
 
       <p class="examples-hint" id="examplesHint">People are searching right now:</p>
@@ -1217,7 +1239,7 @@
     <footer class="footer">
       <p>Quality · Non-toxic · Honest companies · Powered by AI · No ads · Affiliate links help fund our research</p>
       <p style="margin-top:8px;font-size:11px;color:var(--text-3);"><a href="/privacy" style="color:var(--text-3);text-decoration:none;border-bottom:1px solid var(--border);">Privacy Policy</a></p>
-      <p style="margin-top:6px;font-size:11px;opacity:.5;">v2.6.0</p>
+      <p style="margin-top:6px;font-size:11px;opacity:.5;">v2.6.1</p>
     </footer>
   </div>
 
@@ -1414,7 +1436,8 @@
     // ============================================================
     // BROWSE / RESEARCH MODE
     // ============================================================
-    let currentSearchMode = 'browse';
+    let currentSearchMode   = 'browse';
+    let currentBrowseCategory = null; // null = All
     const AFFILIATE_TAG_BROWSE = 'tellmeitsgood-20';
 
     const BROWSE_BADGE_LABELS = {
@@ -1425,30 +1448,68 @@
       NOT_LISTED:  'Not Listed',
     };
 
+    // Category chip selection
+    function setBrowseCategory(cat) {
+      currentBrowseCategory = cat || null;
+      document.querySelectorAll('.browse-cat-chip').forEach(el => {
+        el.classList.toggle('active', (el.dataset.cat || '') === (cat || ''));
+      });
+      const q = document.getElementById('queryInput').value.trim();
+      if (q.length >= 2) runBrowseSearch(q);
+      else loadBrowseDefaults();
+    }
+
+    // Top-rated products when no search query — shown on load and when input is cleared
+    async function loadBrowseDefaults() {
+      const list = document.getElementById('browseResultsList');
+      list.innerHTML = `<div class="browse-hint">${currentBrowseCategory ? `Top ${currentBrowseCategory} products` : 'Top-rated products'}</div>` +
+        Array(4).fill('<div style="height:62px;background:var(--surface);border-radius:var(--radius-lg);margin-bottom:8px;animation:shimmer 1.4s ease-in-out infinite;"></div>').join('');
+
+      let url = `${_SUPA_URL}/rest/v1/products` +
+        `?is_public=eq.true` +
+        `&select=query,slug,product_name,brand,badge,overall_score` +
+        `&badge=neq.NOT_LISTED` +
+        `&order=overall_score.desc.nullslast` +
+        `&limit=8`;
+      if (currentBrowseCategory) url += `&category=eq.${encodeURIComponent(currentBrowseCategory)}`;
+
+      try {
+        const res  = await fetch(url, { headers: { 'apikey': _SUPA_KEY, 'Authorization': `Bearer ${_SUPA_KEY}` } });
+        const rows = await res.json();
+        const label = currentBrowseCategory ? `Top ${currentBrowseCategory} products` : 'Top-rated products';
+        if (!rows?.length) {
+          list.innerHTML = `<div class="browse-hint">${label}</div><div class="browse-empty"><div class="browse-empty-title">Nothing here yet</div><div class="browse-empty-text">Be the first to research a product in this category.</div><button class="browse-empty-btn" onclick="switchSearchMode('research');switchAuthView('signup');ensureTurnstileLoaded();openModal('authModal');">Sign up &amp; Research →</button></div>`;
+          return;
+        }
+        list.innerHTML = `<div class="browse-section-label">${label}</div>` + rows.map(renderBrowseCard).join('');
+      } catch {
+        list.innerHTML = '';
+      }
+    }
+
     function switchSearchMode(mode) {
       currentSearchMode = mode;
       document.getElementById('tabBrowse').classList.toggle('active', mode === 'browse');
       document.getElementById('tabResearch').classList.toggle('active', mode === 'research');
 
-      const label      = document.getElementById('queryInputLabel');
-      const input      = document.getElementById('queryInput');
-      const submitBtn  = document.getElementById('submitBtn');
-      const browseRes  = document.getElementById('browseResults');
-      const tabPills   = document.querySelectorAll('.search-mode-tab-pill');
+      const label     = document.getElementById('queryInputLabel');
+      const input     = document.getElementById('queryInput');
+      const submitBtn = document.getElementById('submitBtn');
+      const browseSection = document.getElementById('browseSection');
 
       if (mode === 'browse') {
-        label.textContent    = "Search what's already been researched";
-        input.placeholder    = 'e.g. sunscreen, baby formula, dish soap...';
+        label.textContent     = "Search what's already been researched";
+        input.placeholder     = 'e.g. sunscreen, baby formula, dish soap...';
         submitBtn.textContent = 'Browse →';
-        browseRes.style.display = 'block';
-        // Re-run search if there's already a query
+        browseSection.style.display = 'block';
         const q = input.value.trim();
         if (q.length >= 2) runBrowseSearch(q);
+        else loadBrowseDefaults();
       } else {
-        label.textContent    = 'Product name or brand';
-        input.placeholder    = "e.g. Honest Company sunscreen, Dr. Bronner's baby soap";
+        label.textContent     = 'Product name or brand';
+        input.placeholder     = "e.g. Honest Company sunscreen, Dr. Bronner's baby soap";
         submitBtn.textContent = currentUser ? 'Research this product →' : 'Sign in to research →';
-        browseRes.style.display = 'none';
+        browseSection.style.display = 'none';
         document.getElementById('browseResultsList').innerHTML = '';
       }
     }
@@ -1457,8 +1518,10 @@
 
     function _onBrowseInput(q) {
       clearTimeout(_browseDebounce);
-      const list = document.getElementById('browseResultsList');
-      if (q.length < 2) { list.innerHTML = ''; return; }
+      if (q.length < 2) {
+        loadBrowseDefaults();
+        return;
+      }
       _browseDebounce = setTimeout(() => runBrowseSearch(q), 280);
     }
 
@@ -1466,13 +1529,16 @@
       const list = document.getElementById('browseResultsList');
       list.innerHTML = '<div class="browse-hint">Searching...</div>';
       try {
-        const res  = await fetch(`/api/autocomplete?q=${encodeURIComponent(q)}`);
+        let url = `/api/autocomplete?q=${encodeURIComponent(q)}`;
+        if (currentBrowseCategory) url += `&category=${encodeURIComponent(currentBrowseCategory)}`;
+        const res  = await fetch(url);
         const rows = await res.json();
         if (!rows.length) {
+          const catNote = currentBrowseCategory ? ` in ${currentBrowseCategory}` : '';
           list.innerHTML = `
             <div class="browse-empty">
               <div class="browse-empty-title">Nothing found yet</div>
-              <div class="browse-empty-text">We haven't researched "<strong>${escapeHtml(q)}</strong>" yet.<br>Sign up free and we'll research it — 3 credits/day.</div>
+              <div class="browse-empty-text">We haven't researched "<strong>${escapeHtml(q)}</strong>"${catNote} yet.<br>Sign up free and we'll research it — 3 credits/day.</div>
               <button class="browse-empty-btn" onclick="switchSearchMode('research');switchAuthView('signup');ensureTurnstileLoaded();openModal('authModal');">Sign up &amp; Research →</button>
             </div>`;
           return;
@@ -2959,6 +3025,10 @@
       document.getElementById('criteriaSection').innerHTML = '';
       document.getElementById('inputSection').style.display = 'block';
       document.getElementById('collectionsSection').style.display = 'block';
+      // Restore browse section if in browse mode
+      if (currentSearchMode === 'browse') {
+        document.getElementById('browseSection').style.display = 'block';
+      }
       document.getElementById('queryInput').value = '';
       ['gate1Bar','gate2Bar','gate3Bar'].forEach(id => document.getElementById(id).style.width = '0%');
       hideCacheStrip(); hideError(); currentSearchQuery = null;
@@ -3082,6 +3152,7 @@
       document.getElementById('loadingSubtext').textContent = sub || '';
       document.getElementById('inputSection').style.display = 'none';
       document.getElementById('collectionsSection').style.display = 'none';
+      document.getElementById('browseSection').style.display = 'none';
       document.getElementById('loadingState').classList.add('visible');
       document.getElementById('submitBtn').disabled = true;
     }
@@ -3782,6 +3853,7 @@
     }
 
     buildHomeCollections();
+    loadBrowseDefaults(); // pre-populate browse tab on first load
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});

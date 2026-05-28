@@ -22,13 +22,15 @@ export default async function handler(req, res) {
   try {
     // PostgREST ilike uses * as the wildcard character
     // Fetch 20 candidates so we can re-rank by query relevance before returning 6
-    const url =
+    const category = ((req.query.category || '')).trim();
+    let url =
       `${SUPABASE_URL}/rest/v1/products` +
       `?query=ilike.*${encodeURIComponent(safe)}*` +
       `&is_public=eq.true` +
       `&select=query,slug,product_name,brand,badge,overall_score` +
       `&order=overall_score.desc.nullslast` +
       `&limit=20`;
+    if (category) url += `&category=eq.${encodeURIComponent(category)}`;
 
     const response = await fetch(url, {
       headers: {
